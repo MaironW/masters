@@ -22,7 +22,7 @@ def systematic_resampling(weight_array):
         # get the index of the first point in the cumulative sum lower than the current point
         # somehow the method below is faster than numpy and bisect
         while (current_point > c_values[s]):
-            s=s+1      
+            s=s+1
         resampled_index[j] = s
     return resampled_index
 
@@ -60,8 +60,8 @@ def particle_filter(F, B, Z, u, R, Q, dt, n_particles):
 
     # Save the initial values
     state_list[0]  = states
-    weight_list[0] = weights 
-    
+    weight_list[0] = weights
+
     # Run filter
     for i in range(n_iters):
         print(i)

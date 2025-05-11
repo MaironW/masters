@@ -36,7 +36,7 @@ launch_lat = 28.4 << u.deg # Latitude: Cape Canaveral
 launch_az  = 90.0 << u.deg # Azimuth: east
 
 # Time in Barycentric Dynamic Time
-start_time = Time("2025-04-27", scale="tdb")
+start_time = Time("2025-05-03", scale="tdb")
 
 # Set Spacecraft Orbit parameters
 h    = 400
@@ -68,28 +68,61 @@ inc = moon_inc
 keplerian_orbit = Orbit.from_classical(Earth, a, ecc, inc, raan, argp, tano, epoch=start_time)
 kep_rv          = keplerian_orbit.rv()
 
+# Create the transfer orbit
+transfer_orbit_a   = (keplerian_orbit.r_p + moon_orbit.r_a)/2
+transfer_orbit_ecc = 1 - keplerian_orbit.r_p / transfer_orbit_a
+transfer_orbit = Orbit.from_classical(Earth,
+                                      transfer_orbit_a,
+                                      transfer_orbit_ecc,
+                                      keplerian_orbit.inc,
+                                      keplerian_orbit.raan,
+                                      keplerian_orbit.argp,
+                                      keplerian_orbit.nu,
+                                      epoch=start_time)
+
 # Plot true anomalies along the time (Propagate)
 # This is poorly done, just for the sake of verification
-propagation_time = int(moon_orbit.period.to(u.hour).to_value())
-kep_orbit_tano   = [0]*propagation_time
-moon_orbit_tano  = [0]*propagation_time
-
+propagation_time    = int(moon_orbit.period.to(u.hour).to_value())
+transfer_orbit_tano = np.zeros(propagation_time)
+moon_orbit_tano     = np.zeros(propagation_time)
+time_range          = np.zeros(propagation_time)
 for i in range(propagation_time):
-    kep_orbit_prop  = keplerian_orbit.propagate(i << u.hour)
-    moon_orbit_prop = moon_orbit.propagate(i << u.hour)
-    kep_orbit_tano[i]  = kep_orbit_prop.nu.to(u.deg).to_value()
-    moon_orbit_tano[i] = moon_orbit_prop.nu.to(u.deg).to_value()
+    transfer_orbit_prop    = transfer_orbit.propagate(i << u.hour)
+    moon_orbit_prop        = moon_orbit.propagate(i << u.hour)
+    transfer_orbit_tano[i] = transfer_orbit_prop.nu.to(u.deg).to_value()%360
+    moon_orbit_tano[i]     = moon_orbit_prop.nu.to(u.deg).to_value()%360
+    time_range[i] = i
+
+tano_compare    = abs(transfer_orbit_tano - moon_orbit_tano)
+rendezvous_idx  = np.argmin(tano_compare)
+rendezvous_time = time_range[rendezvous_idx] << u.hour
+print(moon_orbit_tano[rendezvous_idx])
+print(transfer_orbit_tano[rendezvous_idx])
+
+transfer_orbit_rendezvous = transfer_orbit.propagate(rendezvous_time)
+moon_orbit_rendezvous     = moon_orbit.propagate(rendezvous_time)
+
+print(rendezvous_time)
 
 plt.figure()
-plt.plot(kep_orbit_tano,label='Spacecraft True Anomaly')
-plt.plot(moon_orbit_tano,label='Moon True Anomaly')
+plt.plot(time_range, abs(transfer_orbit_tano - moon_orbit_tano))
 plt.grid()
-plt.show()
+
+plt.figure()
+plt.plot(time_range, transfer_orbit_tano,label='Spacecraft True Anomaly')
+plt.plot(time_range, moon_orbit_tano,label='Moon True Anomaly')
+plt.xlabel("t (days)")
+plt.ylabel("f (deg)")
+plt.grid()
+plt.legend()
 
 # Plot orbits
 fig, ax = plt.subplots()
 op = StaticOrbitPlotter(ax)
 op.plot(keplerian_orbit, label='Spacecraft')
 op.plot(moon_orbit, label='Moon')
+op.plot(moon_orbit_rendezvous, label='Moon')
+op.plot(transfer_orbit, label='Transfer (Homman)')
+op.plot(transfer_orbit_rendezvous, label='Transfer (Homman)')
 plt.legend()
 plt.show()

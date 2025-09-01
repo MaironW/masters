@@ -1,12 +1,11 @@
 # FM235 - Dinâmica de Missões Espaciais Modernas
 # Author: Mairon de Souza Wolniewicz
 
-# 1. Cálculo dos Pontos de Equilíbrios do PR3C.
+# 2. Cálculo dos Valores Críticos da Constante de Jacobi.
 
-# Considere os pontos de equilíbrio colineares L1, L2, L3 do Problema Restrito de Três Corpos Circular Espacial (PR3C).
-# Sendo as coordenadas destes equilíbrios representadas por (x1, 0, 0), (x2, 0, 0),
-#(x3, 0, 0), respectivamente, calcule os valores de x1, x2, x3 em função do parâmetro de massa μ do modelo.
-# Apresente em um único gráfico os valores de xk, k = 1, 2, 3 em função de μ para o intervalo 0 < μ < 1, juntamente com as posições dos primários P1 e P2.
+# Calcule o valor da constante de Jacobi de cada um dos cinco pontos de equilíbrio do PR3C em função do parâmetro de massa.
+# Apresente em um único gráfico os valores de C1 , C2 , C3 , C4 = C5 como função de µ, para µ ∈ (0, 1).
+# Definindo Ck = −2 Ek , plote Ek × µ, para k = 1, 2, 3, 4, 5.
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -39,6 +38,12 @@ def newton_method(x_0, mu, f, df, tol=1e-12, max_iter=10000):
         i += 1
     return x_n1
 
+# Given x and µ, compute the Jacobi constant for the equilibrium points
+def jacobi_constant(x, mu):
+    A = abs(x-mu)
+    B = abs(x-mu+1)
+    return x**2 + 2*(1-mu)/A + 2*mu/B + mu*(1-mu)
+
 # Number of iterations
 N = 100
 
@@ -48,6 +53,11 @@ x_L2 = np.zeros(N)
 x_L3 = np.zeros(N)
 x_P1 = np.zeros(N)
 x_P2 = np.zeros(N)
+C_L1 = np.zeros(N)
+C_L2 = np.zeros(N)
+C_L3 = np.zeros(N)
+C_L4 = np.ones(N)*3 # Solved analytically
+C_L5 = np.ones(N)*3 # Solved analytically
 
 # Iterate µ from 0 to 1 (with tolerances to avoid singularities)
 mu = np.linspace(0+1e-12, 1-1e-12, N)
@@ -67,14 +77,18 @@ for i in range(N):
     x_L2[i] = newton_method(x2_0, mu[i], f, df)
     x_L3[i] = newton_method(x3_0, mu[i], f, df)
 
-plt.figure("CR3BP Equilibrium points (Barcelona et al convention)")
+    # For each µ, find a value for C_L1, C_L2, C_L3
+    C_L1[i] = jacobi_constant(x_L1[i], mu[i])
+    C_L2[i] = jacobi_constant(x_L2[i], mu[i])
+    C_L3[i] = jacobi_constant(x_L3[i], mu[i])
+
+plt.figure("CR3BP Jacobi Constants (Barcelona et al convention)")
 plt.grid()
-plt.plot(mu, x_L1, label="$x_{L1} (x_{P2} < x_{L1} < x_{P1})$")
-plt.plot(mu, x_L2, label="$x_{L2} (x_{L2} < x_{P2})$")
-plt.plot(mu, x_L3, label="$x_{L3} (x_{P1} < x_{L3})$")
-plt.plot(mu, x_P1, label="$x_{P1}$")
-plt.plot(mu, x_P2, label="$x_{P2}$")
+plt.plot(mu, -C_L1/2.0, label="$E_{L1}$")
+plt.plot(mu, -C_L2/2.0, label="$E_{L2}$")
+plt.plot(mu, -C_L3/2.0, label="$E_{L3}$")
+plt.plot(mu, -C_L4/2.0, label="$E_{L4}=E_{L5}$")
 plt.xlabel("$\mu$")
-plt.ylabel("$x_k$")
+plt.ylabel("$C_k$")
 plt.legend()
 plt.show()

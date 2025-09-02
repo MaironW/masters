@@ -50,18 +50,18 @@ def system_mu(m1, m2):
     else:
         return m2/(m1 + m2)
 
-# Generic function for Omega_x (Barcelona)
-def f(x, mu):
-    A = x - mu
-    B = x - mu + 1
+# Generic function for Omega_x (Caltech)
+def f_Caltech(x, mu):
+    A = x + mu
+    B = x + mu - 1
     sign_A = A/abs(A)
     sign_B = B/abs(B)
     return x - (1 - mu)*sign_A/(A**2) - mu*sign_B/(B**2)
 
-# Derivative of Omega_x (Barcelona)
-def df(x, mu):
-    A = x - mu
-    B = x - mu + 1
+# Derivative of Omega_x (Caltech)
+def df_Caltech(x, mu):
+    A = x + mu
+    B = x + mu - 1
     sign_A = A/abs(A)
     sign_B = B/abs(B)
     return 1 + 2*(1 - mu)*sign_A/(A**3) + 2*mu*sign_B/(B**3)
@@ -77,6 +77,49 @@ def newton_method(x_0, mu, f, df, tol=1e-12, max_iter=10000):
         x_n = x_n1
         i += 1
     return x_n1
+
+# Given x and µ, compute the Jacobi constant for the equilibrium points
+def jacobi_constants(x, mu):
+    A = abs(x + mu)
+    B = abs(x + mu - 1)
+    return x**2 + 2*(1-mu)/A + 2*mu/B + mu*(1-mu)
+
+# Compute the planar coordinates for the equilibrium points (x,y)
+def equilibrium_coordinates(mu):
+    # Primaries position (Caltech convention)
+    x_P1 = mu
+    x_P2 = mu - 1
+    delta_x2 = +0.01 # To the right of x_P2
+    delta_x3 = -0.01 # To the left of x_P2
+
+    # Set initial guesses for the iterations based on µ and each Lagrangean point
+    x1_0 = (x_P1 + x_P2)*0.5 # Between x_P1 and x_P2
+    x2_0 = x_P2 + delta_x2
+    x3_0 = x_P1 + delta_x3
+
+    # For each µ, find a value for x_L1, x_L2 and x_L3
+    x_L1 = newton_method(x1_0, mu, f_Caltech, df_Caltech)
+    x_L2 = newton_method(x2_0, mu, f_Caltech, df_Caltech)
+    x_L3 = newton_method(x3_0, mu, f_Caltech, df_Caltech)
+
+    # Compute x_L4 = x_L5
+    x_L4 = -0.5 + mu
+    x_L5 = x_L4
+
+    # Compute y_L4 and y_L5
+    y_L4 = +3**0.5/2
+    y_L5 = -x_L4
+
+    equilibrium_points = {
+        "L1" : (x_L1, 0),
+        "L2" : (x_L2, 0),
+        "L3" : (x_L3, 0),
+        "L4" : (x_L4, y_L4),
+        "L5" : (x_L5, y_L5),
+    }
+
+    return equilibrium_points
+
 
 # Mass of celestial bodies [kg]
 body_mass = {
@@ -116,5 +159,6 @@ system_mu = {
 }
 
 equilibrium_points = {}
+jacobi_constants   = {}
 for system, mu in system_mu.items():
-    equilibrium_points[system] = mu
+    equilibrium_points[system] = equilibrium_coordinates(mu)

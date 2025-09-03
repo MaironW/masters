@@ -28,7 +28,7 @@ mu = np.linspace(0+1e-12, 1-1e-12, N)
 
 for i in range(N):
     # Compute all equilibrium points for each µ
-    equilibrium_points = utils.equilibrium_points(mu[i])
+    equilibrium_points = utils.equilibrium_points(mu[i],convention="Barcelona")
 
     # Attibute the equilibrium points x-coordinate for ease of plotting
     x_L1[i] = equilibrium_points["L1"][0]

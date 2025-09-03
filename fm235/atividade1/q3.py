@@ -40,86 +40,9 @@
 # que apresentam valores com mais algoritmos significativos que a tabela geral de
 # https://nssdc.gsfc.nasa.gov/planetary/factsheet/
 
+import utils
 import numpy as np
 import matplotlib.pyplot as plt
-
-# Compute the system µ based on each body mass
-def system_mu(m1, m2):
-    if m1>m2:
-        return m1/(m1 + m2)
-    else:
-        return m2/(m1 + m2)
-
-# Generic function for Omega_x (Caltech)
-def f_Caltech(x, mu):
-    A = x + mu
-    B = x + mu - 1
-    sign_A = A/abs(A)
-    sign_B = B/abs(B)
-    return x - (1 - mu)*sign_A/(A**2) - mu*sign_B/(B**2)
-
-# Derivative of Omega_x (Caltech)
-def df_Caltech(x, mu):
-    A = x + mu
-    B = x + mu - 1
-    sign_A = A/abs(A)
-    sign_B = B/abs(B)
-    return 1 + 2*(1 - mu)*sign_A/(A**3) + 2*mu*sign_B/(B**3)
-
-# Newton-Raphson method to solve non-linear equations
-def newton_method(x_0, mu, f, df, tol=1e-12, max_iter=10000):
-    i     = 0
-    x_n   = x_0
-    error = 1000
-    while (error > tol) and (i < max_iter):
-        x_n1 = x_n - f(x_n, mu)/df(x_n, mu)
-        error = abs(x_n1 - x_n)
-        x_n = x_n1
-        i += 1
-    return x_n1
-
-# Given x and µ, compute the Jacobi constant for the equilibrium points
-def jacobi_constants(x, mu):
-    A = abs(x + mu)
-    B = abs(x + mu - 1)
-    return x**2 + 2*(1-mu)/A + 2*mu/B + mu*(1-mu)
-
-# Compute the planar coordinates for the equilibrium points (x,y)
-def equilibrium_coordinates(mu):
-    # Primaries position (Caltech convention)
-    x_P1 = mu
-    x_P2 = mu - 1
-    delta_x2 = +0.01 # To the right of x_P2
-    delta_x3 = -0.01 # To the left of x_P2
-
-    # Set initial guesses for the iterations based on µ and each Lagrangean point
-    x1_0 = (x_P1 + x_P2)*0.5 # Between x_P1 and x_P2
-    x2_0 = x_P2 + delta_x2
-    x3_0 = x_P1 + delta_x3
-
-    # For each µ, find a value for x_L1, x_L2 and x_L3
-    x_L1 = newton_method(x1_0, mu, f_Caltech, df_Caltech)
-    x_L2 = newton_method(x2_0, mu, f_Caltech, df_Caltech)
-    x_L3 = newton_method(x3_0, mu, f_Caltech, df_Caltech)
-
-    # Compute x_L4 = x_L5
-    x_L4 = -0.5 + mu
-    x_L5 = x_L4
-
-    # Compute y_L4 and y_L5
-    y_L4 = +3**0.5/2
-    y_L5 = -x_L4
-
-    equilibrium_points = {
-        "L1" : (x_L1, 0),
-        "L2" : (x_L2, 0),
-        "L3" : (x_L3, 0),
-        "L4" : (x_L4, y_L4),
-        "L5" : (x_L5, y_L5),
-    }
-
-    return equilibrium_points
-
 
 # Mass of celestial bodies [kg]
 body_mass = {
@@ -146,19 +69,50 @@ for b, m in mass_sorted.items():
 
 # Compute the mass parameter µ for each system
 system_mu = {
-    "Earth-Moon"     : system_mu(body_mass["Earth"],   body_mass["Moon"]),
-    "Sun-Earth"      : system_mu(body_mass["Sun"],     body_mass["Earth"]),
-    "Sun-Venus"      : system_mu(body_mass["Sun"],     body_mass["Venus"]),
-    "Sun-Jupiter"    : system_mu(body_mass["Sun"],     body_mass["Jupiter"]),
-    "Sun-Saturn"     : system_mu(body_mass["Sun"],     body_mass["Saturn"]),
-    "Jupiter-Europa" : system_mu(body_mass["Jupiter"], body_mass["Europa"]),
-    "Saturn-Titan"   : system_mu(body_mass["Saturn"],  body_mass["Titan"]),
-    "Jupiter-Io"     : system_mu(body_mass["Jupiter"], body_mass["Io"]),
-    "Mars-Phobos"    : system_mu(body_mass["Mars"],    body_mass["Phobos"]),
-    "Pluto-Charon"   : system_mu(body_mass["Pluto"],   body_mass["Charon"]),
+    "Earth-Moon"     : utils.mu_from_masses(body_mass["Earth"],   body_mass["Moon"]),
+    "Sun-Earth"      : utils.mu_from_masses(body_mass["Sun"],     body_mass["Earth"]),
+    "Sun-Venus"      : utils.mu_from_masses(body_mass["Sun"],     body_mass["Venus"]),
+    "Sun-Jupiter"    : utils.mu_from_masses(body_mass["Sun"],     body_mass["Jupiter"]),
+    "Sun-Saturn"     : utils.mu_from_masses(body_mass["Sun"],     body_mass["Saturn"]),
+    "Jupiter-Europa" : utils.mu_from_masses(body_mass["Jupiter"], body_mass["Europa"]),
+    "Saturn-Titan"   : utils.mu_from_masses(body_mass["Saturn"],  body_mass["Titan"]),
+    "Jupiter-Io"     : utils.mu_from_masses(body_mass["Jupiter"], body_mass["Io"]),
+    "Mars-Phobos"    : utils.mu_from_masses(body_mass["Mars"],    body_mass["Phobos"]),
+    "Pluto-Charon"   : utils.mu_from_masses(body_mass["Pluto"],   body_mass["Charon"]),
 }
 
 equilibrium_points = {}
 jacobi_constants   = {}
 for system, mu in system_mu.items():
-    equilibrium_points[system] = equilibrium_coordinates(mu)
+    # Compute all equilibrium points for each µ
+    equilibrium_points[system] = utils.equilibrium_points(mu, convention="Caltech")
+    x_L1 = equilibrium_points[system]["L1"][0]
+    x_L2 = equilibrium_points[system]["L2"][0]
+    x_L3 = equilibrium_points[system]["L3"][0]
+    x_L4 = equilibrium_points[system]["L4"][0]
+    x_L5 = equilibrium_points[system]["L5"][0]
+    y_L4 = equilibrium_points[system]["L4"][1]
+    y_L5 = equilibrium_points[system]["L5"][1]
+
+    # Compute all Jacobi Constants for each µ
+    jacobi_constants[system] = utils.jacobi_constants(equilibrium_points[system], mu, convention="Caltech")
+    C_L1 = jacobi_constants[system]["L1"]
+    C_L2 = jacobi_constants[system]["L2"]
+    C_L3 = jacobi_constants[system]["L3"]
+    C_L4 = jacobi_constants[system]["L4"]
+    C_L5 = jacobi_constants[system]["L5"]
+
+# 1. µ Table
+print("\nSystem, µ")
+for  system, mu in system_mu.items():
+    print(f"{system},{mu}")
+
+# 2. Coordinates Table
+print("\nSystem, L1, L2, L3, L4, L5")
+for system, point in equilibrium_points.items():
+    print(f'{system}, {point["L1"]}, {point["L2"]}, {point["L3"]}, {point["L4"]}, {point["L5"]}')
+
+# 3. Jacobi Constants Table
+print("\nSystem, L1, L2, L3, L4, L5")
+for system, constant in jacobi_constants.items():
+    print(f'{system}, {constant["L1"]}, {constant["L2"]}, {constant["L3"]}, {constant["L4"]}, {constant["L5"]}')

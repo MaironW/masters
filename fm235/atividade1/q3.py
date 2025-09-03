@@ -108,11 +108,11 @@ for  system, mu in system_mu.items():
     print(f"{system},{mu}")
 
 # 2. Coordinates Table
-print("\nSystem, L1, L2, L3, L4, L5")
+print("\nSystem, Coord L1, Coord L2, Coord L3, Coord L4, Coord L5")
 for system, point in equilibrium_points.items():
     print(f'{system}, {point["L1"]}, {point["L2"]}, {point["L3"]}, {point["L4"]}, {point["L5"]}')
 
 # 3. Jacobi Constants Table
-print("\nSystem, L1, L2, L3, L4, L5")
+print("\nSystem, C_L1, C_L2, C_L3, C_L4, C_L5")
 for system, constant in jacobi_constants.items():
     print(f'{system}, {constant["L1"]}, {constant["L2"]}, {constant["L3"]}, {constant["L4"]}, {constant["L5"]}')

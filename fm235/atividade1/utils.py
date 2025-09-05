@@ -1,3 +1,9 @@
+# FM235 - Dinâmica de Missões Espaciais Modernas
+# Author: Mairon de Souza Wolniewicz
+# Date: 2025-Sep-10
+
+# Utilities functions to be used to solve the exercises
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -122,3 +128,56 @@ def hill_curve(x, y, mu, convention="Barcelona"):
         r1 = ((x + mu)**2 + y**2)**0.5
         r2 = ((x + mu - 1)**2 + y**2)**0.5
     return x**2 + y**2 + 2*(1-mu)/r1 + 2*mu/r2 + mu*(1-mu)
+
+# Given µ, plot Hill curves for the conditions of C:
+# C > C1
+# C1 > C > C2
+# C2 > C > C3
+# C3 > C > C4
+def plot_hill_curves(mu, convention="Barcelona"):
+    grid_size = 1000
+
+    # Define the range of the space to search for a Hill region
+    x_range = np.linspace(-1.7, +1.7, grid_size)
+    y_range = np.linspace(-1.7, +1.7, grid_size)
+    X, Y    = np.meshgrid(x_range, y_range)
+
+    # Get equilibrium points and Jacobi constants for each µ
+
+    eq_points = equilibrium_points(mu, convention=convention)
+    C_jacobi  = jacobi_constants(eq_points, mu, convention=convention)
+
+    # Define C values to be tested
+    C_cases = {
+        "C>C1"    : C_jacobi["L1"]*1.01,
+        "C1>C>C2" : (C_jacobi["L1"]+C_jacobi["L2"])*0.5,
+        "C2>C>C3" : (C_jacobi["L2"]+C_jacobi["L3"])*0.5,
+        "C3>C>C4" : (C_jacobi["L3"]+C_jacobi["L4"])*0.5,
+    }
+
+    # Create plot with equilibrium points, bodies and Hill regions
+    fig, axes = plt.subplots(2,2)
+    ax = axes.flatten()
+    i = 0
+    for C_case, C_value in C_cases.items():
+        ax[i].set_title(f"µ={mu}, {C_case}")
+        # Automatically plot the Lagrangian points
+        for L_case, L_value in eq_points.items():
+            if L_case[0] == 'L':
+                ax[i].plot(L_value[0],L_value[1],'.')
+                ax[i].text(L_value[0],L_value[1]-0.2,L_case, ha="center", va="center")
+
+        # Individually plot the bodies
+        ax[i].plot(eq_points["P1"][0],eq_points["P1"][1],'o', color='k', markersize=8)
+        ax[i].text(eq_points["P1"][0],eq_points["P1"][1]-0.2,"P1", ha="center", va="center")
+        ax[i].plot(eq_points["P2"][0],eq_points["P2"][1],'o', color='k', markersize=5)
+        ax[i].text(eq_points["P2"][0],eq_points["P2"][1]-0.2,"P2", ha="center", va="center")
+        ax[i].grid()
+
+        # Fill Hill regions
+        Z = hill_curve(X, Y, mu, convention=convention)
+        ax[i].contourf(X, Y, Z, levels=[Z.min(), C_value], colors=["lightgray"], alpha=0.8)
+        # Draw the zero-velocity curve (boundary)
+        ax[i].contour(X, Y, Z, levels=[C_value], colors="k")
+        ax[i].set_aspect("equal")
+        i+=1

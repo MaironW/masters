@@ -35,57 +35,12 @@
 # estes detalhes devem ser levados em conta.
 
 import utils
-import numpy as np
 import matplotlib.pyplot as plt
 
 # Define µ of interest
 mu_list = [1e-4, 1e-2, 1e-1]
-mu_list = [1.25e-2] # Earth-Moon
 
-# Define the range of the space to search for a Hill region
-x_range = np.linspace(-1.5, +1.5, 100)
-y_range = np.linspace(-1.5, +1.5, 100)
-X, Y    = np.meshgrid(x_range, y_range)
-
-# Get equilibrium points and Jacobi constants for each µ
+# Plot the Hill curves for each µ
 for mu in mu_list:
-    equilibrium_points = utils.equilibrium_points(mu, convention="Barcelona")
-    jacobi_constants = utils.jacobi_constants(equilibrium_points, mu, convention="Barcelona")
-    
-    # Define C values to be tested 
-    C_list = [
-        jacobi_constants["L1"]*1.05,
-        (jacobi_constants["L1"]+jacobi_constants["L2"])*0.5,
-        (jacobi_constants["L2"]+jacobi_constants["L3"])*0.5,
-        (jacobi_constants["L3"]+jacobi_constants["L4"])*0.5,
-    ]
-
-    # Create plot with equilibrium points, bodies and Hill regions
-    fig, axes = plt.subplots(2,2)
-    axes_flat = axes.flatten()
-    for ax, limit_C in zip(axes_flat, C_list):
-        ax.plot(equilibrium_points["L1"][0],equilibrium_points["L1"][1],'.')
-        ax.text(equilibrium_points["L1"][0],equilibrium_points["L1"][1]-0.05,"L1", ha="center", va="center")
-        ax.plot(equilibrium_points["L2"][0],equilibrium_points["L2"][1],'.')
-        ax.text(equilibrium_points["L2"][0],equilibrium_points["L2"][1]-0.05,"L2", ha="center", va="center")
-        ax.plot(equilibrium_points["L3"][0],equilibrium_points["L3"][1],'.')
-        ax.text(equilibrium_points["L3"][0],equilibrium_points["L3"][1]-0.05,"L3", ha="center", va="center")
-        ax.plot(equilibrium_points["L4"][0],equilibrium_points["L4"][1],'.')
-        ax.text(equilibrium_points["L4"][0],equilibrium_points["L4"][1]+0.05,"L4", ha="center", va="center")
-        ax.plot(equilibrium_points["L5"][0],equilibrium_points["L5"][1],'.')
-        ax.text(equilibrium_points["L5"][0],equilibrium_points["L5"][1]-0.05,"L5", ha="center", va="center")
-        ax.plot(equilibrium_points["P1"][0],equilibrium_points["P1"][1],'o', color='k', markersize=8)
-        ax.text(equilibrium_points["P1"][0],equilibrium_points["P1"][1]-0.05,"P1", ha="center", va="center")
-        ax.plot(equilibrium_points["P2"][0],equilibrium_points["P2"][1],'o', color='k', markersize=5)
-        ax.text(equilibrium_points["P2"][0],equilibrium_points["P2"][1]-0.05,"P2", ha="center", va="center")
-        ax.grid()
-
-        # Fill Hill regions
-        Z = utils.hill_curve(X, Y, mu)
-        ax.contourf(X, Y, Z, levels=[Z.min(), limit_C], colors=["lightgray"], alpha=0.8)
-        # Draw the zero-velocity curve (boundary)
-        cs = ax.contour(X, Y, Z, levels=[limit_C], colors="k")
-        ax.set_aspect("equal")
-
+    utils.plot_hill_curves(mu, convention="Barcelona")
 plt.show()
-

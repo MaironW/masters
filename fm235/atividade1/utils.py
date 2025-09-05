@@ -3,19 +3,19 @@ import matplotlib.pyplot as plt
 
 # Generic function for Omega_x (Barcelona)
 def f_Barcelona(x, mu):
-    A = x - mu
-    B = x - mu + 1
-    sign_A = A/abs(A)
-    sign_B = B/abs(B)
-    return x - (1 - mu)*sign_A/(A**2) - mu*sign_B/(B**2)
+    r1 = x - mu
+    r2 = x - mu + 1
+    sign_r1 = r1/abs(r1)
+    sign_r2 = r2/abs(r2)
+    return x - (1 - mu)*sign_r1/(r1**2) - mu*sign_r2/(r2**2)
 
 # Derivative of Omega_x (Barcelona)
 def df_Barcelona(x, mu):
-    A = x - mu
-    B = x - mu + 1
-    sign_A = A/abs(A)
-    sign_B = B/abs(B)
-    return 1 + 2*(1 - mu)*sign_A/(A**3) + 2*mu*sign_B/(B**3)
+    r1 = x - mu
+    r2 = x - mu + 1
+    sign_r1 = r1/abs(r1)
+    sign_r2 = r2/abs(r2)
+    return 1 + 2*(1 - mu)*sign_r1/(r1**3) + 2*mu*sign_r2/(r2**3)
 
 # Newton-Raphson method to solve non-linear equations
 def newton_method(x_0, mu, f, df, tol=1e-12, max_iter=10000):
@@ -76,12 +76,12 @@ def equilibrium_points(mu, convention="Barcelona"):
 # Given x and µ, compute the Jacobi constant for the equilibrium points
 def jacobi_constant(x, mu, convention="Barcelona"):
     if convention=="Barcelona":
-        A = abs(x - mu)
-        B = abs(x - mu + 1)
+        r1 = abs(x - mu)
+        r2 = abs(x - mu + 1)
     else: # Caltech
-        A = abs(x + mu)
-        B = abs(x + mu - 1)
-    return x**2 + 2*(1-mu)/A + 2*mu/B + mu*(1-mu)
+        r1 = abs(x + mu)
+        r2 = abs(x + mu - 1)
+    return x**2 + 2*(1-mu)/r1 + 2*mu/r2 + mu*(1-mu)
 
 # Return the Jacobi Constants for the entire system of equilibrium points
 def jacobi_constants(equilibrium_points, mu, convention="Barcelona"):
@@ -112,3 +112,13 @@ def mu_from_masses(m1, m2):
         return m1/(m1+m2)
     else:
         return m2/(m1+m2)
+
+# Define the zero velocity limit on the planar case
+def hill_curve(x, y, mu, convention="Barcelona"):
+    if convention=="Barcelona":
+        r1 = ((x - mu)**2 + y**2)**0.5
+        r2 = ((x - mu + 1)**2 + y**2)**0.5
+    else: # Caltech
+        r1 = ((x + mu)**2 + y**2)**0.5
+        r2 = ((x + mu - 1)**2 + y**2)**0.5
+    return x**2 + y**2 + 2*(1-mu)/r1 + 2*mu/r2 + mu*(1-mu)

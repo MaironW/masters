@@ -5,7 +5,7 @@
 # 2. Cálculo dos Valores Críticos da Constante de Jacobi.
 
 # Calcule o valor da constante de Jacobi de cada um dos cinco pontos de equilíbrio do PR3C em função do parâmetro de massa.
-# Apresente em um único gráfico os valores de C1 , C2 , C3 , C4 = C5 como função de µ, para µ ∈ (0, 1).
+# Apresente em um único gráfico os valores de C1, C2, C3, C4 = C5 como função de µ, para µ ∈ (0, 1).
 # Definindo Ck = −2 Ek , plote Ek × µ, para k = 1, 2, 3, 4, 5.
 
 import utils
@@ -52,6 +52,6 @@ plt.plot(mu, -C_L2/2.0, label="$E_{L2}$")
 plt.plot(mu, -C_L3/2.0, label="$E_{L3}$")
 plt.plot(mu, -C_L4/2.0, label="$E_{L4}=E_{L5}$")
 plt.xlabel("$\mu$")
-plt.ylabel("$C_k$")
+plt.ylabel("$E_k$")
 plt.legend()
 plt.show()

@@ -17,80 +17,80 @@ import utils
 import numpy as np
 import matplotlib.pyplot as plt
 
-def linearization_matrix(x, y, z, mu, convention="Barcelona"):
-    # Build the equilibrium matrix Dxf
-    Dxf = np.zeros([6,6])
+def plot_equilibirium_eigenvalues(eigenvalues_dict, title=""):
+    # Define colors for the plot
+    color_list = ["tab:blue","tab:orange","tab:green","tab:red","tab:purple","tab:brown"]
+    # Create plot
+    fig, axes = plt.subplots(2,3)
+    ax = axes.flatten()
+    i = 0
+    for L_case in eigenvalues_dict.keys():
+        for j in range(6):
+            ax[i].plot(eigenvalues_dict[L_case][j].real,     eigenvalues_dict[L_case][j].imag,     '.', color=color_list[j])
+            ax[i].plot(eigenvalues_dict[L_case][j][0].real,  eigenvalues_dict[L_case][j][0].imag,  'x', color=color_list[j], label=f"$\lambda_{i+1},_{j+1}$")
+            ax[i].plot(eigenvalues_dict[L_case][j][-1].real, eigenvalues_dict[L_case][j][-1].imag, 'o', color=color_list[j])
 
-    Dxf[0,3] =  1 # df1dx4
-    Dxf[1,4] =  1 # df2dx5
-    Dxf[2,5] =  1 # df3dx6
-    Dxf[3,4] =  2 # df4dx5
-    Dxf[4,3] = -2 # df5dx4
+        ax[i].set_title(f"{title} {L_case}")
+        ax[i].axvline(0, color='k', linestyle='-', linewidth=0.8)
+        ax[i].axhline(0, color='k', linestyle='-', linewidth=0.8)
+        ax[i].set_xlabel('Re($\lambda$)')
+        ax[i].set_ylabel('Im($\lambda$)')
+        ax[i].grid()
+        ax[i].legend()
+        i+=1
 
-    # Barcelona parameters
-    A = x - mu
-    B = x - mu + 1
-    r1 = ((x - mu)**2 + y**2 + z**2)**0.5
-    r2 = ((x - mu + 1)**2 + y**2 + z**2)**0.5
+# For a list of µ, compute the eigenvalues
+def compute_eigenvalues(mu_list, convention="Barcelona"):
+    n_iters = len(mu_list)
+    eigenvalues_dict = {
+        "L1" : np.zeros((6,n_iters),dtype=np.complex128),
+        "L2" : np.zeros((6,n_iters),dtype=np.complex128),
+        "L3" : np.zeros((6,n_iters),dtype=np.complex128),
+        "L4" : np.zeros((6,n_iters),dtype=np.complex128),
+        "L5" : np.zeros((6,n_iters),dtype=np.complex128),
+    }
 
-    # Compute the Hessian
-    Uxx = 1 - (1-mu)/r1**3 - mu/r2**3 + 3*(1-mu)*A**2/r1**5 + 3*mu*B**2/r2**5
-    Uyy = 1 - (1-mu)/r1**3 - mu/r2**3 + 3*(1-mu)*y**2/r1**5 + 3*mu*y**2/r2**5
-    Uzz =   - (1-mu)/r1**3 - mu/r2**3 + 3*(1-mu)*z**2/r1**5 + 3*mu*z**2/r2**5
-    Uxy = 3*(1-mu)*A*y/r1**5 + 3*mu*B*y/r2**5
-    Uxz = 3*(1-mu)*A*z/r1**5 + 3*mu*B*z/r2**5
-    Uyz = 3*(1-mu)*y*z/r1**5 + 3*mu*y*z/r2**5
+    for i, mu in enumerate(mu_list):
+        # Compute equilibrium points coordinates
+        equilibrium_points = utils.equilibrium_points(mu, convention=convention)
+        for L_case in eigenvalues_dict.keys():
+            # For each equilibrium point, compute the eigenvalues
+            x = equilibrium_points[L_case][0]
+            y = equilibrium_points[L_case][1]
+            z = 0
+            Dxf = utils.linearization_matrix(x, y, z, mu, convention=convention)
+            eigenvalues = np.linalg.eigvals(Dxf)
+            # Store the eigenvalues for plotting
+            for j in range(6):
+                eigenvalues_dict[L_case][j,i] = eigenvalues[j]
+    return eigenvalues_dict
 
-    Dxf[3:6, 0:3] = np.array([[Uxx, Uxy, Uxz],
-                              [Uxy, Uyy, Uyz],
-                              [Uxz, Uyz, Uzz]])
-    return Dxf
-
-n_iters = 100
-mu_list = np.linspace(1e-6, 0.5, n_iters)
-
-eigenvalues_dict = {
-    "L1" : np.zeros((6,n_iters),dtype=np.complex128),
-    "L2" : np.zeros((6,n_iters),dtype=np.complex128),
-    "L3" : np.zeros((6,n_iters),dtype=np.complex128),
-    "L4" : np.zeros((6,n_iters),dtype=np.complex128),
+# Mass of celestial bodies [kg]
+body_mass = {
+    "Sun"   : 1.988500e+30,
+    "Earth" : 5.972190e+24,
+    "Moon"  : 7.349000e+22,
 }
 
-for i in range(n_iters):
-    # Compute equilibrium points coordinates
-    equilibrium_points = utils.equilibrium_points(mu_list[i], convention="Barcelona")
-    for L_case in eigenvalues_dict.keys():
+# Compute the mass parameter µ for each system
+system_mu = {
+    "Earth-Moon" : utils.mu_from_masses(body_mass["Earth"], body_mass["Moon"]),
+    "Sun-Earth"  : utils.mu_from_masses(body_mass["Sun"],   body_mass["Earth"]),
+}
 
-        # For each equilibrium point, compute the eigenvalues
-        x = equilibrium_points[L_case][0]
-        y = equilibrium_points[L_case][1]
-        z = 0
-        Dxf = linearization_matrix(x, y, z, mu_list[i], convention="Barcelona")
-        eigenvalues = np.linalg.eigvals(Dxf)
+# Variable µ list
+mu_list = np.linspace(1e-6, 0.5, 100)
+eigenvalues_dict = compute_eigenvalues(mu_list)
+plot_equilibirium_eigenvalues(eigenvalues_dict, "1e-6 < µ < 0.5")
 
-        # Store the eigenvalues for plotting
-        for j in range(6):
-            eigenvalues_dict[L_case][j,i] = eigenvalues[j]
+# Earth-Moon
+equilibrium_points = utils.equilibrium_points(system_mu["Earth-Moon"], convention="Barcelona")
+eigenvalues_dict   = compute_eigenvalues([system_mu["Earth-Moon"]])
+plot_equilibirium_eigenvalues(eigenvalues_dict, "Earth-Moon")
 
-# Define colors for the plot
-color_list = ["tab:blue","tab:orange","tab:green","tab:red","tab:purple","tab:brown"]
+# Sun-Earth
+equilibrium_points = utils.equilibrium_points(system_mu["Sun-Earth"], convention="Barcelona")
+eigenvalues_dict   = compute_eigenvalues([system_mu["Sun-Earth"]])
+plot_equilibirium_eigenvalues(eigenvalues_dict, "Sun-Earth")
 
-# Create plot
-fig, axes = plt.subplots(1,4)
-ax = axes.flatten()
-i = 0
-for L_case in eigenvalues_dict.keys():
-    for j in range(6):
-        ax[i].plot(eigenvalues_dict[L_case][j].real,     eigenvalues_dict[L_case][j].imag,     '.', color=color_list[j])
-        ax[i].plot(eigenvalues_dict[L_case][j][0].real,  eigenvalues_dict[L_case][j][0].imag,  'x', color=color_list[j], label=f"$\lambda_{j+1}$")
-        ax[i].plot(eigenvalues_dict[L_case][j][-1].real, eigenvalues_dict[L_case][j][-1].imag, 'o', color=color_list[j])
-
-    ax[i].set_title(L_case)
-    ax[i].axvline(0, color='gray', linestyle='--', linewidth=0.8)
-    ax[i].axhline(0, color='gray', linestyle='--', linewidth=0.8)
-    ax[i].set_xlabel('Real Part')
-    ax[i].set_ylabel('Imaginary Part')
-    ax[i].grid()
-    ax[i].legend()
-    i+=1
 plt.show()

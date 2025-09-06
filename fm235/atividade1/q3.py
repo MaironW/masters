@@ -41,24 +41,22 @@
 # https://nssdc.gsfc.nasa.gov/planetary/factsheet/
 
 import utils
-import numpy as np
-import matplotlib.pyplot as plt
 
 # Mass of celestial bodies [kg]
 body_mass = {
-    "Sun"     : 1.988500e+30,
-    "Earth"   : 5.972190e+24,
-    "Jupiter" : 1.898130e+27,
-    "Moon"    : 7.349000e+22,
-    "Mars"    : 6.417100e+23,
-    "Venus"   : 4.867500e+24,
-    "Saturn"  : 5.683400e+26,
-    "Io"      : 8.931900e+22,
-    "Europa"  : 4.799800e+22,
-    "Titan"   : 1.345200e+23,
-    "Phobos"  : 1.065900e+16,
-    "Pluto"   : 1.303000e+22,
-    "Charon"  : 1.586000e+21,
+    "Sun"     : 1.988500e30,
+    "Earth"   : 5.972190e24,
+    "Jupiter" : 1.898130e27,
+    "Moon"    : 7.349000e22,
+    "Mars"    : 6.417100e23,
+    "Venus"   : 4.867500e24,
+    "Saturn"  : 5.683400e26,
+    "Io"      : 8.931900e22,
+    "Europa"  : 4.799800e22,
+    "Titan"   : 1.345200e23,
+    "Phobos"  : 1.065900e16,
+    "Pluto"   : 1.303000e22,
+    "Charon"  : 1.586000e21,
 }
 
 # Sort the dict by mass decrescent order

@@ -13,6 +13,9 @@ import utils
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Define primary position convention
+convention = "Barcelona"
+
 # Number of iterations
 N = 100
 
@@ -28,7 +31,7 @@ mu = np.linspace(0+1e-12, 1-1e-12, N)
 
 for i in range(N):
     # Compute all equilibrium points for each µ
-    equilibrium_points = utils.equilibrium_points(mu[i],convention="Barcelona")
+    equilibrium_points = utils.equilibrium_points(mu[i],convention=convention)
 
     # Attibute the equilibrium points x-coordinate for ease of plotting
     x_L1[i] = equilibrium_points["L1"][0]
@@ -38,7 +41,7 @@ for i in range(N):
     x_P2[i] = equilibrium_points["P2"][0]
 
 # Plot
-plt.figure("CR3BP Equilibrium points (Barcelona et al convention)")
+plt.figure(f"CR3BP Equilibrium points ({convention} et al convention)")
 plt.grid()
 plt.plot(mu, x_L1, label="$x_{L1} (x_{P2} < x_{L1} < x_{P1})$")
 plt.plot(mu, x_L2, label="$x_{L2} (x_{L2} < x_{P2})$")

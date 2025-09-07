@@ -122,11 +122,13 @@ def mu_from_masses(m1, m2):
 # Define the zero velocity limit on the planar case
 def hill_curve(x, y, mu, convention="Barcelona"):
     if convention=="Barcelona":
-        r1 = ((x - mu)**2 + y**2)**0.5
-        r2 = ((x - mu + 1)**2 + y**2)**0.5
+        A = x - mu
+        B = x - mu + 1
     else: # Caltech
-        r1 = ((x + mu)**2 + y**2)**0.5
-        r2 = ((x + mu - 1)**2 + y**2)**0.5
+        A = x + mu
+        B = x + mu - 1
+    r1 = (A**2 + y**2)**0.5
+    r2 = (B**2 + y**2)**0.5
     return x**2 + y**2 + 2*(1-mu)/r1 + 2*mu/r2 + mu*(1-mu)
 
 # Given µ, plot Hill curves for the conditions of C:
@@ -183,20 +185,25 @@ def plot_hill_curves(mu, convention="Barcelona"):
         i+=1
 
 # Build the equilibrium matrix Dxf
-def linearization_matrix(x, y, z, mu, convention="Barcelona"):
+def linearization_matrix(x, y, z, mu, convention="Barcelona", planar=False):
     Dxf = np.zeros([6,6])
 
     Dxf[0,3] =  1 # df1dx4
-    Dxf[1,4] =  1 # df2dx5
+    Dxf[1,4] =  1 # df2dx5-
     Dxf[2,5] =  1 # df3dx6
     Dxf[3,4] =  2 # df4dx5
     Dxf[4,3] = -2 # df5dx4
 
     # Barcelona parameters
-    A = x - mu
-    B = x - mu + 1
-    r1 = ((x - mu)**2 + y**2 + z**2)**0.5
-    r2 = ((x - mu + 1)**2 + y**2 + z**2)**0.5
+    if convention=="Barcelona":
+        A = x - mu
+        B = x - mu + 1
+    else: # Caltech
+        A = x + mu
+        B = x + mu - 1
+
+    r1 = (A**2 + y**2 + z**2)**0.5
+    r2 = (B**2 + y**2 + z**2)**0.5
 
     # Compute the Hessian
     Uxx = 1 - (1-mu)/r1**3 - mu/r2**3 + 3*(1-mu)*A**2/r1**5 + 3*mu*B**2/r2**5
@@ -209,4 +216,15 @@ def linearization_matrix(x, y, z, mu, convention="Barcelona"):
     Dxf[3:6, 0:3] = np.array([[Uxx, Uxy, Uxz],
                               [Uxy, Uyy, Uyz],
                               [Uxz, Uyz, Uzz]])
+
+    if planar==True:
+        # Remove the Z values from the linearization matrix
+        Dxf = np.delete(Dxf, [2, 5], axis=0)
+        Dxf = np.delete(Dxf, [2, 5], axis=1)
     return Dxf
+
+# Given a list of eigenvalues and eigenvectors, return the unstable one
+def get_unstable_eigenpair(values, vectors):
+    reals   = np.real(values)
+    pos_idx = np.argmax(reals)
+    return values[pos_idx], vectors[:, pos_idx]

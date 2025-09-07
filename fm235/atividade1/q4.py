@@ -12,18 +12,21 @@
 
 import utils
 
+# Define primary position convention
+convention = "Barcelona"
+
 # Define µ as 0.5
 mu = 0.5
 
 # Compute the coordinates of the equilibrium points
-equilibrium_points = utils.equilibrium_points(mu, convention="Barcelona")
+equilibrium_points = utils.equilibrium_points(mu, convention=convention)
 
 # Output equilibrium points
 print("Equilibrium Points Coordinates:")
 print(equilibrium_points)
 
 # Compute all Jacobi Constants
-jacobi_constants = utils.jacobi_constants(equilibrium_points, mu, convention="Barcelona")
+jacobi_constants = utils.jacobi_constants(equilibrium_points, mu, convention=convention)
 
 # Output Jacobi constants
 print("Jacobi Constants:")

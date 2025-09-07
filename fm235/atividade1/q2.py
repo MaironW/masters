@@ -12,6 +12,9 @@ import utils
 import numpy as np
 import matplotlib.pyplot as plt
 
+# Define primary position convention
+convention = "Barcelona"
+
 # Number of iterations
 N = 100
 
@@ -32,7 +35,7 @@ mu = np.linspace(0+1e-12, 1-1e-12, N)
 
 for i in range(N):
     # Compute all equilibrium points for each µ
-    equilibrium_points = utils.equilibrium_points(mu[i], convention="Barcelona")
+    equilibrium_points = utils.equilibrium_points(mu[i], convention=convention)
 
     # Attibute the equilibrium points x-coordinate for ease of plotting
     x_L1[i] = equilibrium_points["L1"][0]
@@ -40,9 +43,9 @@ for i in range(N):
     x_L3[i] = equilibrium_points["L3"][0]
 
     # For each µ, find a value for C_L1, C_L2, C_L3
-    C_L1[i] = utils.jacobi_constant(x_L1[i], mu[i], convention="Barcelona")
-    C_L2[i] = utils.jacobi_constant(x_L2[i], mu[i], convention="Barcelona")
-    C_L3[i] = utils.jacobi_constant(x_L3[i], mu[i], convention="Barcelona")
+    C_L1[i] = utils.jacobi_constant(x_L1[i], mu[i], convention=convention)
+    C_L2[i] = utils.jacobi_constant(x_L2[i], mu[i], convention=convention)
+    C_L3[i] = utils.jacobi_constant(x_L3[i], mu[i], convention=convention)
 
 # Plot
 plt.figure("CR3BP Jacobi Constants (Barcelona et al convention)")

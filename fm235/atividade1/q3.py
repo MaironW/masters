@@ -42,6 +42,9 @@
 
 import utils
 
+# Define primary position convention
+convention = "Caltech"
+
 # Mass of celestial bodies [kg]
 body_mass = {
     "Sun"     : 1.988500e30,
@@ -83,7 +86,7 @@ equilibrium_points = {}
 jacobi_constants   = {}
 for system, mu in system_mu.items():
     # Compute all equilibrium points for each µ
-    equilibrium_points[system] = utils.equilibrium_points(mu, convention="Caltech")
+    equilibrium_points[system] = utils.equilibrium_points(mu, convention=convention)
     x_L1 = equilibrium_points[system]["L1"][0]
     x_L2 = equilibrium_points[system]["L2"][0]
     x_L3 = equilibrium_points[system]["L3"][0]
@@ -93,7 +96,7 @@ for system, mu in system_mu.items():
     y_L5 = equilibrium_points[system]["L5"][1]
 
     # Compute all Jacobi Constants for each µ
-    jacobi_constants[system] = utils.jacobi_constants(equilibrium_points[system], mu, convention="Caltech")
+    jacobi_constants[system] = utils.jacobi_constants(equilibrium_points[system], mu, convention=convention)
     C_L1 = jacobi_constants[system]["L1"]
     C_L2 = jacobi_constants[system]["L2"]
     C_L3 = jacobi_constants[system]["L3"]

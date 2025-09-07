@@ -65,6 +65,9 @@ def compute_eigenvalues(mu_list, convention="Barcelona"):
                 eigenvalues_dict[L_case][j,i] = eigenvalues[j]
     return eigenvalues_dict
 
+# Define primary position convention
+convention = "Barcelona"
+
 # Mass of celestial bodies [kg]
 body_mass = {
     "Sun"   : 1.988500e+30,
@@ -80,16 +83,16 @@ system_mu = {
 
 # Variable µ list
 mu_list = np.linspace(1e-6, 0.5, 100)
-eigenvalues_dict = compute_eigenvalues(mu_list)
+eigenvalues_dict = compute_eigenvalues(mu_list, convention=convention)
 plot_equilibirium_eigenvalues(eigenvalues_dict, "1e-6 < µ < 0.5")
 
 # Earth-Moon
-equilibrium_points = utils.equilibrium_points(system_mu["Earth-Moon"], convention="Barcelona")
+equilibrium_points = utils.equilibrium_points(system_mu["Earth-Moon"], convention=convention)
 eigenvalues_dict   = compute_eigenvalues([system_mu["Earth-Moon"]])
 plot_equilibirium_eigenvalues(eigenvalues_dict, "Earth-Moon")
 
 # Sun-Earth
-equilibrium_points = utils.equilibrium_points(system_mu["Sun-Earth"], convention="Barcelona")
+equilibrium_points = utils.equilibrium_points(system_mu["Sun-Earth"], convention=convention)
 eigenvalues_dict   = compute_eigenvalues([system_mu["Sun-Earth"]])
 plot_equilibirium_eigenvalues(eigenvalues_dict, "Sun-Earth")
 

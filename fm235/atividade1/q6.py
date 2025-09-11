@@ -23,12 +23,18 @@ def plot_equilibirium_eigenvalues(eigenvalues_dict, title=""):
     # Create plot
     fig, axes = plt.subplots(2,3)
     ax = axes.flatten()
+    fig.delaxes(ax[-1])
+    ax = ax[:-1]
+
     i = 0
     for L_case in eigenvalues_dict.keys():
         for j in range(6):
+            # Compute labels
+            m = j // 2 + 1 # increases every 2 steps
+            n = j % 2 + 1  # alternates between 1 and 2
             ax[i].plot(eigenvalues_dict[L_case][j].real,     eigenvalues_dict[L_case][j].imag,     '.', color=color_list[j])
-            ax[i].plot(eigenvalues_dict[L_case][j][0].real,  eigenvalues_dict[L_case][j][0].imag,  'x', color=color_list[j], label=f"$\lambda_{i+1},_{j+1}$")
-            ax[i].plot(eigenvalues_dict[L_case][j][-1].real, eigenvalues_dict[L_case][j][-1].imag, 'o', color=color_list[j])
+            ax[i].plot(eigenvalues_dict[L_case][j][0].real,  eigenvalues_dict[L_case][j][0].imag,  'x', color=color_list[j], label=f"$\lambda_{m},_{n}$")
+            ax[i].plot(eigenvalues_dict[L_case][j][-1].real, eigenvalues_dict[L_case][j][-1].imag, 'x', color=color_list[j])
 
         ax[i].set_title(f"{title} {L_case}")
         ax[i].axvline(0, color='k', linestyle='-', linewidth=0.8)
@@ -60,6 +66,7 @@ def compute_eigenvalues(mu_list, convention="Barcelona"):
             z = 0
             Dxf = utils.linearization_matrix(x, y, z, mu, convention=convention)
             eigenvalues = np.linalg.eigvals(Dxf)
+
             # Store the eigenvalues for plotting
             for j in range(6):
                 eigenvalues_dict[L_case][j,i] = eigenvalues[j]
@@ -90,10 +97,18 @@ plot_equilibirium_eigenvalues(eigenvalues_dict, "1e-6 < µ < 0.5")
 equilibrium_points = utils.equilibrium_points(system_mu["Earth-Moon"], convention=convention)
 eigenvalues_dict   = compute_eigenvalues([system_mu["Earth-Moon"]])
 plot_equilibirium_eigenvalues(eigenvalues_dict, "Earth-Moon")
+print("Eigenvalues for Earth-Moon System")
+for L_case in eigenvalues_dict.keys():
+    print(L_case)
+    print(eigenvalues_dict[L_case])
 
 # Sun-Earth
 equilibrium_points = utils.equilibrium_points(system_mu["Sun-Earth"], convention=convention)
 eigenvalues_dict   = compute_eigenvalues([system_mu["Sun-Earth"]])
 plot_equilibirium_eigenvalues(eigenvalues_dict, "Sun-Earth")
+print("Eigenvalues for Sun-Earth System")
+for L_case in eigenvalues_dict.keys():
+    print(L_case)
+    print(eigenvalues_dict[L_case])
 
 plt.show()

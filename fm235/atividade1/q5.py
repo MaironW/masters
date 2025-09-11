@@ -42,5 +42,5 @@ mu_list = [1e-4, 1e-2, 1e-1]
 
 # Plot the Hill curves for each µ
 for mu in mu_list:
-    utils.plot_hill_curves(mu, convention="Barcelona")
+    utils.plot_system_hill_curves(mu, convention="Barcelona")
 plt.show()

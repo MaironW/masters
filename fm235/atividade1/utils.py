@@ -6,6 +6,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.integrate import solve_ivp
 
 # Generic function for Omega_x (Barcelona)
 def f_Barcelona(x, mu):
@@ -136,16 +137,8 @@ def hill_curve(x, y, mu, convention="Barcelona"):
 # C1 > C > C2
 # C2 > C > C3
 # C3 > C > C4
-def plot_hill_curves(mu, convention="Barcelona"):
-    grid_size = 1000
-
-    # Define the range of the space to search for a Hill region
-    x_range = np.linspace(-1.7, +1.7, grid_size)
-    y_range = np.linspace(-1.7, +1.7, grid_size)
-    X, Y    = np.meshgrid(x_range, y_range)
-
+def plot_system_hill_curves(mu, convention="Barcelona"):
     # Get equilibrium points and Jacobi constants for each µ
-
     eq_points = equilibrium_points(mu, convention=convention)
     C_jacobi  = jacobi_constants(eq_points, mu, convention=convention)
 
@@ -175,17 +168,30 @@ def plot_hill_curves(mu, convention="Barcelona"):
         ax[i].plot(eq_points["P2"][0],eq_points["P2"][1],'o', color='k', markersize=5)
         ax[i].text(eq_points["P2"][0],eq_points["P2"][1]-0.2,"P2", ha="center", va="center")
         ax[i].grid()
+        ax[i].set_aspect("equal")
 
         # Fill Hill regions
-        Z = hill_curve(X, Y, mu, convention=convention)
-        ax[i].contourf(X, Y, Z, levels=[Z.min(), C_value], colors=["lightgray"], alpha=0.8)
-        # Draw the zero-velocity curve (boundary)
-        ax[i].contour(X, Y, Z, levels=[C_value], colors="k")
-        ax[i].set_aspect("equal")
+        ax[i] = plot_hill_curves(ax[i], mu, C_value, convention=convention)
         i+=1
 
+# Given a matplotlib figure axis, a µ and a Jacobi constant, plot the Hill curves
+def plot_hill_curves(ax, mu, C_jacobi, convention="Barcelona"):
+    grid_size = 5000
+
+    # Define the range of the space to search for a Hill region
+    x_range = np.linspace(-1.7, +1.7, grid_size)
+    y_range = np.linspace(-1.7, +1.7, grid_size)
+    X, Y    = np.meshgrid(x_range, y_range)
+
+    # Fill Hill regions
+    Z = hill_curve(X, Y, mu, convention=convention)
+    ax.contourf(X, Y, Z, levels=[Z.min(), C_jacobi], colors=["lightgray"], alpha=0.8)
+    # Draw the zero-velocity curve (boundary)
+    ax.contour(X, Y, Z, levels=[C_jacobi], colors="k")
+    return ax
+
 # Build the equilibrium matrix Dxf
-def linearization_matrix(x, y, z, mu, convention="Barcelona", planar=False):
+def linearization_matrix(x, y, z, mu, convention="Barcelona"):
     Dxf = np.zeros([6,6])
 
     Dxf[0,3] =  1 # df1dx4
@@ -216,11 +222,6 @@ def linearization_matrix(x, y, z, mu, convention="Barcelona", planar=False):
     Dxf[3:6, 0:3] = np.array([[Uxx, Uxy, Uxz],
                               [Uxy, Uyy, Uyz],
                               [Uxz, Uyz, Uzz]])
-
-    if planar==True:
-        # Remove the Z values from the linearization matrix
-        Dxf = np.delete(Dxf, [2, 5], axis=0)
-        Dxf = np.delete(Dxf, [2, 5], axis=1)
     return Dxf
 
 # Given a list of eigenvalues and eigenvectors, return the unstable one
@@ -228,3 +229,40 @@ def get_unstable_eigenpair(values, vectors):
     reals   = np.real(values)
     pos_idx = np.argmax(reals)
     return values[pos_idx], vectors[:, pos_idx]
+
+# General state equations for the Restricted 3 Body Problem
+def state_equations(t, state, mu):
+    x, y, z, vx, vy, vz = state
+    A = x - mu
+    B = x - mu + 1
+    r1 = (A**2 + y**2 + z**2)**0.5
+    r2 = (B**2 + y**2 + z**2)**0.5
+    Ux = x - (1-mu) * A / r1**3 - mu * B / r2**3
+    Uy = y - (1-mu) * y / r1**3 - mu * y / r2**3
+    Uz = z - (1-mu) * z / r1**3 - mu * z / r2**3
+    ax = +2 * vy + Ux
+    ay = -2 * vx + Uy
+    az = Uz
+    return [vx, vy, vz, ax, ay, az]
+
+# Find alpha algorithm as described by Parker & Chua
+def find_alpha(x_eq, mu, M, eta_u, t_step=1e-2, Er = 1e-10, Ea=1e-10, alpha_min=1e-12, alpha_max=1.0):
+    alpha = 2*alpha_max
+    while 1:
+        # Halve alpha every iteration
+        alpha /= 2.0
+        # Lower limit alpha by alpha_min (last stop condition)
+        if alpha <= alpha_min:
+            return alpha_min
+        # Perturbed initial condition
+        x_alpha = x_eq + alpha*eta_u
+        # Nonlinear propagation
+        t_span = (0, M*t_step)
+        solution = solve_ivp(state_equations, t_span, x_alpha, args=(mu,), rtol=1e-12, atol=1e-12)
+        # Get most recent state
+        px = solution.y[:, -1]
+        # Linear prediction
+        pLx = x_eq + alpha*np.exp(M)*eta_u
+        # Check mismatch (stop condition)
+        if np.linalg.norm(px - pLx) < Er*np.linalg.norm(px) + Ea:
+            return alpha

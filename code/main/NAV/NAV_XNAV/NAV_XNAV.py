@@ -3,7 +3,9 @@
 # Inputs: Rate/range/pulse information from selected pulsar stars with respect to the spacecraft
 
 # Module output dictionary
-NAV_XNAV_out = {}
+NAV_XNAV_out = {
+    "dummy" : None
+}
 
 # Module main function
 def run(NAV_in):

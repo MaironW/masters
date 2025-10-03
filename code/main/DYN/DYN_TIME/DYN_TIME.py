@@ -1,6 +1,5 @@
 # Level 2 Module DYN_TIME
 # Simulates the propagation of time for the simulation
-# Inputs: Epoch reference
 
 from .DYN_TIME_par import DYN_TIME_par
 

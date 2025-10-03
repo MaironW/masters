@@ -9,10 +9,10 @@ from .NAV_UKF     import NAV_UKF
 
 # Module output dictionary
 NAV_out = {
-    "NAV_CELENAV" : None,
-    "NAV_XNAV"    : None,
-    "NAV_CMBR"    : None,
-    "NAV_UKF"     : None
+    "NAV_CELENAV" : NAV_CELENAV.NAV_CELENAV_out,
+    "NAV_XNAV"    : NAV_XNAV.NAV_XNAV_out,
+    "NAV_CMBR"    : NAV_CMBR.NAV_CMBR_out,
+    "NAV_UKF"     : NAV_UKF.NAV_UKF_out
 }
 
 # Module main function

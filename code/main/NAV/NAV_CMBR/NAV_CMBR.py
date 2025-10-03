@@ -3,7 +3,9 @@
 # Inputs: CMBR thermal readings with respect to the spacecraft
 
 # Module output dictionary
-NAV_CMBR_out = {}
+NAV_CMBR_out = {
+    "dummy" : None
+}
 
 # Module main function
 def run(NAV_in):

@@ -3,7 +3,9 @@
 # Inputs: Selected celestial bodies positions with respect to the spacecraft
 
 # Module output dictionary
-NAV_CELENAV_out = {}
+NAV_CELENAV_out = {
+    "dummy" : None
+}
 
 # Module main function
 def run(NAV_in):

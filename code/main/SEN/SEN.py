@@ -8,9 +8,9 @@ from .SEN_BOLOMETER import SEN_BOLOMETER
 
 # Module output dictionary
 SEN_out = {
-    "SEN_STR"       : None,
-    "SEN_PULSAR"    : None,
-    "SEN_BOLOMETER" : None,
+    "SEN_STR"       : SEN_STR.SEN_STR_out,
+    "SEN_PULSAR"    : SEN_PULSAR.SEN_PULSAR_out,
+    "SEN_BOLOMETER" : SEN_BOLOMETER.SEN_BOLOMETER_out,
 }
 
 # Module main function

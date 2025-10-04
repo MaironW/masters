@@ -29,10 +29,46 @@ def update_timeline(timeline, output, step):
     recurse(timeline, output, step)
 
 # Plot function
-def plot(x, y, xlabel=None, ylabel=None, title=None):
-    plt.plot(x, y)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.title(title)
-    plt.grid(True)
+def plot(x, y, z=None, style='', xlabel=None, ylabel=None, zlabel=None, label=None, title=None, fig=None, ax=None, subplot=None):
+    if fig is None:
+        fig = plt.figure()
+
+    # Create or select subplot/axes
+    if ax is None:
+        if subplot is not None:
+            nrows, ncols, index = subplot
+            if z is None:
+                ax = fig.add_subplot(nrows, ncols, index)
+            else:
+                ax = fig.add_subplot(nrows, ncols, index, projection='3d')
+        else:
+            if z is None:
+                ax = fig.gca() # get current axes (2D)
+            else:
+                ax = fig.add_subplot(111, projection='3d')
+
+    # Plot data
+    if z is None: # Plot 2D
+        ax.plot(x, y, style, label=label)
+        if xlabel: ax.set_xlabel(xlabel)
+        if ylabel: ax.set_ylabel(ylabel)
+    else: # Plot 3D
+        ax.plot(x, y, z, style, label=label)
+        if xlabel: ax.set_xlabel(xlabel)
+        if ylabel: ax.set_ylabel(ylabel)
+        if zlabel: ax.set_zlabel(zlabel)
+
+    # Add legends
+    handles, labels = ax.get_legend_handles_labels()
+    if labels:
+        ax.legend()
+
+    if title:
+        ax.set_title(title)
+    ax.grid(True)
+
+    return fig, ax
+
+# Show plots after they are generated
+def show_plot():
     plt.show()

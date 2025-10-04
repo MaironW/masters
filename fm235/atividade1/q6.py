@@ -87,7 +87,7 @@ system_mu = {
     "Earth-Moon" : utils.mu_from_masses(body_mass["Earth"], body_mass["Moon"]),
     "Sun-Earth"  : utils.mu_from_masses(body_mass["Sun"],   body_mass["Earth"]),
 }
-
+print(system_mu)
 # Variable µ list
 mu_list = np.linspace(1e-6, 0.5, 100)
 eigenvalues_dict = compute_eigenvalues(mu_list, convention=convention)

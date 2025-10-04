@@ -1,20 +1,23 @@
 # Compare a Kalman Filter and a Particle Filter for the same dynamic model
 # Mairon de Souza Wolniewicz
 # first version: 15/03/2025
-
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 from numpy.random import randn
 
+import time
+
 # Filter implementation functions
-from kalman_filter   import kalman_filter
-from particle_filter import particle_filter
+from kalman_filter          import kalman_filter
+from extended_kalman_filter import extended_kalman_filter
+from particle_filter        import particle_filter
 
 # Plot colors
 c1 = (0.0,0.4,1.0)
 c2 = (0.8,0.0,0.0)
 c3 = (0.2,0.8,0.0)
+c4 = 'm'
 
 ################################
 # SET SIMULATION + FILTER TIME #
@@ -141,13 +144,20 @@ Z = np.array([dx_gps,vx_gps, dy_gps, vy_gps]).T
 
 # Control input vector
 u = np.array([ax,ay]).T
+print(u)
 
 ###############
 # RUN FILTERS #
 ###############
 
+start_time = time.time()
 KF_est = kalman_filter(A,B,H,Z,u,R,Q)
-PF_est, PF_est_list, PF_weight_list = particle_filter(A,B,Z,u,R,Q,n_particles=300)
+print((time.time() - start_time)*1e3)
+
+EKF_est = extended_kalman_filter(A,B,H,Z,u,R,Q)
+start_time = time.time()
+PF_est, PF_est_list, PF_weight_list = particle_filter(A,B,Z,u,R,Q,n_particles=1000)
+print(time.time() - start_time)
 
 ##################
 # COMPUTE ERRORS #
@@ -160,6 +170,14 @@ KF_pos_err = (dx_est_err**2 + dy_est_err**2)**0.5
 vx_est_err = abs(KF_est[:,1]-vx)
 vy_est_err = abs(KF_est[:,3]-vy)
 KF_vel_err = (vx_est_err**2 + vy_est_err**2)**0.5
+
+# Extended Kalman Filter Errors
+dx_est_err = abs(EKF_est[:,0]-dx)
+dy_est_err = abs(EKF_est[:,2]-dy)
+EKF_pos_err = (dx_est_err**2 + dy_est_err**2)**0.5
+vx_est_err = abs(EKF_est[:,1]-vx)
+vy_est_err = abs(EKF_est[:,3]-vy)
+EKF_vel_err = (vx_est_err**2 + vy_est_err**2)**0.5
 
 # Particle Filter Errors
 dx_est_err = abs(PF_est[:,0]-dx)
@@ -177,19 +195,21 @@ PF_vel_err = (vx_est_err**2 + vy_est_err**2)**0.5
 plt.figure("X-axis")
 ax1 = plt.subplot(3,1,1)
 ax1.grid()
-ax1.plot(t,          dx, label='true state',  color='k')
-ax1.plot(t,      dx_gps, label='measurement', color=c1)
-ax1.plot(t, KF_est[:,0], '--', label='KF',    color=c2)
-ax1.plot(t, PF_est[:,0], '--', label='PF',    color=c3)
+ax1.plot(t,          dx,  label='true state',  color='k')
+ax1.plot(t,      dx_gps,  label='measurement', color=c1)
+ax1.plot(t, KF_est[:,0],  '--', label='KF',    color=c2)
+ax1.plot(t, EKF_est[:,0], '--', label='EKF',   color=c3)
+ax1.plot(t, PF_est[:,0],  '--', label='PF',    color=c4)
 ax1.set_ylabel("Pos (m)")
 ax1.legend()
 
 ax2 = plt.subplot(3,1,2, sharex=ax1)
 ax2.grid()
-ax2.plot(t,          vx, label='true state',  color='k')
-ax2.plot(t,      vx_gps, label='measurement', color=c1)
-ax2.plot(t, KF_est[:,1], '--', label='KF',    color=c2)
-ax2.plot(t, PF_est[:,1], '--', label='PF',    color=c3)
+ax2.plot(t,          vx,  label='true state',  color='k')
+ax2.plot(t,      vx_gps,  label='measurement', color=c1)
+ax2.plot(t, KF_est[:,1],  '--', label='KF',    color=c2)
+ax2.plot(t, EKF_est[:,1], '--', label='EKF',   color=c3)
+ax2.plot(t, PF_est[:,1],  '--', label='PF',    color=c4)
 ax2.set_ylabel("Vel (m/s)")
 ax2.legend()
 
@@ -204,18 +224,20 @@ ax3.legend()
 plt.figure("Y-axis")
 ax1 = plt.subplot(3,1,1)
 ax1.grid()
-ax1.plot(t,          dy, label='true state',  color='k')
-ax1.plot(t,      dy_gps, label='measurement', color=c1)
-ax1.plot(t, KF_est[:,2], '--', label='KF',    color=c2)
-ax1.plot(t, PF_est[:,2], '--', label='PF',    color=c3)
+ax1.plot(t,          dy,  label='true state',  color='k')
+ax1.plot(t,      dy_gps,  label='measurement', color=c1)
+ax1.plot(t, KF_est[:,2],  '--', label='KF',    color=c2)
+ax1.plot(t, EKF_est[:,2], '--', label='EKF',   color=c3)
+ax1.plot(t, PF_est[:,2],  '--', label='PF',    color=c4)
 ax1.set_ylabel("Pos (m)")
 ax1.legend()
 
 ax2 = plt.subplot(3,1,2, sharex=ax1)
-ax2.plot(t,          vy, label='true state',  color='k')
-ax2.plot(t,      vy_gps, label='measurement', color=c1)
-ax2.plot(t, KF_est[:,3], '--', label='KF',    color=c2)
-ax2.plot(t, PF_est[:,3], '--', label='PF',    color=c3)
+ax2.plot(t,          vy,  label='true state',  color='k')
+ax2.plot(t,      vy_gps,  label='measurement', color=c1)
+ax2.plot(t, KF_est[:,3],  '--', label='KF',    color=c2)
+ax2.plot(t, EKF_est[:,3], '--', label='EKF',   color=c3)
+ax2.plot(t, PF_est[:,3],  '--', label='PF',    color=c4)
 ax2.grid()
 ax2.set_ylabel("Vel (m/s)")
 ax2.legend()
@@ -231,15 +253,17 @@ ax3.legend()
 plt.figure("Estimation Error")
 ax1 = plt.subplot(2,1,1)
 ax1.grid()
-ax1.plot(t,KF_pos_err, label='KF', color=c2)
-ax1.plot(t,PF_pos_err, label='PF', color=c3)
+ax1.plot(t,KF_pos_err,  label='KF',  color=c2)
+ax1.plot(t,EKF_pos_err, label='EKF', color=c3)
+ax1.plot(t,PF_pos_err,  label='PF',  color=c4)
 ax1.set_ylabel("Pos (m)")
 ax1.legend()
 
 ax2 = plt.subplot(2,1,2)
 ax2.grid()
-ax2.plot(t,KF_vel_err, label='KF', color=c2)
-ax2.plot(t,PF_vel_err, label='PF', color=c3)
+ax2.plot(t,KF_vel_err,  label='KF',  color=c2)
+ax2.plot(t,EKF_vel_err, label='EKF', color=c3)
+ax2.plot(t,PF_vel_err,  label='PF',  color=c4)
 ax2.set_ylabel("Vel (m/s)")
 ax2.set_xlabel("Time (s)")
 ax2.legend()
@@ -253,9 +277,13 @@ plt.plot(KF_est[:,0],  KF_est[:,2],  '-', color=c2, label='KF')
 plt.plot(KF_est[0,0],  KF_est[0,2],  'x', color=c2)
 plt.plot(KF_est[-1,0], KF_est[-1,2], 'x', color=c2)
 
-plt.plot(PF_est[:,0],  PF_est[:,2],  '-', color=c3, label='PF')
-plt.plot(PF_est[0,0],  PF_est[0,2],  'x', color=c3)
-plt.plot(PF_est[-1,0], PF_est[-1,2], 'x', color=c3)
+plt.plot(EKF_est[:,0],  EKF_est[:,2],  '-', color=c3, label='EKF')
+plt.plot(EKF_est[0,0],  EKF_est[0,2],  'x', color=c3)
+plt.plot(EKF_est[-1,0], EKF_est[-1,2], 'x', color=c3)
+
+plt.plot(PF_est[:,0],  PF_est[:,2],  '-', color=c4, label='PF')
+plt.plot(PF_est[0,0],  PF_est[0,2],  'x', color=c4)
+plt.plot(PF_est[-1,0], PF_est[-1,2], 'x', color=c4)
 plt.plot(dx,dy,color='k',label='true state')
 plt.plot(dx[-1],dy[-1],'+k')
 

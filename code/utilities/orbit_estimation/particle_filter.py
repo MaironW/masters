@@ -52,7 +52,11 @@ def particle_filter(F, B, Z, u, R, Q, dt, n_particles):
     # Set initial state and weight values for each particle
     state_init  = np.zeros((n_states,n_particles))
     for i in range(n_states):
-        state_range = [Z[0, i]-R[i,i], Z[0, i]+R[i,i]]
+        state_range = [-R[i,i], +R[i,i]] + Z[0, i]
+        # if i % 2 == 0:
+        #    state_range = [-R[i,i], +R[i,i]] + Z[0, i] + 1
+        # else:
+        #     state_range = [-R[i,i], +R[i,i]] + Z[0, i] + 10e-3
         state_init[i,:] = np.random.uniform(state_range[0], state_range[1], size=n_particles)
 
     states  = state_init
@@ -81,7 +85,10 @@ def particle_filter(F, B, Z, u, R, Q, dt, n_particles):
                 # Measurement distribuition
                 measurement_distribuition = multivariate_normal(mean=new_states[:, j], cov=R)
                 new_weights[:, j] = measurement_distribuition.pdf(Z[i])*weights[:, j]
+                
+            new_weights += 1e-300 # avoid zero
             new_weights_std = new_weights/(new_weights.sum())
+
             # STEP 3: Resample
             tmp = [val**2 for val in new_weights_std]
             Neff = 1/np.array(tmp).sum()

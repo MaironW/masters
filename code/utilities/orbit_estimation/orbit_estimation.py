@@ -1,5 +1,4 @@
 import numpy as np
-from numpy import pi
 import matplotlib.pyplot as plt
 from scipy.stats import multivariate_normal
 from kalman_filter import kalman_filter
@@ -33,7 +32,7 @@ rv = per_rv
 ###################
 
 dt     = 1 # [s] data time step
-mes_dt = 60 # [s] measurment time step
+mes_dt = 1 # [s] measurment time step
 n_iters, n_states = rv.shape # [samples]
 time_span = np.arange(0, n_iters*dt, dt)
 
@@ -149,8 +148,8 @@ H = np.eye(n_states)
 
 # Measurement vector
 # Rearange measurements so the state is actually [rx, vx, ry, vy, rz, vz]
-# Z = np.vstack((r[:,0],v[:,0],r[:,1],v[:,1],r[:,2],v[:,2])).T
-Z = np.vstack((rx_mes,vx_mes,ry_mes,vy_mes,rz_mes,vz_mes)).T
+Z = np.vstack((r[:,0],v[:,0],r[:,1],v[:,1],r[:,2],v[:,2])).T
+# Z = np.vstack((rx_mes,vx_mes,ry_mes,vy_mes,rz_mes,vz_mes)).T
 
 # Control input vector (unused)
 u = np.zeros((3,n_iters)).T
@@ -159,11 +158,11 @@ u = np.zeros((3,n_iters)).T
 # RUN FILTERS #
 ###############
 
-KF_est = kalman_filter(kf_A,B,H,Z,u,R,Q)
-PF_est, PF_est_list, PF_weight_list = particle_filter(F,B,Z,u,R,Q,dt,n_particles=500)
+KF_est, KF_P, KF_y = kalman_filter(kf_A,B,H,Z,u,R,Q)
+# PF_est, PF_est_list, PF_weight_list = particle_filter(F,B,Z,u,R,Q,dt,n_particles=100)
 
 KF_rv = np.vstack((KF_est[:,0], KF_est[:,2], KF_est[:,4], KF_est[:,1], KF_est[:,3], KF_est[:,5])).T
-PF_rv = np.vstack((PF_est[:,0], PF_est[:,2], PF_est[:,4], PF_est[:,1], PF_est[:,3], PF_est[:,5])).T
+# PF_rv = np.vstack((PF_est[:,0], PF_est[:,2], PF_est[:,4], PF_est[:,1], PF_est[:,3], PF_est[:,5])).T
 
 ################
 # GET RESIDUES #
@@ -192,23 +191,23 @@ vz_est_err = abs(KF_rv[:,5]-kep_v[:,2])
 KF_kep_vel_err = (vx_est_err**2 + vy_est_err**2 + vz_est_err**2)**0.5
 
 # Particle Filter Errors
-dx_est_err = abs(PF_rv[:,0]-r[:,0])
-dy_est_err = abs(PF_rv[:,1]-r[:,1])
-dz_est_err = abs(PF_rv[:,2]-r[:,2])
-PF_pos_err = (dx_est_err**2 + dy_est_err**2 + dz_est_err**2)**0.5
-vx_est_err = abs(PF_rv[:,3]-v[:,0])
-vy_est_err = abs(PF_rv[:,4]-v[:,1])
-vz_est_err = abs(PF_rv[:,5]-v[:,2])
-PF_vel_err = (vx_est_err**2 + vy_est_err**2 + vz_est_err**2)**0.5
+# dx_est_err = abs(PF_rv[:,0]-r[:,0])
+# dy_est_err = abs(PF_rv[:,1]-r[:,1])
+# dz_est_err = abs(PF_rv[:,2]-r[:,2])
+# PF_pos_err = (dx_est_err**2 + dy_est_err**2 + dz_est_err**2)**0.5
+# vx_est_err = abs(PF_rv[:,3]-v[:,0])
+# vy_est_err = abs(PF_rv[:,4]-v[:,1])
+# vz_est_err = abs(PF_rv[:,5]-v[:,2])
+# PF_vel_err = (vx_est_err**2 + vy_est_err**2 + vz_est_err**2)**0.5
 
-dx_est_err = abs(PF_rv[:,0]-kep_r[:,0])
-dy_est_err = abs(PF_rv[:,1]-kep_r[:,1])
-dz_est_err = abs(PF_rv[:,2]-kep_r[:,2])
-PF_kep_pos_err = (dx_est_err**2 + dy_est_err**2 + dz_est_err**2)**0.5
-vx_est_err = abs(PF_rv[:,3]-kep_v[:,0])
-vy_est_err = abs(PF_rv[:,4]-kep_v[:,1])
-vz_est_err = abs(PF_rv[:,5]-kep_v[:,2])
-PF_kep_vel_err = (vx_est_err**2 + vy_est_err**2 + vz_est_err**2)**0.5
+# dx_est_err = abs(PF_rv[:,0]-kep_r[:,0])
+# dy_est_err = abs(PF_rv[:,1]-kep_r[:,1])
+# dz_est_err = abs(PF_rv[:,2]-kep_r[:,2])
+# PF_kep_pos_err = (dx_est_err**2 + dy_est_err**2 + dz_est_err**2)**0.5
+# vx_est_err = abs(PF_rv[:,3]-kep_v[:,0])
+# vy_est_err = abs(PF_rv[:,4]-kep_v[:,1])
+# vz_est_err = abs(PF_rv[:,5]-kep_v[:,2])
+# PF_kep_vel_err = (vx_est_err**2 + vy_est_err**2 + vz_est_err**2)**0.5
 
 ##########################
 # COMPUTE ORBIT ELEMENTS #
@@ -219,18 +218,18 @@ per_r = per_rv[:,0:3] << units.km
 per_v = per_rv[:,3:6] << units.km/units.s
 KF_r = KF_rv[:,0:3] << units.km
 KF_v = KF_rv[:,3:6] << units.km/units.s
-PF_r = PF_rv[:,0:3] << units.km
-PF_v = PF_rv[:,3:6] << units.km/units.s
+# PF_r = PF_rv[:,0:3] << units.km
+# PF_v = PF_rv[:,3:6] << units.km/units.s
 
 kep_elem = np.zeros((n_iters,6))
 per_elem = np.zeros((n_iters,6))
 KF_elem = np.zeros((n_iters,6))
-PF_elem = np.zeros((n_iters,6))
+# PF_elem = np.zeros((n_iters,6))
 
 kep_a, kep_ecc, kep_inc, kep_argp, kep_raan, kep_nu = elementsfromstate(kep_rv[:,0:3],kep_rv[:,3:6],mu)
 per_a, per_ecc, per_inc, per_argp, per_raan, per_nu = elementsfromstate(per_rv[:,0:3],per_rv[:,3:6],mu)
 KF_a, KF_ecc, KF_inc, KF_argp, KF_raan, KF_nu = elementsfromstate(KF_rv[:,0:3],KF_rv[:,3:6],mu)
-PF_a, PF_ecc, PF_inc, PF_argp, PF_raan, PF_nu = elementsfromstate(PF_rv[:,0:3],PF_rv[:,3:6],mu)
+# PF_a, PF_ecc, PF_inc, PF_argp, PF_raan, PF_nu = elementsfromstate(PF_rv[:,0:3],PF_rv[:,3:6],mu)
 
 kep_elem[:,0] = (kep_a << units.km).value
 kep_elem[:,1] = kep_ecc
@@ -259,14 +258,14 @@ KF_elem[:,5] = (KF_nu << units.rad).to(units.deg).value
 KF_elem[:,4] = ((KF_elem[:,4]+180)%360)-180
 KF_elem[:,5] = ((KF_elem[:,5]+180)%360)-180
 
-PF_elem[:,0] = (PF_a << units.km).value
-PF_elem[:,1] = PF_ecc
-PF_elem[:,2] = (PF_inc << units.rad).to(units.deg).value
-PF_elem[:,3] = (PF_raan << units.rad).to(units.deg).value
-PF_elem[:,4] = (PF_argp << units.rad).to(units.deg).value
-PF_elem[:,5] = (PF_nu << units.rad).to(units.deg).value
-PF_elem[:,4] = ((PF_elem[:,4]+180)%360)-180
-PF_elem[:,5] = ((PF_elem[:,5]+180)%360)-180
+# PF_elem[:,0] = (PF_a << units.km).value
+# PF_elem[:,1] = PF_ecc
+# PF_elem[:,2] = (PF_inc << units.rad).to(units.deg).value
+# PF_elem[:,3] = (PF_raan << units.rad).to(units.deg).value
+# PF_elem[:,4] = (PF_argp << units.rad).to(units.deg).value
+# PF_elem[:,5] = (PF_nu << units.rad).to(units.deg).value
+# PF_elem[:,4] = ((PF_elem[:,4]+180)%360)-180
+# PF_elem[:,5] = ((PF_elem[:,5]+180)%360)-180
 
 ################
 # PLOT RESULTS #
@@ -282,7 +281,7 @@ for i in range(3):
     axs[i].plot(time_span/3600, kep_rv[:,i], color=c1, label = 'Keplerian')
     axs[i].plot(time_span/3600, per_rv[:,i], color=c2, label = 'Perturbed')
     axs[i].plot(time_span/3600, KF_rv[:,i], color=c3, label = 'Kalman Filter')
-    axs[i].plot(time_span/3600, PF_rv[:,i], color=c4, label = 'Particle Filter')
+    # axs[i].plot(time_span/3600, PF_rv[:,i], color=c4, label = 'Particle Filter')
     axs[i].legend()
     axs[i].set_ylabel(label_list[i])
 axs[2].set_xlabel("Time (h)")
@@ -292,44 +291,44 @@ plt.figure("Estimation Error")
 ax1 = plt.subplot(2,1,1)
 ax1.grid()
 ax1.plot(time_span/3600, KF_pos_err,  label='KF',  color=c3)
-ax1.plot(time_span/3600, KF_kep_pos_err, '--',  label='KF Kep',  color=c3)
-ax1.plot(time_span/3600, PF_pos_err,  label='PF',  color=c4)
-ax1.plot(time_span/3600, PF_kep_pos_err, '--',  label='PF Kep',  color=c4)
+# ax1.plot(time_span/3600, KF_kep_pos_err, '--',  label='KF Kep',  color=c3)
+# ax1.plot(time_span/3600, PF_pos_err,  label='PF',  color=c4)
+# ax1.plot(time_span/3600, PF_kep_pos_err, '--',  label='PF Kep',  color=c4)
 ax1.set_ylabel("Pos (km)")
 ax1.legend()
 
 ax2 = plt.subplot(2,1,2)
 ax2.grid()
 ax2.plot(time_span/3600, KF_vel_err,  label='KF',  color=c3)
-ax2.plot(time_span/3600, KF_kep_vel_err, '--',  label='KF Kep',  color=c3)
-ax2.plot(time_span/3600, PF_vel_err,  label='PF',  color=c4)
-ax2.plot(time_span/3600, PF_kep_vel_err, '--',  label='PF Kep',  color=c4)
+# ax2.plot(time_span/3600, KF_kep_vel_err, '--',  label='KF Kep',  color=c3)
+# ax2.plot(time_span/3600, PF_vel_err,  label='PF',  color=c4)
+# ax2.plot(time_span/3600, PF_kep_vel_err, '--',  label='PF Kep',  color=c4)
 ax2.set_ylabel("Vel (km/s)")
 ax2.set_xlabel("Time (h)")
 ax2.legend()
 
-# Orbital Elements
-axs = [0]*6
-label_list = ["sma (km)","ecc","inc (deg)","raan (deg)","argp (deg)","tano (deg)"]
-plt.figure("Orbital Elements")
-for i in range(6):
-    axs[i] = plt.subplot(6,1,i+1)
-    axs[i].grid()
-    axs[i].plot(time_span/3600, kep_elem[:,i], label = 'Keplerian', color=c1)
-    axs[i].plot(time_span/3600, per_elem[:,i], label = 'Perturbed',color=c2)
-    axs[i].plot(time_span/3600, KF_elem[:,i],  label = 'Kalman Filter',color=c3)
-    axs[i].plot(time_span/3600, PF_elem[:,i],  label = 'Particle Filter',color=c4)
-    axs[i].legend()
-    axs[i].set_ylabel(label_list[i])
-axs[5].set_xlabel("Time (h)")
+# # Orbital Elements
+# axs = [0]*6
+# label_list = ["sma (km)","ecc","inc (deg)","raan (deg)","argp (deg)","tano (deg)"]
+# plt.figure("Orbital Elements")
+# for i in range(6):
+#     axs[i] = plt.subplot(6,1,i+1)
+#     axs[i].grid()
+#     axs[i].plot(time_span/3600, kep_elem[:,i], label = 'Keplerian', color=c1)
+#     axs[i].plot(time_span/3600, per_elem[:,i], label = 'Perturbed',color=c2)
+#     axs[i].plot(time_span/3600, KF_elem[:,i],  label = 'Kalman Filter',color=c3)
+#     # axs[i].plot(time_span/3600, PF_elem[:,i],  label = 'Particle Filter',color=c4)
+#     axs[i].legend()
+#     axs[i].set_ylabel(label_list[i])
+# axs[5].set_xlabel("Time (h)")
 
 # 3D plot
 fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
-ax.plot(kep_rv[:, 0], kep_rv[:, 1], kep_rv[:, 2], color=c1, label='Keplerian')
+# ax.plot(kep_rv[:, 0], kep_rv[:, 1], kep_rv[:, 2], color=c1, label='Keplerian')
 ax.plot(per_rv[:, 0], per_rv[:, 1], per_rv[:, 2], color=c2, label='Perturbed')
 ax.plot(KF_rv[:, 0], KF_rv[:, 1], KF_rv[:, 2], color=c3, label='Kalman Filter')
-ax.plot(PF_rv[:, 0], PF_rv[:, 1], PF_rv[:, 2], color=c4, label='Particle Filter')
+# ax.plot(PF_rv[:, 0], PF_rv[:, 1], PF_rv[:, 2], color=c4, label='Particle Filter')
 ax.set_xlabel('X (km)')
 ax.set_ylabel('Y (km)')
 ax.set_zlabel('Z (km)')

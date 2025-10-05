@@ -9,6 +9,6 @@ DYN_ATT_out = {
 }
 
 # Module main function
-def run():
-    DYN_ATT_out["SSBq_BOF"] = DYN_ATT_par["SSBq_BOF_ini"]
+def run(inputs):
+    DYN_ATT_out["SSBq_BOF"] = inputs["SSBq_BOF"]
     return dict(DYN_ATT_out)

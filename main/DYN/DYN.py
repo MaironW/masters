@@ -20,12 +20,12 @@ DYN_out = {
 }
 
 # Module main function
-def run():
+def run(inputs):
     DYN_TIME_out  = DYN_TIME.run()
     DYN_SUN_out   = DYN_SUN.run(DYN_TIME_out)
     DYN_EARTH_out = DYN_EARTH.run(DYN_TIME_out)
     DYN_MARS_out  = DYN_MARS.run(DYN_TIME_out)
-    DYN_ATT_out   = DYN_ATT.run()
+    DYN_ATT_out   = DYN_ATT.run(inputs["DYN_ATT"])
     DYN_TRA_out   = DYN_TRA.run()
 
     # Attribute outputs to DYN output

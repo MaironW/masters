@@ -23,11 +23,14 @@ timeline = PPC.init_timeline({"DYN" : DYN.DYN_out, "SEN" : SEN.SEN_out, "NAV" : 
 # Initialize inputs table
 events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt)
 
+# Initialize outputs
+DYN_out = DYN.DYN_out
+
 # Main loop
 for step in range(n_steps):
     inputs = events_table[sim_time]
 
-    DYN_out = DYN.run(inputs["DYN"])
+    DYN_out = DYN.run(inputs["DYN"], DYN_out)
     SEN_out = SEN.run(DYN_out)
     NAV_out = NAV.run(SEN_out)
 

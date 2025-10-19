@@ -8,14 +8,17 @@ from .DYN_SUN_par import DYN_SUN_par
 # Module output dictionary
 DYN_SUN_out = {
     "SUNpos_SSB" : DYN_SUN_par["SUNpos_SSB_ini"],
-    "SUNvel_SSB" : DYN_SUN_par["SUNvel_SSB_ini"]
+    "SUNvel_SSB" : DYN_SUN_par["SUNvel_SSB_ini"],
+    "SSBq_SUN"   : DYN_SUN_par["SSBq_SUN_ini"]
 }
 
 # Module main function
 def run(DYN_TIME_out):
     SUNpos_SSB, SUNvel_SSB = spice.get_state("SUN", DYN_TIME_out["time_UTC"])
+    SSBq_SUN = spice.get_orientation("IAU_SUN", "J2000", DYN_TIME_out["time_UTC"])
 
     DYN_SUN_out["SUNpos_SSB"] = SUNpos_SSB
     DYN_SUN_out["SUNvel_SSB"] = SUNvel_SSB
+    DYN_SUN_out["SSBq_SUN"]   = SSBq_SUN
 
     return dict(DYN_SUN_out)

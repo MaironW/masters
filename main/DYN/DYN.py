@@ -26,13 +26,17 @@ def run(inputs, DYN_out_old):
     # Get last step outputs
     DYN_TRA_out_old = DYN_out_old["DYN_TRA"]
 
+    # Run Level-2 modules
     DYN_TIME_out  = DYN_TIME.run()
     DYN_SUN_out   = DYN_SUN.run(DYN_TIME_out)
     DYN_EARTH_out = DYN_EARTH.run(DYN_TIME_out)
     DYN_MARS_out  = DYN_MARS.run(DYN_TIME_out)
     DYN_ATT_out   = DYN_ATT.run(inputs["DYN_ATT"])
-    DYN_GRV_out   = DYN_GRV.run(DYN_TRA_out_old)
-    DYN_TRA_out   = DYN_TRA.run(DYN_SUN_out, DYN_EARTH_out, DYN_MARS_out, DYN_ATT_out, DYN_GRV_out)
+
+    # Integrate coupled dynamics
+    DYN_TRA_out   = DYN_TRA.run(DYN_TRA_out_old, DYN_TIME_out, DYN_EARTH_out)
+    # After integration, recompute gravity for outputs
+    DYN_GRV_out   = DYN_GRV.run(DYN_EARTH_out, DYN_TRA_out)
 
     # Attribute outputs to DYN output
     DYN_out["DYN_TIME"]  = DYN_TIME_out

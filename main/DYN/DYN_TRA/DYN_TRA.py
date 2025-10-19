@@ -1,63 +1,93 @@
 # Level 2 Module DYN_TRA
 # Simulates the propagation of the spacecraft orbital states for the simulation
 
+from DYN.DYN_GRV import DYN_GRV
 from .DYN_TRA_par import DYN_TRA_par
 from Utils.constants import CONSTANTS_par
+from Utils import quaternions
 
 # Module output dictionary
 DYN_TRA_out = {
     "SCpos_TER" : DYN_TRA_par["SCpos_TER_ini"],
+    "SCpos_ECI" : DYN_TRA_par["SCpos_ECI_ini"],
     "SCpos_MAR" : DYN_TRA_par["SCpos_MAR_ini"],
     "SCpos_SUN" : DYN_TRA_par["SCpos_SUN_ini"],
     "SCpos_SSB" : DYN_TRA_par["SCpos_SSB_ini"],
+    "SCvel_ECI" : DYN_TRA_par["SCvel_ECI_ini"],
     "SCvel_SSB" : DYN_TRA_par["SCvel_SSB_ini"]
 }
 
 # Module main function
-def run(DYN_TIME_out, DYN_SUN_out, DYN_EARTH_out, DYN_MARS_out, DYN_ATT_out, DYN_GRV_out):
-    # Get gravity expressed in each body inertial frame
-    grvacc_ECI = DYN_GRV_out["grvacc_ECI"] # [km/s^2]
-    grvacc_MCI = DYN_GRV_out["grvacc_MCI"] # [km/s^2]
-    grvacc_SSB = DYN_GRV_out["grvacc_SSB"] # [km/s^2]
-
-    # Compute the acceleration applied on the spacecraft (gravity + environmental forces(TBD))
-    SCacc_ECI = grvacc_ECI # [km/s^2]
-    SCacc_MCI = grvacc_MCI # [km/s^2]
-    SCacc_SSB = grvacc_SSB # [km/s^2]
-
-    # Integrate to get position and velocity
+def run(state_prev, DYN_TIME_out, DYN_EARTH_out):
     dt = DYN_TIME_out["dt"]
-    SCpos_ECI, SCvel_ECI = rk4_step(dt, SCpos_ECI, SCvel_ECI, SCacc_ECI)
 
-    DYN_TRA_out["SCpos_TER"] = DYN_TRA_par["SCpos_TER_ini"]
-    DYN_TRA_out["SCpos_MAR"] = DYN_TRA_par["SCpos_MAR_ini"]
-    DYN_TRA_out["SCpos_SUN"] = DYN_TRA_par["SCpos_SUN_ini"]
-    DYN_TRA_out["SCpos_SSB"] = DYN_TRA_par["SCpos_SSB_ini"]
-    DYN_TRA_out["SCvel_SSB"] = DYN_TRA_par["SCvel_SSB_ini"]
+    # Integrate coupled equations
+    state_next = rk4_step(state_prev, dt, derivatives, DYN_EARTH_out)
+
+    TERq_ECI = DYN_EARTH_out["TERq_ECI"]
+    SCpos_ECI = state_next["SCpos_ECI"]
+    SCvel_ECI = state_next["SCvel_ECI"]
+    SCpos_TER = quaternions.qvecrot(SCpos_ECI, TERq_ECI)
+
+    DYN_TRA_out["SCpos_TER"] = SCpos_TER
+    DYN_TRA_out["SCpos_ECI"] = SCpos_ECI
+    DYN_TRA_out["SCvel_ECI"] = SCvel_ECI
+
     return dict(DYN_TRA_out)
+
+# Module computation of derivatives to be integrated
+def derivatives(state, DYN_EARTH_out):
+    SCpos_ECI = state["SCpos_ECI"]
+    SCvel_ECI = state["SCvel_ECI"]
+
+    TERq_ECI = DYN_EARTH_out["TERq_ECI"]
+    SCpos_TER = quaternions.qvecrot(SCpos_ECI, TERq_ECI)
+
+    # Build a minimal DYN_TRA_out to feed into DYN_GRV
+    DYN_TRA_out_tmp = {
+        "SCpos_TER" : SCpos_TER,
+    }
+
+    # Compute gravitational acceleration
+    DYN_GRV_out = DYN_GRV.run(DYN_EARTH_out, DYN_TRA_out_tmp)
+    grvacc_ECI = DYN_GRV_out["grvacc_ECI"]
+
+    # Return derivatives
+    dSCpos_ECI = SCvel_ECI
+    dSCvel_ECI = grvacc_ECI
+
+    return {
+        "dSCpos_ECI" : dSCpos_ECI,
+        "dSCvel_ECI" : dSCvel_ECI
+    }
 
 # Runge-Kutta 4 integrator.
 # TODO: Set this as a generic function in utils to be used on other modules
-def rk4_step(dt, pos, vel, acc_func):
-    k1_pos = vel
-    k1_vel = acc_func(pos, vel)
+def rk4_step(state, dt, derivatives, *args):
+    k1 = derivatives(state, *args)
 
-    pos2 = pos + 0.5*dt*k1_pos
-    vel2 = vel + 0.5*dt*k1_vel
-    k2_pos = vel2
-    k2_vel = acc_func(pos2, vel2)
+    state_k2 = {
+        "SCpos_ECI" : state["SCpos_ECI"] + 0.5*dt*k1["dSCpos_ECI"],
+        "SCvel_ECI" : state["SCvel_ECI"] + 0.5*dt*k1["dSCvel_ECI"]
+    }
+    k2 = derivatives(state_k2, *args)
 
-    pos3 = pos + 0.5*dt*k2_pos
-    vel3 = vel + 0.5*dt*k2_vel
-    k3_pos = vel3
-    k3_vel = acc_func(pos3, vel3)
+    state_k3 = {
+        "SCpos_ECI" : state["SCpos_ECI"] + 0.5*dt*k2["dSCpos_ECI"],
+        "SCvel_ECI" : state["SCvel_ECI"] + 0.5*dt*k2["dSCvel_ECI"]
+    }
+    k3 = derivatives(state_k3, *args)
 
-    pos4 = pos + 0.5*dt*k3_pos
-    vel4 = vel + 0.5*dt*k3_vel
-    k4_pos = vel4
-    k4_vel = acc_func(pos4, vel4)
+    state_k4 = {
+        "SCpos_ECI" : state["SCpos_ECI"] + dt*k3["dSCpos_ECI"],
+        "SCvel_ECI" : state["SCvel_ECI"] + dt*k3["dSCvel_ECI"]
+    }
+    k4 = derivatives(state_k4, *args)
 
-    pos_next = pos + dt*(k1_pos + 2*k2_pos + 2*k3_pos * k4_pos)/6.0
-    vel_next = vel + dt*(k1_vel + 2*k2_vel + 2*k3_vel * k4_vel)/6.0
+    SCpos_ECI = state["SCpos_ECI"] + dt/6.0 * (k1["dSCpos_ECI"] + 2*k2["dSCpos_ECI"] + 2*k3["dSCpos_ECI"] + k4["dSCpos_ECI"])
+    SCvel_ECI = state["SCvel_ECI"] + dt/6.0 * (k1["dSCvel_ECI"] + 2*k2["dSCvel_ECI"] + 2*k3["dSCvel_ECI"] + k4["dSCvel_ECI"])
 
-    return pos_next, vel_next
+    return {
+        "SCpos_ECI" : SCpos_ECI,
+        "SCvel_ECI" : SCvel_ECI,
+    }

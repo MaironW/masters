@@ -13,6 +13,7 @@ DYN_MARS_out = {
     "DEIMOSvel_SSB": DYN_MARS_par["DEIMOSvel_SSB_ini"],
     "PHOBOSpos_SSB": DYN_MARS_par["PHOBOSpos_SSB_ini"],
     "PHOBOSvel_SSB": DYN_MARS_par["PHOBOSvel_SSB_ini"],
+    "MCIq_MAR"     : DYN_MARS_par["MCIq_MAR_ini"]
 }
 
 # Module main function
@@ -20,10 +21,12 @@ def run(DYN_TIME_out):
     MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   DYN_TIME_out["time_UTC"])
     DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", DYN_TIME_out["time_UTC"])
     PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", DYN_TIME_out["time_UTC"])
+    MCIq_MAR = spice.get_orientation("IAU_MARS", "J2000", DYN_TIME_out["time_UTC"])
 
     DYN_MARS_out["MARSpos_SSB"]   = MARSpos_SSB
     DYN_MARS_out["MARSvel_SSB"]   = MARSvel_SSB
     DYN_MARS_out["DEIMOSpos_SSB"] = DEIMOSpos_SSB
     DYN_MARS_out["PHOBOSpos_SSB"] = PHOBOSpos_SSB
+    DYN_MARS_out["MCIq_MAR"]      = MCIq_MAR
 
     return dict(DYN_MARS_out)

@@ -37,11 +37,10 @@ def get_state(body: str, et: float):
     state, lt = spiceypy.spkezr(body, et, "J2000", "NONE", "SOLAR SYSTEM BARYCENTER")
     return state[:3], state[3:] # pos, vel
 
-# Give the orientation of the BCBF (Body-Fixed, Body-Centered) referencial with respect to the SSB
-def get_orientation(body: str, et: float):
+# Give the orientation that rotatates from frame to new frame at the specified ephemeris time et
+def get_orientation(from_frame: str, to_frame: str, et: float):
     load_kernels()
-    frame_name = f"IAU_{body.upper()}"
     # Return the matrix that transforms position vectors from one frame to another at a specified epoch
-    r = spiceypy.pxform("J2000", frame_name, et)
+    r = spiceypy.pxform(from_frame, to_frame, et)
     # Convert matrix to quaternion
     return spiceypy.m2q(r)

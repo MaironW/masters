@@ -29,9 +29,14 @@ def run(state_prev, DYN_TIME_out, DYN_EARTH_out):
     SCvel_ECI = state_next["SCvel_ECI"]
     SCpos_TER = quaternions.qvecrot(SCpos_ECI, TERq_ECI)
 
+    SCpos_SSB = SCpos_ECI + DYN_EARTH_out["EARTHpos_SSB"]
+    SCvel_SSB = SCvel_ECI + DYN_EARTH_out["EARTHvel_SSB"]
+
     DYN_TRA_out["SCpos_TER"] = SCpos_TER
     DYN_TRA_out["SCpos_ECI"] = SCpos_ECI
     DYN_TRA_out["SCvel_ECI"] = SCvel_ECI
+    DYN_TRA_out["SCpos_SSB"] = SCpos_SSB
+    DYN_TRA_out["SCvel_SSB"] = SCvel_SSB
 
     return dict(DYN_TRA_out)
 

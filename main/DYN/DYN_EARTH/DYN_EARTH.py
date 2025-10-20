@@ -18,8 +18,8 @@ DYN_EARTH_out = {
 def run(DYN_TIME_out):
     EARTHpos_SSB, EARTHvel_SSB = spice.get_state("EARTH", DYN_TIME_out["time_UTC"])
     MOONpos_SSB, MOONvel_SSB   = spice.get_state("MOON", DYN_TIME_out["time_UTC"])
-    ECIq_TER = spice.get_orientation("IAU_EARTH", "J2000", DYN_TIME_out["time_UTC"])
-    TERq_ECI = spice.get_orientation("J2000", "IAU_EARTH", DYN_TIME_out["time_UTC"])
+    ECIq_TER = spice.get_orientation("ITRF93", "J2000", DYN_TIME_out["time_UTC"])
+    TERq_ECI = spice.get_orientation("J2000", "ITRF93", DYN_TIME_out["time_UTC"])
 
     DYN_EARTH_out["EARTHpos_SSB"] = EARTHpos_SSB
     DYN_EARTH_out["EARTHvel_SSB"] = EARTHvel_SSB

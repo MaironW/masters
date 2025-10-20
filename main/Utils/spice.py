@@ -12,7 +12,8 @@ def load_kernels():
     spiceypy.furnsh(kernel_dir + "naif0012.tls") # Leap seconds
     spiceypy.furnsh(kernel_dir + "de440s.bsp")   # Planetary ephemerides
     spiceypy.furnsh(kernel_dir + "mar097.bsp")   # Mars body + moons
-    spiceypy.furnsh(kernel_dir + "pck00010.tcp") # Planet orientation
+    spiceypy.furnsh(kernel_dir + "pck00010.tpc") # Planet orientation
+    spiceypy.furnsh(kernel_dir + "earth_000101_260114_251018.bpc") # Earth orientation binary
 
     _KERNELS_LOADED = True
 

@@ -9,13 +9,16 @@ def qprod(a, b):
         w1*y2 - x1*z2 + y1*w2 + z1*x2,
         w1*z2 + x1*y2 - y1*x2 + z1*w2
     ])
-    q = q / np.linalg.norm(q)
     return q
+
+
+def qtrans(q):
+    q0, q1, q2, q3 = q
+    q_conj = np.array([q0, -q1, -q2, -q3])
+    return q_conj
 
 def qvecrot(v, q):
     q = q / np.linalg.norm(q)
-    q0, q1, q2, q3 = q
     vq = np.array([0.0, *v])
-    q_conj = np.array([q0, -q1, -q2, -q3])
-    v_new = qprod(qprod(q, vq), q_conj)
+    v_new = qprod(qprod(q, vq), qtrans(q))
     return v_new[1:]

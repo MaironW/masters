@@ -1,3 +1,4 @@
 *.bsp
 *.tls
-*.tcp
+*.tpc
+*.bpc

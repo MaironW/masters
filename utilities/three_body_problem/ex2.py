@@ -34,25 +34,20 @@ jacobi_constants = utils.jacobi_constants(equilibrium_points, mu)
 point = 'L1'
 
 # Initial condition
-dx  = 5e-4 # Small variation from position equilibrium
-x0  = equilibrium_points[point][0] + dx # Initial value for x
-y0  =  0.0 # Initial value for y
-z0  =  0.0 # Initial value for z
-vx0 =  0.0 # Initial value for vx
-vy0 =  0.05 # Expected initial value for vy, to be adjusted
-vz0 =  0.0 # Initial value for vz
-T_half = 1.1 # Expected value for the half orbit period, to be adjusted
-state  = np.array([x0,y0,z0,vx0,vy0,vz0]) # Initial state
+dx         = 0.01 # Small variation from position equilibrium
+x0         = equilibrium_points[point][0] + dx # Initial value for x
+y0         = 0.0 # Initial value for y
+z0         = 0.0 # Initial value for z
+vx0        = 0.0 # Initial value for vx
+vy0        = -1e-7 # Expected initial value for vy, to be adjusted
+vz0        = 0.0 # Initial value for vz
+T_half     = 1.1 # Expected value for the half orbit period, to be adjusted
+init_state = np.array([x0,y0,z0,vx0,vy0,vz0]) # Initial state
 
-# Detect when there is a crossing
-def find_y_crossing(solution):
-    y_vals = solution.y[1]
-    t_vals = solution.t
-    for i in range(len(y_vals)-1):
-        if y_vals[i]*y_vals[i+1] < 0:
-            t_cross = t_vals[i] - y_vals[i]*(t_vals[i+1]-t_vals[i])/(y_vals[i+1]-y_vals[i])
-            return t_cross
-    return None
+def y_event(t, y, mu):
+    return y[1]
+y_event.terminal = True
+y_event.direction = -1*np.sign(vy0)
 
 def variational_equations(t, state_M, mu):
     # Extract the state vector and the matrix M
@@ -62,13 +57,13 @@ def variational_equations(t, state_M, mu):
     # Dynamic equations
     dstate = utils.state_equations(t, state, mu)
     # Jacobian matrix A(t)
-    A = utils.linearization_matrix(state[0], state[1], state[2], mu,)
+    A = utils.linearization_matrix(state[0], state[1], state[2], mu)
     # Variational equations: dM/dt = A*M
     dM = A @ M
     # Return the concatenated vector (6 + 36 variables)
     return np.concatenate((dstate, dM.flatten()))
 
-# Integrate the state transition matrix up to T/2
+# Integrate the state transition matrix up to T/2, when the solution crosses y=0
 def integrate_variational(mu, init_state, t_end):
     # M =  dx/dx  dx/dy  dx/dz  dx/dvx  dx/dvy    dx/dvz
     #      dy/dx  dy/dy  dy/dz  dy/dvx [dy/dvy]   dy/dvz
@@ -79,39 +74,36 @@ def integrate_variational(mu, init_state, t_end):
     M0 = np.eye(6).flatten()
     y0 = np.concatenate((init_state, M0))
     t_span = (0, t_end)
-    solution = solve_ivp(variational_equations, t_span, y0, args=(mu,), rtol=1e-12, atol=1e-12, dense_output=True)
-    state_final  = solution.y[:6,-1]
-    M_flat_final = solution.y[6:,-1]
-    M_final = M_flat_final.reshape((6,6))
-    return state_final, M_final, solution
+    solution = solve_ivp(variational_equations, t_span, y0, args=(mu,), rtol=1e-12, atol=1e-12, events=y_event, dense_output=True)
 
-def differential_correction(mu, T_half, state, tol=tol, n_iter=n_iter):
+    # Get the instant when y=0
+    if solution.t_events[0].size > 0:
+        T_half = solution.t_events[0][0]
+    # If none, keep the last integration value as T_half, just to keep going
+    else:
+        T_half = t_end*0.5
+
+    # Return valid solutions at T/2
+    state_final  = solution.sol(T_half)[:6]
+    M_flat_final = solution.sol(T_half)[6:]
+    M_final      = M_flat_final.reshape((6,6))
+    return state_final, M_final, solution, T_half
+
+def differential_correction(mu, init_state, T_half, tol=tol, n_iter=n_iter):
     for i in range(n_iter):
-        # Integrate until estimated T/2 with overshooted T
-        t_span = (0, T_half*2)
-        # solution = solve_ivp(utils.state_equations, t_span, state, args=(mu,), rtol=1e-12, atol=1e-12, dense_output=True)
-        state, M, solution = integrate_variational(mu, state, T_half*2)
-
-        # # Find the point where y=0
-        # T_crossing = find_y_crossing(solution)
-        # if T_crossing is None:
-        #     print(f"Convergence failed. No y=0 crossing after T/2 = {T_half}")
-        #     state_half = solution.sol(T_half)
-        #     return state_half, T_half, solution
-        # T_half = T_crossing
-
+        # Integrate the augumented state
+        state, M, solution, T_half = integrate_variational(mu, init_state, T_half*2)
         # Get useful variables at half period
-        state_half = state
+        state_half = solution.sol(T_half)[:6]
         deriv_half = np.array(utils.state_equations(T_half, state_half, mu))
-        y_half  = state_half[1]
         vx_half = state_half[3]
         vy_half = state_half[4]
         ax_half = deriv_half[3]
 
         # Correction conditions
-        F = np.array([y_half, vx_half])
+        F = np.array([0, vx_half])
         if np.linalg.norm(F) < tol:
-            return state, T_half, solution # Success
+            return state, solution, T_half # Success
 
         # Get useful parameters from the state transition matrix at half period
         dy_dvy  = M[1,4]
@@ -123,49 +115,34 @@ def differential_correction(mu, T_half, state, tol=tol, n_iter=n_iter):
 
         # Correction of [vy0, tf]
         delta = np.linalg.solve(M_sub, -F)
-        state[4] += delta[0]
-        T_half   += delta[1]
+        init_state[4] += delta[0]
+        T_half        += delta[1]
 
     print(f"Convergence failed after {n_iter} iterations.")
-    return state, T_half, solution
+    return state, solution, T_half
 
 # Create Plot
 fig, ax = plt.subplots(1,1)
-# Points
-# ax.plot(equilibrium_points["P1"][0], equilibrium_points["P1"][1], "ko")
-# ax.text(equilibrium_points["P1"][0], equilibrium_points["P1"][1]-0.1, "P1", ha="center", va="center")
-# ax.plot(equilibrium_points["P2"][0], equilibrium_points["P2"][1], "ko")
-# ax.text(equilibrium_points["P2"][0], equilibrium_points["P2"][1]-0.1, "P2", ha="center", va="center")
-# for i in range(1,6):
-#     case = f"L{i}"
-#     marker = "rx" if case == point else "bx"
-#     ax.plot(equilibrium_points[case][0], equilibrium_points[case][1], marker)
-#     ax.text(equilibrium_points[case][0], equilibrium_points[case][1]-0.1, case, ha="center", va="center")
-# # Hill Regions
-# ax = utils.plot_hill_curves(ax, mu, jacobi_constants[point], convention=convention)
-
 ax.plot(equilibrium_points['L1'][0], equilibrium_points['L1'][1], 'kX')
 
 # Build the family
-for i in range(10):
+for i in range(20):
     print(i)
-    state, T_half, solution = differential_correction(mu, T_half, state)
+    state, solution, T_half = differential_correction(mu, init_state, T_half)
 
     # Plot Orbits
-    t_vals = np.linspace(0, T_half, 1000)
-    print(solution.sol(t_vals))
+    t_vals = np.linspace(0, T_half*2, 1000)
     x,y,z,vx,vy,vz = solution.sol(t_vals)[:6]
 
-    plt.plot(x, y, label=f"Orbit {i}")
-    plt.plot(x[0], y[0], 'bo')
-    plt.plot(x[-1], y[-1], 'rx')
-
-    # Stop if first divergence occured
-    # if state is None:
-        # break
+    ax.plot(x, y, label=f"Orbit {i}")
+    # ax.plot(x[0], y[0], 'bo')
+    # ax.plot(x[-1], y[-1], 'rx')
 
     # Increment to get family
-    state[0] += dx
+    init_state[0] += dx
+
+# Hill regions
+# ax = utils.plot_hill_curves(ax, mu, jacobi_constants[point])
 
 # 2D Plot settings
 ax.set_xlabel("x")

@@ -56,7 +56,7 @@ def differential_correction(mu, init_state, t_end, tol=1e-8, n_iter=10):
             # Correction condition
             F = np.array([y_half, vx_half])
             if np.linalg.norm(F) < tol:
-                return solution, T_half
+                break
 
             # Get useful parameters from the state transition matrix at half period
             M = solution.sol(t_end)[6:].reshape((6,6))
@@ -83,14 +83,11 @@ body_mass = {
     "Moon"    : 7.349000e22,
 }
 
-# Compute the mass parameter µ for the Earth-Moon system
-mu = utils.mu_from_masses(body_mass["Earth"], body_mass["Moon"])
+# Compute the mass parameter µ for the Sun-Jupiter system
+mu = utils.mu_from_masses(body_mass["Sun"], body_mass["Jupiter"])
 
 # Compute equilibrium points
 equilibrium_points = utils.equilibrium_points(mu)
-
-# Compute the Jacobi constants for Hill regions plot
-jacobi_constants = utils.jacobi_constants(equilibrium_points, mu)
 
 # Create Plot
 fig, ax = plt.subplots(1,1)
@@ -99,14 +96,17 @@ ax.plot(equilibrium_points['L2'][0], equilibrium_points['L2'][1], 'kX')
 
 # Get solutions
 tf = 1.5
-for dx in [0.01, 0.02, 0.03, 0.04, 0.05, 0.06]:
+for dx in np.linspace(0.01, 0.07, 10):
     x0 = equilibrium_points['L1'][0] - dx
     print(x0)
     # Brute force first guesses for vy0
     vy0_new = None
     for vy0 in np.linspace(0.07, dx*10, 10):
+        # vy0_new will be None until a valid solution is found.
+        # In this case, keep using the brute force guesses.
+        if vy0_new is not None:
+            vy0 = vy0_new
         init_state = np.array([x0, 0, 0, 0, vy0, 0])
-        # solution = integrate_variational(mu, init_state, tf)
         solution, T_half = differential_correction(mu, init_state, tf)
 
         if solution.t_events[0].size > 0:
@@ -116,9 +116,11 @@ for dx in [0.01, 0.02, 0.03, 0.04, 0.05, 0.06]:
             # If xf > x0, save updated init state
             if state[0][-1] > state[0][0]:
                 init_state = solution.sol(0)
+                vy0_new = init_state[4]
                 solution = solve_ivp(variational_equations, (0,2*tf), init_state, args=(mu,), rtol=1e-12, atol=1e-12, dense_output=True)
                 full_state = solution.sol(t_vals)[:6]
-                ax.plot(full_state[0],full_state[1], label=f"vy0: {init_state[4]}, tf: {T_half}")
+                ax.plot(full_state[0],full_state[1], label=f"x0: {init_state[0]:.3g}, vy0: {init_state[4]:.3g}, tf: {T_half:.3g}")
+                tf = T_half*2
                 break # Stop iterating the velocity if solution found
 
 ax.set_xlabel("x")

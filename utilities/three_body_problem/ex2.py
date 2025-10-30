@@ -18,10 +18,10 @@ def variational_equations(t, state_M, mu):
     return np.concatenate((dstate, dM.flatten()))
 
 # Integrate the state transition matrix up to T/2, when the solution crosses y=0
-def integrate_variational(mu, init_state, t_end):
+def integrate_variational(mu, init_state, t_end, terminate=True):
     def y_event(t, y, mu):
         return y[1]
-    y_event.terminal = True
+    y_event.terminal = terminate
     y_event.direction = -1
 
     # M =  dx/dx  dx/dy  dx/dz  dx/dvx  dx/dvy    dx/dvz
@@ -42,7 +42,7 @@ def differential_correction(mu, init_state, t_end, tol=1e-8, n_iter=10):
     T_half = t_end
     for i in range(n_iter):
         # Integrate the augmented state
-        solution = integrate_variational(mu, state, T_half)
+        solution = integrate_variational(mu, state, T_half, terminate=True)
         # The solution may be valid if the solution crosses the y=0 axis
         if solution.t_events[0].size > 0:
             t_end = solution.t_events[0][0]
@@ -78,9 +78,7 @@ def differential_correction(mu, init_state, t_end, tol=1e-8, n_iter=10):
 # Mass of celestial bodies [kg]
 body_mass = {
     "Sun"     : 1.988500e30,
-    "Earth"   : 5.972190e24,
     "Jupiter" : 1.898130e27,
-    "Moon"    : 7.349000e22,
 }
 
 # Compute the mass parameter µ for the Sun-Jupiter system
@@ -89,43 +87,105 @@ mu = utils.mu_from_masses(body_mass["Sun"], body_mass["Jupiter"])
 # Compute equilibrium points
 equilibrium_points = utils.equilibrium_points(mu)
 
-# Create Plot
-fig, ax = plt.subplots(1,1)
-ax.plot(equilibrium_points['L1'][0], equilibrium_points['L1'][1], 'kX')
-ax.plot(equilibrium_points['L2'][0], equilibrium_points['L2'][1], 'kX')
-
 # Get solutions
-tf = 1.5
-for dx in np.linspace(0.01, 0.07, 10):
-    x0 = equilibrium_points['L1'][0] - dx
-    print(x0)
-    # Brute force first guesses for vy0
-    vy0_new = None
-    for vy0 in np.linspace(0.07, dx*10, 10):
-        # vy0_new will be None until a valid solution is found.
-        # In this case, keep using the brute force guesses.
-        if vy0_new is not None:
-            vy0 = vy0_new
-        init_state = np.array([x0, 0, 0, 0, vy0, 0])
-        solution, T_half = differential_correction(mu, init_state, tf)
+def compute_solutions():
+    # Lists to store solutions
+    init_state_list = []
+    tf = 1.5
+    for x0 in np.linspace(equilibrium_points['L1'][0]-0.002, -0.99, 20):
+        # Brute force first guesses for vy0
+        vy0_new = None
+        for vy0 in np.linspace(0.001, 0.6, 20):
+            # vy0_new will be None until a valid solution is found.
+            # In this case, keep using the brute force guesses.
+            if vy0_new is not None:
+                vy0 = vy0_new
+            init_state = np.array([x0, 0, 0, 0, vy0, 0])
+            solution, T_half = differential_correction(mu, init_state, tf)
 
-        if solution.t_events[0].size > 0:
-            T_half = solution.t_events[0][0]
-            t_vals = np.linspace(0, T_half*2, 1000)
-            state = solution.sol(t_vals)[:6]
-            # If xf > x0, save updated init state
-            if state[0][-1] > state[0][0]:
-                init_state = solution.sol(0)
-                vy0_new = init_state[4]
-                solution = solve_ivp(variational_equations, (0,2*tf), init_state, args=(mu,), rtol=1e-12, atol=1e-12, dense_output=True)
-                full_state = solution.sol(t_vals)[:6]
-                ax.plot(full_state[0],full_state[1], label=f"x0: {init_state[0]:.3g}, vy0: {init_state[4]:.3g}, tf: {T_half:.3g}")
-                tf = T_half*2
-                break # Stop iterating the velocity if solution found
+            if solution.t_events[0].size > 0:
+                T_half = solution.t_events[0][0]
+                t_vals = np.linspace(0, T_half*2, 1000)
+                state = solution.sol(t_vals)[:6]
+                # If xf > x0, save updated init state
+                if state[0][-1] > state[0][0]:
+                    x,y,z,vx,vy,vz = solution.sol(0)[:6]
+                    print(x,y,z,vx,vy,vz,T_half)
+                    vy0_new = vy
+                    init_state_list.append([x,y,z,vx,vy,vz,T_half])
+                    tf = T_half*2
+                    break # Stop iterating the velocity if solution found
+    return init_state_list
 
-ax.set_xlabel("x")
-ax.set_ylabel("y")
-ax.grid()
-ax.legend()
-ax.axis("equal")
+# Load solutions from file in format [x,y,z,vx,vy,vz,T_half]
+def load_solutions(file):
+    init_state_list = np.loadtxt(file, delimiter=",")
+    return init_state_list
+
+# Integrate a full orbit given initial states
+def integrate_solutions(init_state_list):
+    full_state_list = []
+    for init_state in init_state_list:
+        x,y,z,vx,vy,vz,T_half = init_state
+        tf = T_half
+        solution = integrate_variational(mu, init_state[:6], 2*tf, terminate=False)
+        t_vals = np.linspace(0, 2*tf, 1000)
+        full_state = solution.sol(t_vals)[:6]
+        full_state_list.append(full_state)
+    return full_state_list
+
+# init_state_list = compute_solutions()
+# np.savetxt("lyapunov.txt", init_state_list, delimiter=",")
+
+init_state_list = load_solutions("lyapunov.txt")
+full_state_list = integrate_solutions(init_state_list)
+
+# Process results
+x0_list     = []
+vy0_list    = []
+T_half_list = []
+jacobi_list = []
+for state in init_state_list:
+    x0     = state[0]
+    vy0    = state[4]
+    T_half = state[6]
+    x0_list.append(x0)
+    vy0_list.append(vy0)
+    T_half_list.append(T_half)
+    jacobi_list.append(utils.jacobi_constant(x0, mu))
+
+# i) Orbit plot
+fig, ax = plt.subplots(1,2)
+ax[0].plot(equilibrium_points['L1'][0], equilibrium_points['L1'][1], 'kX')
+ax[0].plot(equilibrium_points['L2'][0], equilibrium_points['L2'][1], 'kX')
+for state in full_state_list:
+    ax[0].plot(state[0],state[1], label=f"x0: {state[0][0]:.3g}, vy0: {state[4][0]:.3g}, tf: {T_half:.3g}")
+    ax[1].plot(state[3],state[4], label=f"x0: {state[0][0]:.3g}, vy0: {state[4][0]:.3g}, tf: {T_half:.3g}")
+ax[0].set_xlabel("x")
+ax[0].set_ylabel("y")
+ax[0].grid()
+ax[0].legend()
+ax[0].axis("equal")
+ax[1].set_xlabel("x_dot")
+ax[1].set_ylabel("y_dot")
+ax[1].grid()
+ax[1].legend()
+ax[1].axis("equal")
+
+# ii)
+fig, ax = plt.subplots(2,1)
+ax[0].plot(x0_list, vy0_list)
+ax[1].plot(x0_list, T_half_list)
+ax[1].set_xlabel("x_0")
+ax[0].set_ylabel("y_dot_0")
+ax[1].set_ylabel("T_half")
+
+# C)
+fig, ax = plt.subplots(2,1)
+ax[0].plot(x0_list, jacobi_list)
+ax[1].plot(x0_list, np.array(T_half_list)*2)
+ax[1].set_xlabel("x_0")
+ax[0].set_ylabel("C")
+ax[1].set_ylabel("T")
+
 plt.show()

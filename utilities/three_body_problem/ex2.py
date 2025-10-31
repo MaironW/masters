@@ -24,9 +24,9 @@ def integrate_variational(mu, init_state, t_end, terminate=True):
     y_event.terminal = terminate
     y_event.direction = -1
 
-    # M =  dx/dx  dx/dy  dx/dz  dx/dvx  dx/dvy    dx/dvz
-    #      dy/dx  dy/dy  dy/dz  dy/dvx [dy/dvy]   dy/dvz
-    #      dz/dx  dz/dy  dz/dz  dz/dvx  dz/dvy    dz/dvz
+    # M =  dx/dx  dx/dy  dx/dz  dx/dvx   dx/dvy   dx/dvz
+    #      dy/dx  dy/dy  dy/dz  dy/dvx  [dy/dvy]  dy/dvz
+    #      dz/dx  dz/dy  dz/dz  dz/dvx   dz/dvy   dz/dvz
     #     dvx/dx dvx/dy dvx/dz dvx/dvx [dvx/dvy] dvx/dvz
     #     dvy/dx dvy/dy dvy/dz dvy/dvx  dvy/dvy  dvy/dvz
     #     dvz/dx dvz/dy dvz/dz dvz/dvx  dvz/dvy  dvz/dvz
@@ -92,10 +92,11 @@ def compute_solutions():
     # Lists to store solutions
     init_state_list = []
     tf = 1.5
-    for x0 in np.linspace(equilibrium_points['L1'][0]-0.002, -0.99, 20):
+    vy = 0.01
+    for x0 in np.linspace(equilibrium_points['L1'][0]-0.002, equilibrium_points['P2'][0]+0.001, 10):
         # Brute force first guesses for vy0
         vy0_new = None
-        for vy0 in np.linspace(0.001, 0.6, 20):
+        for vy0 in np.linspace(vy, 0.6, 25):
             # vy0_new will be None until a valid solution is found.
             # In this case, keep using the brute force guesses.
             if vy0_new is not None:
@@ -110,7 +111,7 @@ def compute_solutions():
                 # If xf > x0, save updated init state
                 if state[0][-1] > state[0][0]:
                     x,y,z,vx,vy,vz = solution.sol(0)[:6]
-                    print(x,y,z,vx,vy,vz,T_half)
+                    print(x,vy,T_half)
                     vy0_new = vy
                     init_state_list.append([x,y,z,vx,vy,vz,T_half])
                     tf = T_half*2
@@ -130,14 +131,14 @@ def integrate_solutions(init_state_list):
         tf = T_half
         solution = integrate_variational(mu, init_state[:6], 2*tf, terminate=False)
         t_vals = np.linspace(0, 2*tf, 1000)
-        full_state = solution.sol(t_vals)[:6]
+        full_state = solution.sol(t_vals)
         full_state_list.append(full_state)
     return full_state_list
 
-# init_state_list = compute_solutions()
-# np.savetxt("lyapunov.txt", init_state_list, delimiter=",")
+init_state_list = compute_solutions()
+np.savetxt("lyapunov.txt", init_state_list, delimiter=",")
 
-init_state_list = load_solutions("lyapunov.txt")
+# init_state_list = load_solutions("lyapunov.txt")
 full_state_list = integrate_solutions(init_state_list)
 
 # Process results
@@ -154,38 +155,119 @@ for state in init_state_list:
     T_half_list.append(T_half)
     jacobi_list.append(utils.jacobi_constant(x0, mu))
 
+eigval_list = []
+s1_list     = []
+s2_list     = []
+for full_state in full_state_list:
+    monodromy_matrix = full_state.T[-1][6:].reshape((6,6))
+    eigvals = np.linalg.eigvals(monodromy_matrix)
+    eigval_list.append(eigvals)
+    s1 = (eigvals[0]+eigvals[1])*0.5
+    s2 = (eigvals[2]+eigvals[3])*0.5
+    s1_list.append(s1)
+    s2_list.append(s2)
+
 # i) Orbit plot
 fig, ax = plt.subplots(1,2)
-ax[0].plot(equilibrium_points['L1'][0], equilibrium_points['L1'][1], 'kX')
-ax[0].plot(equilibrium_points['L2'][0], equilibrium_points['L2'][1], 'kX')
 for state in full_state_list:
-    ax[0].plot(state[0],state[1], label=f"x0: {state[0][0]:.3g}, vy0: {state[4][0]:.3g}, tf: {T_half:.3g}")
-    ax[1].plot(state[3],state[4], label=f"x0: {state[0][0]:.3g}, vy0: {state[4][0]:.3g}, tf: {T_half:.3g}")
-ax[0].set_xlabel("x")
-ax[0].set_ylabel("y")
+    ax[0].plot(state[0],state[1], label=f"x0: {state[0][0]:.3g}, vy0: {state[4][0]:.3g}")
+    ax[1].plot(state[3],state[4], label=f"x0: {state[0][0]:.3g}, vy0: {state[4][0]:.3g}")
+ax[0].plot(equilibrium_points['L1'][0], equilibrium_points['L1'][1], 'bX', label='L1')
+ax[0].plot(equilibrium_points['L2'][0], equilibrium_points['L2'][1], 'rX', label='L2')
+ax[0].plot(equilibrium_points['P2'][0], equilibrium_points['P2'][1], color='C1', marker='o', label='Jupiter')
+ax[0].set_xlabel("$x$")
+ax[0].set_ylabel("$y$")
 ax[0].grid()
 ax[0].legend()
 ax[0].axis("equal")
-ax[1].set_xlabel("x_dot")
-ax[1].set_ylabel("y_dot")
+ax[1].set_xlabel("$\dot{x}$")
+ax[1].set_ylabel("$\dot{y}$")
 ax[1].grid()
 ax[1].legend()
 ax[1].axis("equal")
 
-# ii)
+# ii) x0 vs vy0 and x0 vs T/2
 fig, ax = plt.subplots(2,1)
-ax[0].plot(x0_list, vy0_list)
-ax[1].plot(x0_list, T_half_list)
-ax[1].set_xlabel("x_0")
-ax[0].set_ylabel("y_dot_0")
-ax[1].set_ylabel("T_half")
+ax[0].plot(x0_list, vy0_list, label='$x_0$ vs $\dot{y}_0$')
+ax[1].plot(x0_list, T_half_list, label='$x_0$ vs $T/2$')
+ax[1].set_xlabel("$x_0$")
+ax[0].set_ylabel("$\dot{y}_0$")
+ax[1].set_ylabel("$T/2$")
+for ax_i in ax:
+    ax_i.axvline(equilibrium_points['L1'][0],color='red',linestyle='--',label='L1')
+    ax_i.axvline(equilibrium_points['P2'][0],color='C1',linestyle='--',label='Jupiter')
+    ax_i.grid()
+    ax_i.legend()
 
-# C)
+# B) Eigenvalues on complex plane
+fig_complex, ax_complex = plt.subplots(1,3)
+fig1, ax1 = plt.subplots(3,1)
+fig2, ax2 = plt.subplots(3,1)
+fig3, ax3 = plt.subplots(3,1)
+for i in range(3):
+    ax_complex[i].axhline(color='k')
+    ax_complex[i].axvline(color='k')
+    ax_complex[i].grid()
+    ax_complex[i].set_xlabel("Re($\lambda$)")
+    ax_complex[i].set_ylabel("Im($\lambda$)")
+i = 0
+for eigvals in eigval_list:
+    plt.gca().set_prop_cycle(None)
+    print(eigvals)
+    # Complex plane
+    ax_complex[0].plot(eigvals[0].real, eigvals[0].imag, 'x', color=f"C{i}")
+    ax_complex[0].plot(eigvals[1].real, eigvals[1].imag, 'x', color=f"C{i}")
+    ax_complex[1].plot(eigvals[2].real, eigvals[2].imag, 'x', color=f"C{i}")
+    ax_complex[1].plot(eigvals[3].real, eigvals[3].imag, 'x', color=f"C{i}")
+    ax_complex[2].plot(eigvals[4].real, eigvals[4].imag, 'x', color=f"C{i}")
+    ax_complex[2].plot(eigvals[5].real, eigvals[5].imag, 'x', color=f"C{i}")
+
+    # x0 vs real and x0 vs imag
+    ax1[0].plot(x0_list[i], eigvals[0].real, 'o')
+    ax2[0].plot(x0_list[i], eigvals[2].real, 'o')
+    ax3[0].plot(x0_list[i], eigvals[4].real, 'o')
+    ax1[1].plot(x0_list[i], eigvals[0].imag, 'o')
+    ax2[1].plot(x0_list[i], eigvals[2].imag, 'o')
+    ax3[1].plot(x0_list[i], eigvals[4].imag, 'o')
+    i += 1
+# x0 vs s1 and x0 vs s
+ax1[2].plot(x0_list, s1_list, 'o-', label='$x_0$ vs $s_1$')
+ax1[2].plot(x0_list, s2_list, 'o-', label='$x_0$ vs $s_2$')
+ax1[2].axhline(1, linestyle="--",color='grey')
+ax2[2].plot(x0_list, s1_list, 'o-', label='$x_0$ vs $s_1$')
+ax2[2].plot(x0_list, s2_list, 'o-', label='$x_0$ vs $s_2$')
+ax2[2].axhline(1, linestyle="--",color='grey')
+ax3[2].plot(x0_list, s1_list, 'o-', label='$x_0$ vs $s_1$')
+ax3[2].plot(x0_list, s2_list, 'o-', label='$x_0$ vs $s_2$')
+ax3[2].axhline(1, linestyle="--",color='grey')
+for i in range(3):
+    ax1[i].grid()
+    ax2[i].grid()
+    ax3[i].grid()
+ax1[0].set_ylabel("Re($\lambda$)")
+ax1[1].set_ylabel("Im($\lambda$)")
+ax1[2].set_ylabel("|s|")
+ax1[2].set_xlabel("$x_0$")
+ax2[0].set_ylabel("Re($\lambda$)")
+ax2[1].set_ylabel("Im($\lambda$)")
+ax2[2].set_ylabel("|s|")
+ax2[2].set_xlabel("$x_0$")
+ax3[0].set_ylabel("Re($\lambda$)")
+ax3[1].set_ylabel("Im($\lambda$)")
+ax3[2].set_ylabel("|s|")
+ax3[2].set_xlabel("$x_0$")
+
+# C) x0 vs Cj and x0 vs T
 fig, ax = plt.subplots(2,1)
-ax[0].plot(x0_list, jacobi_list)
-ax[1].plot(x0_list, np.array(T_half_list)*2)
-ax[1].set_xlabel("x_0")
-ax[0].set_ylabel("C")
-ax[1].set_ylabel("T")
+ax[0].plot(x0_list, jacobi_list, label='$x_0$ vs $C_j$')
+ax[1].plot(x0_list, np.array(T_half_list)*2, label='$x_0$ vs $T$')
+ax[1].set_xlabel("$x_0$")
+ax[0].set_ylabel("$C_j$")
+ax[1].set_ylabel("$T$")
+for ax_i in ax:
+    ax_i.axvline(equilibrium_points['L1'][0],color='red',linestyle='--',label='L1')
+    ax_i.axvline(equilibrium_points['P2'][0],color='C1',linestyle='--',label='Jupiter')
+    ax_i.grid()
+    ax_i.legend()
 
 plt.show()

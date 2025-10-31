@@ -70,7 +70,7 @@ def differential_correction(mu, init_state, t_end, tol=1e-8, n_iter=10):
             # Correction of [vy0, tf]
             delta = np.linalg.solve(M_sub, -F)
             state[4] += delta[0]
-            T_half   += delta[1]
+            # T_half   += delta[1]
 
     return solution, T_half
 
@@ -91,9 +91,9 @@ equilibrium_points = utils.equilibrium_points(mu)
 def compute_solutions():
     # Lists to store solutions
     init_state_list = []
-    tf = 1.5
+    tf = 1.55
     vy = 0.01
-    for x0 in np.linspace(equilibrium_points['L1'][0]-0.002, equilibrium_points['P2'][0]+0.001, 10):
+    for x0 in np.linspace(equilibrium_points['L1'][0]-0.002, equilibrium_points['P2'][0]+1e-4, 10):
         # Brute force first guesses for vy0
         vy0_new = None
         for vy0 in np.linspace(vy, 0.6, 25):
@@ -107,15 +107,18 @@ def compute_solutions():
             if solution.t_events[0].size > 0:
                 T_half = solution.t_events[0][0]
                 t_vals = np.linspace(0, T_half*2, 1000)
-                state = solution.sol(t_vals)[:6]
+                state  = solution.sol(t_vals)[:6]
+                x_ini  = solution.sol(0)[0]
+                x_half = solution.sol(T_half)[0]
                 # If xf > x0, save updated init state
-                if state[0][-1] > state[0][0]:
+                if x_half > x_ini:
                     x,y,z,vx,vy,vz = solution.sol(0)[:6]
                     print(x,vy,T_half)
                     vy0_new = vy
                     init_state_list.append([x,y,z,vx,vy,vz,T_half])
                     tf = T_half*2
                     break # Stop iterating the velocity if solution found
+        print(vy0_new)
     return init_state_list
 
 # Load solutions from file in format [x,y,z,vx,vy,vz,T_half]

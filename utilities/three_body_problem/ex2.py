@@ -1,3 +1,8 @@
+# FM235 - Dinâmica de Missões Espaciais Modernas
+# Author: Mairon de Souza Wolniewicz
+# Date: 2025-Nov-02
+# Messy code, but computes the Lyapunov orbits around L1 of the Sun-Jupiter system
+
 import utils
 import numpy as np
 import matplotlib.pyplot as plt
@@ -167,6 +172,7 @@ def stability_indices(M, tol=1e-6):
     # Assuming planar orbit
     planar_pairs = pairs_sorted[:2]
     transversal_pair = pairs_sorted[2]
+    eigvals = [pairs_sorted[0][0], pairs_sorted[0][1], pairs_sorted[1][0], pairs_sorted[1][1], pairs_sorted[2][0], pairs_sorted[2][1]]
     # Compute stability indices
     s1 = 0.5*(planar_pairs[0][0]  + 1/planar_pairs[0][0])
     s2 = 0.5*(planar_pairs[1][0]  + 1/planar_pairs[1][0])
@@ -238,6 +244,9 @@ def plot_eigenvalues_complex_plane(eigval_list, x0_list=None, pair_labels=None):
         ax.set_ylabel("Im($\lambda$)")
         label = pair_labels[j] if pair_labels else f"Pair {j+1}"
         ax.set_title(label)
+        # Plot stability circle
+        unit_circle = plt.Circle((0, 0), 1, facecolor='lightgrey', edgecolor='grey', linewidth=1)
+        ax.add_patch(unit_circle)
     # Optional colorbar to show parameter variation (x0)
     if x0_list is not None:
         norm = plt.Normalize(min(x0_list), max(x0_list))
@@ -274,6 +283,7 @@ s3_list     = []
 for full_state in full_state_list:
     monodromy_matrix = full_state.T[-1][6:].reshape((6,6))
     s1, s2, s3, eigvals = stability_indices(monodromy_matrix)
+    print(eigvals)
     eigval_list.append(eigvals)
     s1_list.append(abs(s1))
     s2_list.append(abs(s2))

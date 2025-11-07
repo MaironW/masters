@@ -195,7 +195,7 @@ def linearization_matrix(x, y, z, mu, convention="Barcelona"):
     Dxf = np.zeros([6,6])
 
     Dxf[0,3] =  1 # df1dx4
-    Dxf[1,4] =  1 # df2dx5-
+    Dxf[1,4] =  1 # df2dx5
     Dxf[2,5] =  1 # df3dx6
     Dxf[3,4] =  2 # df4dx5
     Dxf[4,3] = -2 # df5dx4
@@ -214,7 +214,7 @@ def linearization_matrix(x, y, z, mu, convention="Barcelona"):
     # Compute the Hessian
     Uxx = 1 - (1-mu)/r1**3 - mu/r2**3 + 3*(1-mu)*A**2/r1**5 + 3*mu*B**2/r2**5
     Uyy = 1 - (1-mu)/r1**3 - mu/r2**3 + 3*(1-mu)*y**2/r1**5 + 3*mu*y**2/r2**5
-    Uzz =   - (1-mu)/r1**3 - mu/r2**3 + 3*(1-mu)*z**2/r1**5 + 3*mu*z**2/r2**5
+    Uzz = 1 - (1-mu)/r1**3 - mu/r2**3 + 3*(1-mu)*z**2/r1**5 + 3*mu*z**2/r2**5
     Uxy = 3*(1-mu)*A*y/r1**5 + 3*mu*B*y/r2**5
     Uxz = 3*(1-mu)*A*z/r1**5 + 3*mu*B*z/r2**5
     Uyz = 3*(1-mu)*y*z/r1**5 + 3*mu*y*z/r2**5
@@ -239,7 +239,7 @@ def state_equations(t, state, mu):
     r2 = (B**2 + y**2 + z**2)**0.5
     Ux = x - (1-mu) * A / r1**3 - mu * B / r2**3
     Uy = y - (1-mu) * y / r1**3 - mu * y / r2**3
-    Uz = z - (1-mu) * z / r1**3 - mu * z / r2**3
+    Uz =   - (1-mu) * z / r1**3 - mu * z / r2**3
     ax = +2 * vy + Ux
     ay = -2 * vx + Uy
     az = Uz

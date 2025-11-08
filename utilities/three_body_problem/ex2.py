@@ -173,25 +173,43 @@ def plot(x, y_sets, x_label=None, y_label=None, vlines=None, hlines=None, title=
     fig, axes = plt.subplots(n_plots, 1, sharex=sharex, figsize=figsize)
     if n_plots == 1:
         axes = [axes]
-    # Create color mapping by x
+
+    # Colormap based on x
     cmap_obj = cm.get_cmap('viridis')
     norm = plt.Normalize(np.min(x), np.max(x))
     colors = cmap_obj(norm(x))
+
     for i, ax in enumerate(axes):
-        y = np.array(y_sets[i])
+        y_group = y_sets[i]
+        # Ensure we handle single arrays and lists of arrays
+        if not isinstance(y_group[0], (list, np.ndarray)):
+            y_group = [y_group]
+
+        # Select label for this axis
         lbl = y_label[i] if isinstance(y_label, list) and i < len(y_label) else y_label
 
-        # Line with gradient color using small segments
-        for j in range(len(x) - 1):
-            if type_list[j] == ['saddle', 'center', 'center']:
-                marker = 'o'
-                style  = '-'
-            else:
-                marker = 's'
-                style  = '--'
-            ax.plot(x[j:j+2], y[j:j+2], color=colors[j], linestyle=style, marker=marker)
-        if lbl:
-            ax.plot([], [], color=cmap_obj(0.7), linestyle=style, label=lbl)
+        # Plot each dataset in this axis
+        for k, y in enumerate(y_group):
+            y = np.array(y)
+            label = None
+            if isinstance(lbl, list):  # support nested label list
+                label = lbl[k] if k < len(lbl) else None
+            elif k == 0:
+                label = lbl
+
+            for j in range(len(x) - 1):
+                if type_list is not None and type_list[j] == ['saddle', 'center', 'center']:
+                    marker = 'o'
+                    style  = '-'
+                else:
+                    marker = 's'
+                    style  = '--'
+                ax.plot(x[j:j+2], y[j:j+2], color=colors[j], linestyle=style, marker=marker)
+
+            # Add dummy handle for legend
+            if label:
+                ax.plot([], [], color=cmap_obj(0.7), linestyle=style, label=label)
+
         # Grid and reference lines
         ax.grid(True, linestyle=":", linewidth=0.8)
         if hlines:
@@ -200,14 +218,17 @@ def plot(x, y_sets, x_label=None, y_label=None, vlines=None, hlines=None, title=
         if vlines:
             for xpos, color, vlabel in vlines:
                 ax.axvline(xpos, color=color, linestyle="--", label=vlabel)
-        # Labels
-        if isinstance(y_label, list):
+
+        # Axis labels
+        if isinstance(y_label, list) and not isinstance(y_label[i], list):
             ax.set_ylabel(y_label[i])
-        elif y_label:
+        elif isinstance(y_label, str):
             ax.set_ylabel(y_label)
-        if legend and lbl:
+
+        if legend:
             ax.legend()
-    # Shared x-axis label
+
+    # Shared x-axis label and title
     if x_label:
         axes[-1].set_xlabel(x_label)
     if title:
@@ -218,7 +239,7 @@ def plot(x, y_sets, x_label=None, y_label=None, vlines=None, hlines=None, title=
 # Function to plot eigenvalues in the complex plane
 def plot_eigenvalues_complex_plane(eigval_list, x0_list=None, pair_labels=None):
     n_pairs = len(eigval_list[0])//2
-    fig, axes = plt.subplots(1, n_pairs, constrained_layout=True)
+    fig, axes = plt.subplots(n_pairs, 1, constrained_layout=True)
     # Color map to encode x0 variation (or index)
     cmap = cm.viridis
     if x0_list is None:
@@ -350,9 +371,11 @@ plot(x0_list, [vy0_list, T_half_list], y_label=["$\dot{y}_0$", "$T/2$"], x_label
 
 # x0 vs Re(λ) and Im(λ) for each pair
 for j in range(3):
-    eig_re = [eigvals[2*j].real for eigvals in eigval_list]
-    eig_im = [eigvals[2*j].imag for eigvals in eigval_list]
-    plot(x0_list, [eig_re, eig_im], y_label=["Re($\lambda$)", "Im($\lambda$)"], x_label="$x_0$", vlines=vlines, type_list=type_list, title=f"Eigenvalue pair {j+1}")
+    eig_re_1 = [eigvals[2*j].real for eigvals in eigval_list]
+    eig_im_1 = [eigvals[2*j].imag for eigvals in eigval_list]
+    eig_re_2 = [eigvals[2*j+1].real for eigvals in eigval_list]
+    eig_im_2 = [eigvals[2*j+1].imag for eigvals in eigval_list]
+    plot(x0_list, [[eig_re_1, eig_re_2], [eig_im_1, eig_im_2]], y_label=["Re($\lambda$)", "Im($\lambda$)"], x_label="$x_0$", vlines=vlines, type_list=type_list, title=f"Eigenvalue pair {j+1}")
 
 # x0 vs |s1|, |s2|, |s3|
 plot(x0_list, [s1_list, s2_list, s3_list], y_label=["$|s_1|$", "$|s_2|$", "$|s_3|$"], x_label="$x_0$", hlines=[(1, "grey", "$|s_i|=1$")], vlines=vlines, type_list=type_list)

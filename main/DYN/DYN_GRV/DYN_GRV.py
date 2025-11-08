@@ -7,35 +7,48 @@ from Utils.constants import CONSTANTS_par
 from Utils import quaternions
 
 # Module output dictionary
-DYN_GRV_out = {
-    "grvacc_TER" : DYN_GRV_par["grvacc_TER_ini"],
-    "grvacc_ECI" : DYN_GRV_par["grvacc_ECI_ini"],
-    "grvacc_MAR" : DYN_GRV_par["grvacc_MAR_ini"],
-    "grvacc_MCI" : DYN_GRV_par["grvacc_MCI_ini"],
-    "grvacc_SUN" : DYN_GRV_par["grvacc_SUN_ini"],
-    "grvacc_SSB" : DYN_GRV_par["grvacc_SSB_ini"]
-}
+def initialize():
+    DYN_GRV_out = {
+        "grvacc_TER" : DYN_GRV_par["grvacc_TER_ini"],
+        "grvacc_ECI" : DYN_GRV_par["grvacc_ECI_ini"],
+        "grvacc_MAR" : DYN_GRV_par["grvacc_MAR_ini"],
+        "grvacc_MCI" : DYN_GRV_par["grvacc_MCI_ini"],
+        "grvacc_SUN" : DYN_GRV_par["grvacc_SUN_ini"],
+        "grvacc_SSB" : DYN_GRV_par["grvacc_SSB_ini"]
+    }
+    return DYN_GRV_out
 
 # Module main function
-def run(DYN_EARTH_out, DYN_TRA_out):
-    # Get parameters to make code more readable
+def outputs(t, DYN_out):
+    # Get parameters and states to make code more readable
     gravitational_cst = CONSTANTS_par["gravitational_cst"] # [km^2/kg s^2]
     SCmass_cst        = CONSTANTS_par["SCmass_cst"]        # [kg]
     EARTHmass_cst     = CONSTANTS_par["EARTHmass_cst"]     # [kg]
+    SCpos_TER         = DYN_out["DYN_TRA"]["SCpos_TER"]    # [km]
+    grvacc_TER        = DYN_out["DYN_GRV"]["grvacc_TER"]   # [km/s^2]
 
     # Compute the standard gravitational parameter around each body
     mu_EARTH = gravitational_cst*(SCmass_cst + EARTHmass_cst) # [km^3/s^2]
-
-    # Get the distance between the spacecraft relative to each body
-    SCpos_TER = DYN_TRA_out["SCpos_TER"] # [km]
 
     # Compute the point mass acceleration (no perturbation) in the body rotative frame
     grvacc_TER = -mu_EARTH * SCpos_TER/np.linalg.norm(SCpos_TER)**3 # [km/s^2]
 
     # Compute the gravity acceleration in the body inertial frame
-    ECIq_TER = DYN_EARTH_out["ECIq_TER"]
+    ECIq_TER = DYN_out["DYN_EARTH"]["ECIq_TER"]
     grvacc_ECI = quaternions.qvecrot(grvacc_TER, ECIq_TER)
 
-    DYN_GRV_out["grvacc_TER"] = grvacc_TER # [km/s^2]
-    DYN_GRV_out["grvacc_ECI"] = grvacc_ECI # [km/s^2]
-    return dict(DYN_GRV_out)
+    DYN_out["DYN_GRV"]["grvacc_TER"] = grvacc_TER # [km/s^2]
+    DYN_out["DYN_GRV"]["grvacc_ECI"] = grvacc_ECI # [km/s^2]
+    return DYN_out
+
+# Module computation of derivatives to be integrated
+def derivatives(t, DYN_out):
+    return np.array([])
+
+# Return integrated variables
+def get_state(DYN_GRV_out):
+    return np.array([])
+
+# Update integrated variables into the state dict
+def set_state(DYN_GRV_out, vec):
+    return DYN_GRV_out

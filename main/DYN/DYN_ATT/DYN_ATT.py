@@ -4,11 +4,13 @@
 from .DYN_ATT_par import DYN_ATT_par
 
 # Module output dictionary
-DYN_ATT_out = {
-    "SSBq_BOF" : DYN_ATT_par["SSBq_BOF_ini"]
-}
+def initialize():
+    DYN_ATT_out = {
+        "SSBq_BOF" : DYN_ATT_par["SSBq_BOF_ini"]
+    }
+    return DYN_ATT_out
 
 # Module main function
-def run(inputs):
-    DYN_ATT_out["SSBq_BOF"] = inputs["SSBq_BOF"]
-    return dict(DYN_ATT_out)
+def outputs(t, DYN_out, inputs):
+    DYN_out["DYN_ATT"]["SSBq_BOF"] = inputs["DYN_ATT"]["SSBq_BOF"]
+    return DYN_out

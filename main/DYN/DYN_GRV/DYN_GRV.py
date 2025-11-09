@@ -7,7 +7,7 @@ from Utils.constants import CONSTANTS_par
 from Utils import quaternions
 
 # Module output dictionary
-def initialize():
+def initialize(DYN_TRA_out):
     DYN_GRV_out = {
         "grvacc_TER" : DYN_GRV_par["grvacc_TER_ini"],
         "grvacc_ECI" : DYN_GRV_par["grvacc_ECI_ini"],
@@ -37,8 +37,12 @@ def outputs(t, DYN_out):
     ECIq_TER = DYN_out["DYN_EARTH"]["ECIq_TER"]
     grvacc_ECI = quaternions.qvecrot(grvacc_TER, ECIq_TER)
 
+    # Compute the gravity acceleration in the SSB frame
+    grvacc_SSB = grvacc_ECI
+
     DYN_out["DYN_GRV"]["grvacc_TER"] = grvacc_TER # [km/s^2]
     DYN_out["DYN_GRV"]["grvacc_ECI"] = grvacc_ECI # [km/s^2]
+    DYN_out["DYN_GRV"]["grvacc_SSB"] = grvacc_SSB # [km/s^2]
 
     return DYN_out
 

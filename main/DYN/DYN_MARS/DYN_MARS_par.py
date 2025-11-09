@@ -10,4 +10,5 @@ DYN_MARS_par = {
     "PHOBOSpos_SSB_ini" : np.array([0,0,0]), # [km] Initial position of the Phobos relative to the SSB at the initial epoch
     "PHOBOSvel_SSB_ini" : np.array([0,0,0]), # [km] Initial velocity of the Phobos relative to the SSB at the initial epoch
     "MCIq_MAR_ini"      : np.array([0,0,0,0]), # Initial quaternion from MAR to MCI at the initial epoch
+    "MARq_MCI_ini"      : np.array([0,0,0,0]), # Initial quaternion from MCI to MAR at the initial epoch
 }

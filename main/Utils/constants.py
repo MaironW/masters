@@ -2,7 +2,9 @@
 
 CONSTANTS_par = {
     # Convertion factors
-    "sec2days_cst"  : 1/(3600*24),
+    "sec2days_cst"  : 1/(3600*24),  # Seconds to days
+    "deg2rad_cst"   :  0.017453293, # Degrees to radians
+    "rad2deg_cst"   : 57.295779513, # Radians to degrees
     # Mass properties
     "SCmass_cst"    : 1000.0,    # [kg] Spacecraft mass
     "SUNmass_cst"   : 1.9885e30, # [kg] Sun mmass

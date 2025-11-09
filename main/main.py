@@ -37,7 +37,6 @@ for step in range(n_steps):
     DYN_out = DYN.update_algebraic(sim_time, DYN_out, inputs["DYN"])
     # Integrate all dynamic states together
     DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_out, modules)
-    
     # Save results into the timeline
     output = {"DYN" : DYN_out}
     PPC.update_timeline(timeline, output, step)
@@ -59,9 +58,10 @@ fig, ax = PPC.plot(timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,0], timeline["
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2],      label="SC",    fig=fig, ax=ax)
 
 # Plot inputs
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_ATT"]["SSBq_BOF"], label=["q0","q1","q2","q3"], xlabel="time_SIM [s]", ylabel="SSBq_BOF", title="SSBq_BOF")
+# fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_ATT"]["SSBq_BOF"], label=["q0","q1","q2","q3"], xlabel="time_SIM [s]", ylabel="SSBq_BOF", title="SSBq_BOF")
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_TER"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_TER", title="grvacc_TER")
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_TER"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_TER", title="SCpos_TER")
 
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,1], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_TER", title="SCpos_TER")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,1], label=["x","y","z"], xlabel="SCpos_TER x [km]", ylabel="SCpos_TER y [km]", title="SCpos_TER")
+
 PPC.show_plot()

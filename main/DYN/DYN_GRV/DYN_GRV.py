@@ -39,6 +39,7 @@ def outputs(t, DYN_out):
 
     DYN_out["DYN_GRV"]["grvacc_TER"] = grvacc_TER # [km/s^2]
     DYN_out["DYN_GRV"]["grvacc_ECI"] = grvacc_ECI # [km/s^2]
+
     return DYN_out
 
 # Module computation of derivatives to be integrated

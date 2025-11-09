@@ -31,12 +31,17 @@ def update_algebraic(t, DYN_out, inputs):
     DYN_out = DYN_EARTH.outputs(t, DYN_out)
     DYN_out = DYN_MARS.outputs(t, DYN_out)
     DYN_out = DYN_ATT.outputs(t, DYN_out, inputs)
+    DYN_out = DYN_TRA.outputs(t, DYN_out)
     DYN_out = DYN_GRV.outputs(t, DYN_out)
     return DYN_out
 
 # Return a dict of modules that have dynamic (integrated) states
 def get_dynamic_modules():
     return {
-        "DYN_TRA" : DYN_TRA,
-        "DYN_GRV" : DYN_GRV,
+        "DYN_TIME"  : DYN_TIME,
+        "DYN_SUN"   : DYN_SUN,
+        "DYN_EARTH" : DYN_EARTH,
+        "DYN_MARS"  : DYN_MARS,
+        "DYN_TRA"   : DYN_TRA,
+        "DYN_GRV"   : DYN_GRV,
     }

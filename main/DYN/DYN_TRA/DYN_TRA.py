@@ -1,7 +1,6 @@
 # Level 2 Module DYN_TRA
 # Simulates the propagation of the spacecraft orbital states for the simulation
 
-from DYN.DYN_GRV import DYN_GRV
 from .DYN_TRA_par import DYN_TRA_par
 from Utils.constants import CONSTANTS_par
 from Utils import quaternions
@@ -16,7 +15,7 @@ def initialize():
         "SCpos_SUN" : DYN_TRA_par["SCpos_SUN_ini"],
         "SCpos_SSB" : DYN_TRA_par["SCpos_SSB_ini"],
         "SCvel_ECI" : DYN_TRA_par["SCvel_ECI_ini"],
-        "SCvel_SSB" : DYN_TRA_par["SCvel_SSB_ini"]
+        "SCvel_SSB" : DYN_TRA_par["SCvel_SSB_ini"],
     }
     return DYN_TRA_out
 
@@ -38,7 +37,7 @@ def outputs(t, DYN_out):
     DYN_out["DYN_TRA"]["SCpos_SSB"] = SCpos_SSB
     DYN_out["DYN_TRA"]["SCvel_SSB"] = SCvel_SSB
 
-    return DYN_out
+    return dict(DYN_out)
 
 # Module computation of derivatives to be integrated
 def derivatives(t, DYN_out):

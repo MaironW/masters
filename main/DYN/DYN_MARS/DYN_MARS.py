@@ -1,6 +1,7 @@
 # Level 2 Module DYN_MARS
 # Simulates the propagation of the Mars position relative to the SSB frame
 
+import numpy as np
 from Utils import spice
 
 from .DYN_MARS_par import DYN_MARS_par
@@ -32,3 +33,15 @@ def outputs(t, DYN_out):
     DYN_out["DYN_MARS"]["MCIq_MAR"]      = MCIq_MAR
 
     return DYN_out
+
+# Module computation of derivatives to be integrated
+def derivatives(t, DYN_out):
+    return np.array([])
+
+# Return integrated variables
+def get_state(DYN_MARS_out):
+    return np.array([])
+
+# Update integrated variables into the state dict
+def set_state(DYN_MARS_out, vec):
+    return DYN_MARS_out

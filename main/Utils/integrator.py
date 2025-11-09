@@ -23,13 +23,11 @@ def rk4_step(t, dt, state, modules):
 
     # Set states, update algebraic modules and dynamic outputs, then evaluate derivatives
     def f(t_local, y_vec):
-        state_tmp = dict(state)
-        state_tmp = set_state_vector(state_tmp, y_vec, slices, modules)
-        
-        # Update non-integrated DYN parts
+        state_tmp = set_state_vector(dict(state), y_vec, slices, modules)
+        # Compute outputs of dynamic models
         for mod in modules.values():
             mod.outputs(t_local, state_tmp)
-
+        # Compute derivatives of dynamic models
         dy = [mod.derivatives(t_local, state_tmp) for mod in modules.values()]
         return np.hstack(dy)
 

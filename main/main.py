@@ -11,9 +11,10 @@ from Utils import events
 from Utils import integrator
 
 # Simulation parameters
-sim_dt         = 3600 # [s] 1 h
-sim_time_start = 0   # [s]
-sim_time_end   = 24*3600*50 # [s] 30 days
+sim_dt         = 1      # [s]
+sim_time_start = 0      # [s]
+sim_time_end   = 3600*3 # [s] 3 h
+
 sim_time       = sim_time_start # [s]
 step           = 0
 n_steps        = int((sim_time_end - sim_time_start)/sim_dt) + 1
@@ -36,11 +37,6 @@ for step in range(n_steps):
     DYN_out = DYN.update_algebraic(sim_time, DYN_out, inputs["DYN"])
     # Integrate all dynamic states together
     DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_out, modules)
-    # Compute outputs of dynamic models
-    for name, mod in modules.items():
-        DYN_out = mod.outputs(sim_time, DYN_out)
-
-    print(DYN_out["DYN_TRA"]["SCpos_TER"])
     
     # Save results into the timeline
     output = {"DYN" : DYN_out}
@@ -63,8 +59,9 @@ fig, ax = PPC.plot(timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,0], timeline["
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2],      label="SC",    fig=fig, ax=ax)
 
 # Plot inputs
-# fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_ATT"]["SSBq_BOF"], label=["q0","q1","q2","q3"], xlabel="time_SIM [s]", ylabel="SSBq_BOF", title="SSBq_BOF")
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_TER"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_ECI", title="grvacc_ECI")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_ATT"]["SSBq_BOF"], label=["q0","q1","q2","q3"], xlabel="time_SIM [s]", ylabel="SSBq_BOF", title="SSBq_BOF")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_TER"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_TER", title="grvacc_TER")
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_TER"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_TER", title="SCpos_TER")
 
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,1], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_TER", title="SCpos_TER")
 PPC.show_plot()

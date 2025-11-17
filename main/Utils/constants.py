@@ -17,3 +17,8 @@ CONSTANTS_par = {
     # Universal constants
     "gravitational_cst" : 6.67430e-20 # [km^3/(kg s^2)]
 }
+
+# Compute derived constants
+CONSTANTS_par["mu_SUN_cst"]   = CONSTANTS_par["gravitational_cst"]*CONSTANTS_par["SUNmass_cst"]   # [km^3/s^2] Sun gravitational parameter
+CONSTANTS_par["mu_EARTH_cst"] = CONSTANTS_par["gravitational_cst"]*CONSTANTS_par["EARTHmass_cst"] # [km^3/s^2] Earth gravitational parameter
+CONSTANTS_par["mu_MARS_cst"]  = CONSTANTS_par["gravitational_cst"]*CONSTANTS_par["MARSmass_cst"]  # [km^3/s^2] Mars gravitational parameter

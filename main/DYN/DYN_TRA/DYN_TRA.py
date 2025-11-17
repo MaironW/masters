@@ -8,26 +8,51 @@ import numpy as np
 
 # Module output dictionary
 def initialize(DYN_EARTH_out, DYN_MARS_out, DYN_SUN_out):
-    # Compute Earth gravitational parameter
-    gravitational_cst = CONSTANTS_par["gravitational_cst"] # [km^2/kg s^2]
-    SCmass_cst        = CONSTANTS_par["SCmass_cst"]        # [kg]
-    EARTHmass_cst     = CONSTANTS_par["EARTHmass_cst"]     # [kg]
-    mu_EARTH = gravitational_cst*(SCmass_cst + EARTHmass_cst) # [km^3/s^2]
-
     # Get initial conditions based on Keplerian elements
+    BODY_ini = DYN_TRA_par["BODY_ini"]
     sma_ini  = DYN_TRA_par["sma_ini"]
     ecc_ini  = DYN_TRA_par["ecc_ini"]
     incl_ini = DYN_TRA_par["incl_ini"]
     raan_ini = DYN_TRA_par["raan_ini"]
     argp_ini = DYN_TRA_par["argp_ini"]
     tano_ini = DYN_TRA_par["tano_ini"]
-    SCpos_ECI_ini, SCvel_ECI_ini = kep2rv(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu_EARTH)
 
-    # Convert ECI states into other inertial refernces
-    SCpos_SSB_ini = SCpos_ECI_ini + DYN_EARTH_out["EARTHpos_SSB"]
-    SCvel_SSB_ini = SCvel_ECI_ini + DYN_EARTH_out["EARTHvel_SSB"]
-    SCpos_MCI_ini = SCpos_SSB_ini - DYN_MARS_out["MARSpos_SSB"]
-    SCvel_MCI_ini = SCvel_SSB_ini - DYN_MARS_out["MARSvel_SSB"]
+    if BODY_ini == "EARTH":
+        # Get respective gravitational parameter
+        mu = CONSTANTS_par["mu_EARTH_cst"] # [km^3/s^2]
+        # Get position and velocity in the respective body centered inertial frame
+        SCpos_ECI_ini, SCvel_ECI_ini = kep2rv(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
+        # Convert inertial states into other inertial refernces
+        SCpos_SSB_ini = SCpos_ECI_ini + DYN_EARTH_out["EARTHpos_SSB"]
+        SCvel_SSB_ini = SCvel_ECI_ini + DYN_EARTH_out["EARTHvel_SSB"]
+        SCpos_MCI_ini = SCpos_SSB_ini - DYN_MARS_out["MARSpos_SSB"]
+        SCvel_MCI_ini = SCvel_SSB_ini - DYN_MARS_out["MARSvel_SSB"]
+        SCpos_SCI_ini = SCpos_SSB_ini - DYN_SUN_out["SUNpos_SSB"]
+        SCvel_SCI_ini = SCvel_SSB_ini - DYN_SUN_out["SUNvel_SSB"]
+    elif BODY_ini == "MARS":
+        # Get respective gravitational parameter
+        mu = CONSTANTS_par["mu_MARS_cst"] # [km^3/s^2]
+        # Get position and velocity in the respective body centered inertial frame
+        SCpos_MCI_ini, SCvel_MCI_ini = kep2rv(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
+        # Convert inertial states into other inertial refernces
+        SCpos_SSB_ini = SCpos_MCI_ini + DYN_MARS_out["MARSpos_SSB"]
+        SCvel_SSB_ini = SCvel_MCI_ini + DYN_MARS_out["MARSvel_SSB"]
+        SCpos_ECI_ini = SCpos_SSB_ini - DYN_EARTH_out["EARTHpos_SSB"]
+        SCvel_ECI_ini = SCvel_SSB_ini - DYN_EARTH_out["EARTHvel_SSB"]
+        SCpos_SCI_ini = SCpos_SSB_ini - DYN_SUN_out["SUNpos_SSB"]
+        SCvel_SCI_ini = SCvel_SSB_ini - DYN_SUN_out["SUNvel_SSB"]
+    elif BODY_ini == "SUN":
+        # Get respective gravitational parameter
+        mu = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
+        # Get position and velocity in the respective body centered inertial frame
+        SCpos_SCI_ini, SCvel_SCI_ini = kep2rv(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
+        # Convert inertial states into other inertial refernces
+        SCpos_SSB_ini = SCpos_SCI_ini + DYN_SUN_out["SUNpos_SSB"]
+        SCvel_SSB_ini = SCvel_SCI_ini + DYN_SUN_out["SUNvel_SSB"]
+        SCpos_ECI_ini = SCpos_SSB_ini - DYN_EARTH_out["EARTHpos_SSB"]
+        SCvel_ECI_ini = SCvel_SSB_ini - DYN_EARTH_out["EARTHvel_SSB"]
+        SCpos_MCI_ini = SCpos_SSB_ini - DYN_MARS_out["MARSpos_SSB"]
+        SCvel_MCI_ini = SCvel_SSB_ini - DYN_MARS_out["MARSvel_SSB"]
 
     # Get frame rotation quaternions
     TERq_ECI = DYN_EARTH_out["TERq_ECI"]
@@ -45,8 +70,12 @@ def initialize(DYN_EARTH_out, DYN_MARS_out, DYN_SUN_out):
     DYN_TRA_out = {
         "SCpos_SSB" : SCpos_SSB_ini,
         "SCvel_SSB" : SCvel_SSB_ini,
+        "SCpos_SCI" : SCpos_SCI_ini,
+        "SCvel_SCI" : SCvel_SCI_ini,
         "SCpos_ECI" : SCpos_ECI_ini,
         "SCvel_ECI" : SCvel_ECI_ini,
+        "SCpos_MCI" : SCpos_MCI_ini,
+        "SCvel_MCI" : SCvel_MCI_ini,
         "SCpos_SUN" : SCpos_SUN_ini,
         "SCvel_SUN" : SCvel_SUN_ini,
         "SCpos_TER" : SCpos_TER_ini,
@@ -63,6 +92,8 @@ def outputs(t, DYN_out):
     SCvel_SSB = DYN_out["DYN_TRA"]["SCvel_SSB"]  # [km/s]
 
     # Convert SSB states into other inertial refernces
+    SCpos_SCI = SCpos_SSB - DYN_out["DYN_SUN"]["SUNpos_SSB"]
+    SCvel_SCI = SCvel_SSB - DYN_out["DYN_SUN"]["SUNvel_SSB"]
     SCpos_ECI = SCpos_SSB - DYN_out["DYN_EARTH"]["EARTHpos_SSB"]
     SCvel_ECI = SCvel_SSB - DYN_out["DYN_EARTH"]["EARTHvel_SSB"]
     SCpos_MCI = SCpos_SSB - DYN_out["DYN_MARS"]["MARSpos_SSB"]
@@ -83,6 +114,8 @@ def outputs(t, DYN_out):
 
     DYN_out["DYN_TRA"]["SCpos_SSB"] = SCpos_SSB
     DYN_out["DYN_TRA"]["SCvel_SSB"] = SCvel_SSB
+    DYN_out["DYN_TRA"]["SCpos_SCI"] = SCpos_SCI
+    DYN_out["DYN_TRA"]["SCvel_SCI"] = SCvel_SCI
     DYN_out["DYN_TRA"]["SCpos_ECI"] = SCpos_ECI
     DYN_out["DYN_TRA"]["SCvel_ECI"] = SCvel_ECI
     DYN_out["DYN_TRA"]["SCpos_MCI"] = SCpos_MCI

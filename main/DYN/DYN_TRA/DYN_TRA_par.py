@@ -4,6 +4,7 @@ from Utils.constants import CONSTANTS_par
 # Parameters for Module DYN_TRA
 
 DYN_TRA_par = {
+    "BODY_ini" : "EARTH",                                 # Select with respect to which body the orbital elements are defined 
     "sma_ini"  : CONSTANTS_par["EARTHradius_cst"] + 1000, # [km] Semi-major axis
     "ecc_ini"  : 0,                                       # Eccentricity
     "incl_ini" : CONSTANTS_par["deg2rad_cst"]*99.5,       # [rad] Inclination

@@ -58,10 +58,12 @@ fig, ax = PPC.plot(timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,0], timeline["
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2],      label="SC",    fig=fig, ax=ax)
 
 # Plot inputs
-# fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_ATT"]["SSBq_BOF"], label=["q0","q1","q2","q3"], xlabel="time_SIM [s]", ylabel="SSBq_BOF", title="SSBq_BOF")
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_TER"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_TER", title="grvacc_TER")
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_TER"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_TER", title="SCpos_TER")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_SSB"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_SSB", title="grvacc_SSB")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_ECI"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_ECI", title="SCpos_ECI")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_MCI"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_MCI", title="SCpos_MCI")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SCI"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_SCI", title="SCpos_SCI")
 
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,1], label=["x","y","z"], xlabel="SCpos_TER x [km]", ylabel="SCpos_TER y [km]", title="SCpos_TER")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_MAR"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_MAR"][:,1], label=["x","y","z"], xlabel="SCpos_MAR x [km]", ylabel="SCpos_MAR y [km]", title="SCpos_MAR")
 
 PPC.show_plot()

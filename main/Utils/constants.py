@@ -15,7 +15,9 @@ CONSTANTS_par = {
     "EARTHradius_cst" :   6371.0, # [km] Earth radius
     "MARSradius_cst"  :   3389.5, # [km] Mars radius
     # Universal constants
-    "gravitational_cst" : 6.67430e-20 # [km^3/(kg s^2)]
+    "gravitational_cst" : 6.67430e-20, # [km^3/(kg s^2)]
+    # Astronomical Unit
+    "AU_cst" : 188766877 # [km]
 }
 
 # Compute derived constants

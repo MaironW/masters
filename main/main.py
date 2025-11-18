@@ -10,11 +10,15 @@ from Utils import spice
 from Utils import events
 from Utils import integrator
 
-# Simulation parameters
-sim_dt         = 1      # [s]
-sim_time_start = 0      # [s]
-sim_time_end   = 3600*3 # [s] 3 h
+# Load data or run new simulation
+DYN_log_save = False
+DYN_log_load = True
+DYN_log_path = "Logs/DYN"
 
+# Simulation parameters
+sim_dt         = 60     # [s]
+sim_time_start = 0      # [s]
+sim_time_end   = 3600*5 # [s] 24 h
 sim_time       = sim_time_start # [s]
 step           = 0
 n_steps        = int((sim_time_end - sim_time_start)/sim_dt) + 1
@@ -26,23 +30,36 @@ events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt)
 DYN_out = DYN.initialize()
 modules = DYN.get_dynamic_modules()
 
-# Initialize timeline
-timeline = PPC.init_timeline({"DYN" : DYN_out}, n_steps)
+# Initialize or load timeline
+if DYN_log_load:
+    DYN_timeline = PPC.load_timeline(DYN_log_path)
+    timeline = {"DYN" : DYN_timeline}
+else:
+    timeline = PPC.init_timeline({"DYN" : DYN_out}, n_steps)
 
 # Main loop
 for step in range(n_steps):
     # Load external inputs
     inputs = events_table[sim_time]
-    # Update algebraic modules first
-    DYN_out = DYN.update_algebraic(sim_time, DYN_out, inputs["DYN"])
-    # Integrate all dynamic states together
-    DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_out, modules)
-    # Save results into the timeline
-    output = {"DYN" : DYN_out}
-    PPC.update_timeline(timeline, output, step)
+
+    # Load DYN from file or compute everything
+    if DYN_log_load:
+        DYN_out = PPC.load_module(timeline["DYN"], step)
+    else:
+        # Update algebraic modules first
+        DYN_out = DYN.update_algebraic(sim_time, DYN_out, inputs["DYN"])
+        # Integrate all dynamic states together
+        DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_out, modules)
+        # Save results into the timeline
+        output = {"DYN" : DYN_out}
+        PPC.update_timeline(timeline, output, step)
 
     # Update time
     sim_time += sim_dt
+
+# Save log (currently only for DYN module)
+if DYN_log_save:
+    PPC.store_timeline(timeline, DYN_log_path)
 
 # Clear Kernels from memory
 spice.clear_kernels()
@@ -57,13 +74,10 @@ fig, ax = PPC.plot(timeline["DYN"]["DYN_MARS"]["DEIMOSpos_SSB"][:,0], timeline["
 fig, ax = PPC.plot(timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,0], timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,1], timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,2], label="Phobos",fig=fig, ax=ax)
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2],      label="SC",    fig=fig, ax=ax)
 
-# Plot inputs
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_SSB"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_SSB", title="grvacc_SSB")
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_ECI"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_ECI", title="SCpos_ECI")
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_MCI"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_MCI", title="SCpos_MCI")
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SCI"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_SCI", title="SCpos_SCI")
-
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,1], label=["x","y","z"], xlabel="SCpos_TER x [km]", ylabel="SCpos_TER y [km]", title="SCpos_TER")
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_MAR"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_MAR"][:,1], label=["x","y","z"], xlabel="SCpos_MAR x [km]", ylabel="SCpos_MAR y [km]", title="SCpos_MAR")
+# Plot 2D
+fig, ax = PPC.plot([0], [0], label=["EARTH"], style='o')
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_ECI"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_ECI"][:,1], label=["SCpos_ECI"], xlabel="x [km]", ylabel="y [km]", title="SCpos_ECI", fig=fig, ax=ax)
+fig, ax = PPC.plot(timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"][:,0]-timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,0], timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"][:,1]-timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,1], label=["MOONpos_ECI"], fig=fig, ax=ax)
+# fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_SSB"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_SSB", title="grvacc_SSB")
 
 PPC.show_plot()

@@ -11,7 +11,6 @@ def qprod(a, b):
     ])
     return q
 
-
 def qtrans(q):
     q0, q1, q2, q3 = q
     q_conj = np.array([q0, -q1, -q2, -q3])

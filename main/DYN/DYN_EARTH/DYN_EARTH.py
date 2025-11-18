@@ -1,30 +1,54 @@
 # Level 2 Module DYN_EARTH
 # Simulates the propagation of the Earth position relative to the SSB frame
 
+import numpy as np
 from Utils import spice
-
 from .DYN_EARTH_par import DYN_EARTH_par
 
 # Module output dictionary
-DYN_EARTH_out = {
-    "EARTHpos_SSB" : DYN_EARTH_par["EARTHpos_SSB_ini"],
-    "EARTHvel_SSB" : DYN_EARTH_par["EARTHvel_SSB_ini"],
-    "MOONpos_SSB"  : DYN_EARTH_par["MOONpos_SSB_ini"],
-    "ECIq_TER"     : DYN_EARTH_par["ECIq_TER_ini"],
-    "TERq_ECI"     : DYN_EARTH_par["TERq_ECI_ini"],
-}
+def initialize(DYN_TIME_out):
+    # Get initial position and orientation based on time
+    time_UTC_ini = DYN_TIME_out["time_UTC"]
+    EARTHpos_SSB_ini, EARTHvel_SSB_ini = spice.get_state("EARTH", time_UTC_ini)
+    MOONpos_SSB_ini,  MOONvel_SSB_ini  = spice.get_state("MOON",  time_UTC_ini)
+    ECIq_TER_ini = spice.get_orientation("ITRF93", "J2000", time_UTC_ini)
+    TERq_ECI_ini = spice.get_orientation("J2000", "ITRF93", time_UTC_ini)
+    # Update output
+    DYN_EARTH_out = {
+        "EARTHpos_SSB" : EARTHpos_SSB_ini,
+        "EARTHvel_SSB" : EARTHvel_SSB_ini,
+        "MOONpos_SSB"  : MOONpos_SSB_ini,
+        "MOONvel_SSB"  : MOONvel_SSB_ini,
+        "ECIq_TER"     : ECIq_TER_ini,
+        "TERq_ECI"     : TERq_ECI_ini,
+    }
+    return DYN_EARTH_out
 
 # Module main function
-def run(DYN_TIME_out):
-    EARTHpos_SSB, EARTHvel_SSB = spice.get_state("EARTH", DYN_TIME_out["time_UTC"])
-    MOONpos_SSB, MOONvel_SSB   = spice.get_state("MOON", DYN_TIME_out["time_UTC"])
-    ECIq_TER = spice.get_orientation("ITRF93", "J2000", DYN_TIME_out["time_UTC"])
-    TERq_ECI = spice.get_orientation("J2000", "ITRF93", DYN_TIME_out["time_UTC"])
+def outputs(t, DYN_out):
+    EARTHpos_SSB, EARTHvel_SSB = spice.get_state("EARTH", DYN_out["DYN_TIME"]["time_UTC"])
+    MOONpos_SSB, MOONvel_SSB   = spice.get_state("MOON",  DYN_out["DYN_TIME"]["time_UTC"])
+    ECIq_TER = spice.get_orientation("ITRF93", "J2000", DYN_out["DYN_TIME"]["time_UTC"])
+    TERq_ECI = spice.get_orientation("J2000", "ITRF93", DYN_out["DYN_TIME"]["time_UTC"])
 
-    DYN_EARTH_out["EARTHpos_SSB"] = EARTHpos_SSB
-    DYN_EARTH_out["EARTHvel_SSB"] = EARTHvel_SSB
-    DYN_EARTH_out["MOONpos_SSB"]  = MOONpos_SSB
-    DYN_EARTH_out["ECIq_TER"]     = ECIq_TER
-    DYN_EARTH_out["TERq_ECI"]     = TERq_ECI
+    DYN_out["DYN_EARTH"]["EARTHpos_SSB"] = EARTHpos_SSB
+    DYN_out["DYN_EARTH"]["EARTHvel_SSB"] = EARTHvel_SSB
+    DYN_out["DYN_EARTH"]["MOONpos_SSB"]  = MOONpos_SSB
+    DYN_out["DYN_EARTH"]["MOONvel_SSB"]  = MOONvel_SSB
+    DYN_out["DYN_EARTH"]["ECIq_TER"]     = ECIq_TER
+    DYN_out["DYN_EARTH"]["TERq_ECI"]     = TERq_ECI
  
-    return dict(DYN_EARTH_out)
+    return DYN_out
+
+# Module computation of derivatives to be integrated
+def derivatives(t, DYN_out):
+    return np.array([])
+
+# Return integrated variables
+def get_state(DYN_EARTH_out):
+    return np.array([])
+
+# Update integrated variables into the state dict
+def set_state(DYN_EARTH_out, vec):
+    return DYN_EARTH_out
+

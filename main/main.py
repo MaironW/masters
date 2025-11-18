@@ -8,34 +8,37 @@ from NAV   import NAV
 from PPC   import PPC
 from Utils import spice
 from Utils import events
+from Utils import integrator
 
 # Simulation parameters
-sim_dt         = 3600 # [s] 1 h
-sim_time_start = 0   # [s]
-sim_time_end   = 24*3600*15 # [s] 15 days
+sim_dt         = 1      # [s]
+sim_time_start = 0      # [s]
+sim_time_end   = 3600*3 # [s] 3 h
+
 sim_time       = sim_time_start # [s]
 step           = 0
 n_steps        = int((sim_time_end - sim_time_start)/sim_dt) + 1
-
-# Initialize timeline
-timeline = PPC.init_timeline({"DYN" : DYN.DYN_out, "SEN" : SEN.SEN_out, "NAV" : NAV.NAV_out}, n_steps)
 
 # Initialize inputs table
 events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt)
 
 # Initialize outputs
-DYN_out = DYN.DYN_out
+DYN_out = DYN.initialize()
+modules = DYN.get_dynamic_modules()
+
+# Initialize timeline
+timeline = PPC.init_timeline({"DYN" : DYN_out}, n_steps)
 
 # Main loop
 for step in range(n_steps):
+    # Load external inputs
     inputs = events_table[sim_time]
-
-    DYN_out = DYN.run(inputs["DYN"], DYN_out)
-    SEN_out = SEN.run(DYN_out)
-    NAV_out = NAV.run(SEN_out)
-
+    # Update algebraic modules first
+    DYN_out = DYN.update_algebraic(sim_time, DYN_out, inputs["DYN"])
+    # Integrate all dynamic states together
+    DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_out, modules)
     # Save results into the timeline
-    output = {"DYN" : DYN_out, "SEN" : SEN_out, "NAV" : NAV_out}
+    output = {"DYN" : DYN_out}
     PPC.update_timeline(timeline, output, step)
 
     # Update time
@@ -52,9 +55,15 @@ fig, ax = PPC.plot(timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"][:,0],  timeline["
 fig, ax = PPC.plot(timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,0],   timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,1],   timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,2],   label="Mars",  fig=fig, ax=ax)
 fig, ax = PPC.plot(timeline["DYN"]["DYN_MARS"]["DEIMOSpos_SSB"][:,0], timeline["DYN"]["DYN_MARS"]["DEIMOSpos_SSB"][:,1], timeline["DYN"]["DYN_MARS"]["DEIMOSpos_SSB"][:,2], label="Deimos",fig=fig, ax=ax)
 fig, ax = PPC.plot(timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,0], timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,1], timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,2], label="Phobos",fig=fig, ax=ax)
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2], label="SC",fig=fig, ax=ax)
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2],      label="SC",    fig=fig, ax=ax)
 
 # Plot inputs
-# fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_ATT"]["SSBq_BOF"], label=["q0","q1","q2","q3"], xlabel="time_SIM [s]", ylabel="SSBq_BOF", title="SSBq_BOF")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_SSB"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_SSB", title="grvacc_SSB")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_ECI"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_ECI", title="SCpos_ECI")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_MCI"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_MCI", title="SCpos_MCI")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SCI"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="SCpos_SCI", title="SCpos_SCI")
+
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_TER"][:,1], label=["x","y","z"], xlabel="SCpos_TER x [km]", ylabel="SCpos_TER y [km]", title="SCpos_TER")
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_MAR"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_MAR"][:,1], label=["x","y","z"], xlabel="SCpos_MAR x [km]", ylabel="SCpos_MAR y [km]", title="SCpos_MAR")
 
 PPC.show_plot()

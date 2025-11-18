@@ -11,39 +11,46 @@ from .DYN_GRV   import DYN_GRV
 from .DYN_TRA   import DYN_TRA
 
 # Module output dictionary
-DYN_out = {
-    "DYN_TIME"  : DYN_TIME.DYN_TIME_out,
-    "DYN_SUN"   : DYN_SUN.DYN_SUN_out,
-    "DYN_EARTH" : DYN_EARTH.DYN_EARTH_out,
-    "DYN_MARS"  : DYN_MARS.DYN_MARS_out,
-    "DYN_ATT"   : DYN_ATT.DYN_ATT_out,
-    "DYN_GRV"   : DYN_GRV.DYN_GRV_out,
-    "DYN_TRA"   : DYN_TRA.DYN_TRA_out,
-}
 
-# Module main function
-def run(inputs, DYN_out_old):
-    # Get last step outputs
-    DYN_TRA_out_old = DYN_out_old["DYN_TRA"]
+def initialize():
+    DYN_TIME_out  = DYN_TIME.initialize()
+    DYN_SUN_out   = DYN_SUN.initialize(DYN_TIME_out)
+    DYN_EARTH_out = DYN_EARTH.initialize(DYN_TIME_out)
+    DYN_MARS_out  = DYN_MARS.initialize(DYN_TIME_out)
+    DYN_ATT_out   = DYN_ATT.initialize()
+    DYN_TRA_out   = DYN_TRA.initialize(DYN_EARTH_out, DYN_MARS_out, DYN_SUN_out)
+    DYN_GRV_out   = DYN_GRV.initialize(DYN_TRA_out)
 
-    # Run Level-2 modules
-    DYN_TIME_out  = DYN_TIME.run()
-    DYN_SUN_out   = DYN_SUN.run(DYN_TIME_out)
-    DYN_EARTH_out = DYN_EARTH.run(DYN_TIME_out)
-    DYN_MARS_out  = DYN_MARS.run(DYN_TIME_out)
-    DYN_ATT_out   = DYN_ATT.run(inputs["DYN_ATT"])
+    DYN_out = {
+        "DYN_TIME"  : DYN_TIME_out,
+        "DYN_SUN"   : DYN_SUN_out,
+        "DYN_EARTH" : DYN_EARTH_out,
+        "DYN_MARS"  : DYN_MARS_out,
+        "DYN_ATT"   : DYN_ATT_out,
+        "DYN_TRA"   : DYN_TRA_out,
+        "DYN_GRV"   : DYN_GRV_out,
+    }
+    print("DYN Module Initialized.")
+    return DYN_out
 
-    # Integrate coupled dynamics
-    DYN_TRA_out   = DYN_TRA.run(DYN_TRA_out_old, DYN_TIME_out, DYN_EARTH_out)
-    # After integration, recompute gravity for outputs
-    DYN_GRV_out   = DYN_GRV.run(DYN_EARTH_out, DYN_TRA_out)
+# Update time-dependent, non-integrated Level-2 modules
+def update_algebraic(t, DYN_out, inputs):
+    DYN_out = DYN_TIME.outputs(t, DYN_out)
+    DYN_out = DYN_SUN.outputs(t, DYN_out)
+    DYN_out = DYN_EARTH.outputs(t, DYN_out)
+    DYN_out = DYN_MARS.outputs(t, DYN_out)
+    DYN_out = DYN_ATT.outputs(t, DYN_out, inputs)
+    DYN_out = DYN_TRA.outputs(t, DYN_out)
+    DYN_out = DYN_GRV.outputs(t, DYN_out)
+    return DYN_out
 
-    # Attribute outputs to DYN output
-    DYN_out["DYN_TIME"]  = DYN_TIME_out
-    DYN_out["DYN_SUN"]   = DYN_SUN_out
-    DYN_out["DYN_EARTH"] = DYN_EARTH_out
-    DYN_out["DYN_MARS"]  = DYN_MARS_out
-    DYN_out["DYN_ATT"]   = DYN_ATT_out
-    DYN_out["DYN_GRV"]   = DYN_GRV_out
-    DYN_out["DYN_TRA"]   = DYN_TRA_out
-    return dict(DYN_out)
+# Return a dict of modules that have dynamic (integrated) states
+def get_dynamic_modules():
+    return {
+        "DYN_TIME"  : DYN_TIME,
+        "DYN_SUN"   : DYN_SUN,
+        "DYN_EARTH" : DYN_EARTH,
+        "DYN_MARS"  : DYN_MARS,
+        "DYN_TRA"   : DYN_TRA,
+        "DYN_GRV"   : DYN_GRV,
+    }

@@ -2,7 +2,9 @@
 
 CONSTANTS_par = {
     # Convertion factors
-    "sec2days_cst"  : 1/(3600*24),
+    "sec2days_cst"  : 1/(3600*24),  # Seconds to days
+    "deg2rad_cst"   :  0.017453293, # Degrees to radians
+    "rad2deg_cst"   : 57.295779513, # Radians to degrees
     # Mass properties
     "SCmass_cst"    : 1000.0,    # [kg] Spacecraft mass
     "SUNmass_cst"   : 1.9885e30, # [kg] Sun mmass
@@ -15,3 +17,8 @@ CONSTANTS_par = {
     # Universal constants
     "gravitational_cst" : 6.67430e-20 # [km^3/(kg s^2)]
 }
+
+# Compute derived constants
+CONSTANTS_par["mu_SUN_cst"]   = CONSTANTS_par["gravitational_cst"]*CONSTANTS_par["SUNmass_cst"]   # [km^3/s^2] Sun gravitational parameter
+CONSTANTS_par["mu_EARTH_cst"] = CONSTANTS_par["gravitational_cst"]*CONSTANTS_par["EARTHmass_cst"] # [km^3/s^2] Earth gravitational parameter
+CONSTANTS_par["mu_MARS_cst"]  = CONSTANTS_par["gravitational_cst"]*CONSTANTS_par["MARSmass_cst"]  # [km^3/s^2] Mars gravitational parameter

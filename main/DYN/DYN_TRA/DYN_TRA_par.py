@@ -4,13 +4,11 @@ from Utils.constants import CONSTANTS_par
 # Parameters for Module DYN_TRA
 
 DYN_TRA_par = {
-    "SCpos_TER_ini" : np.array([CONSTANTS_par["EARTHradius_cst"]+400,0,0]), # [km]   Initial relative position of spacecraft on TER reference frame
-    
-    "SCpos_ECI_ini" : np.array([CONSTANTS_par["EARTHradius_cst"]+400,0,0]), # [km]   Initial relative position of spacecraft on ECI reference frame
-    "SCvel_ECI_ini" : np.array([0,7.67,0]), # [km/s] Initial relative velocity of spacecraft on ECI reference frame
-    
-    "SCpos_MAR_ini" : np.array([1,0,0]), # [km]   Initial relative position of spacecraft on MAR reference frame
-    "SCpos_SUN_ini" : np.array([1,0,0]), # [km]   Initial relative position of spacecraft on SUN reference frame
-    "SCpos_SSB_ini" : np.array([1,0,0]), # [km]   Initial relative position of spacecraft on SSB reference frame
-    "SCvel_SSB_ini" : np.array([1,0,0]), # [km/s] Initial relative velocity of spacecraft on SSB reference frame
+    "BODY_ini" : "EARTH",                                 # Select with respect to which body the orbital elements are defined 
+    "sma_ini"  : CONSTANTS_par["EARTHradius_cst"] + 1000, # [km] Semi-major axis
+    "ecc_ini"  : 0,                                       # Eccentricity
+    "incl_ini" : CONSTANTS_par["deg2rad_cst"]*99.5,       # [rad] Inclination
+    "raan_ini" : 0,                                       # [rad] Right ascension of the ascending node
+    "argp_ini" : 0,                                       # [rad] Argument of perigee
+    "tano_ini" : 0,                                       # [rad] True anomaly
 }

@@ -31,6 +31,7 @@ def outputs(t, DYN_out):
     grvacc_MARS_MCI  = -mu_MARS_cst  * SCpos_MCI/np.linalg.norm(SCpos_MCI)**3 # [km/s^2]
 
     # Compute the gravity acceleration in the SSB frame (add all inertial models together)
+    # Check Vallado c1.4 - Barycentric form of the N-body problem (eq 1-38)
     grvacc_SSB = grvacc_SUN_SCI + grvacc_EARTH_ECI + grvacc_MARS_MCI
 
     DYN_out["DYN_GRV"]["grvacc_SSB"] = grvacc_SSB # [km/s^2]

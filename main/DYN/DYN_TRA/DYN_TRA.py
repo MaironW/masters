@@ -21,7 +21,7 @@ def initialize(DYN_EARTH_out, DYN_MARS_out, DYN_SUN_out):
         # Get respective gravitational parameter
         mu = CONSTANTS_par["mu_EARTH_cst"] # [km^3/s^2]
         # Get position and velocity in the respective body centered inertial frame
-        SCpos_ECI_ini, SCvel_ECI_ini = kep2rv(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
+        SCpos_ECI_ini, SCvel_ECI_ini = kep2rvi(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
         # Convert inertial states into other inertial refernces
         SCpos_SSB_ini = SCpos_ECI_ini + DYN_EARTH_out["EARTHpos_SSB"]
         SCvel_SSB_ini = SCvel_ECI_ini + DYN_EARTH_out["EARTHvel_SSB"]
@@ -33,7 +33,7 @@ def initialize(DYN_EARTH_out, DYN_MARS_out, DYN_SUN_out):
         # Get respective gravitational parameter
         mu = CONSTANTS_par["mu_MARS_cst"] # [km^3/s^2]
         # Get position and velocity in the respective body centered inertial frame
-        SCpos_MCI_ini, SCvel_MCI_ini = kep2rv(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
+        SCpos_MCI_ini, SCvel_MCI_ini = kep2rvi(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
         # Convert inertial states into other inertial refernces
         SCpos_SSB_ini = SCpos_MCI_ini + DYN_MARS_out["MARSpos_SSB"]
         SCvel_SSB_ini = SCvel_MCI_ini + DYN_MARS_out["MARSvel_SSB"]
@@ -45,7 +45,7 @@ def initialize(DYN_EARTH_out, DYN_MARS_out, DYN_SUN_out):
         # Get respective gravitational parameter
         mu = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
         # Get position and velocity in the respective body centered inertial frame
-        SCpos_SCI_ini, SCvel_SCI_ini = kep2rv(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
+        SCpos_SCI_ini, SCvel_SCI_ini = kep2rvi(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
         # Convert inertial states into other inertial refernces
         SCpos_SSB_ini = SCpos_SCI_ini + DYN_SUN_out["SUNpos_SSB"]
         SCvel_SSB_ini = SCvel_SCI_ini + DYN_SUN_out["SUNvel_SSB"]
@@ -150,11 +150,11 @@ def set_state(DYN_TRA_out, vec):
     return DYN_TRA_out
 
 # Convert Keplerian elements to cartesian position and velocity
-def kep2rv(sma, ecc, incl, raan, argp, tano, mu):
+def kep2rvi(sma, ecc, incl, raan, argp, tano, mu):
     # Compute position and velocity on the perifocal frame
-    p    = sma*(1 - ecc**2) # Semi-latus rectum
-    r_pf = (p/(1 + ecc*np.cos(tano)))*np.array([np.cos(tano), np.sin(tano), 0.0])
-    v_pf = np.sqrt(mu/p)*np.array([-np.sin(tano), ecc + np.cos(tano), 0.0])
+    p     = sma*(1 - ecc**2) # Semi-latus rectum
+    r_PQW = (p/(1 + ecc*np.cos(tano)))*np.array([np.cos(tano), np.sin(tano), 0.0])
+    v_PQW = np.sqrt(mu/p)*np.array([-np.sin(tano), ecc + np.cos(tano), 0.0])
 
     # Rotation from perifocal to inertial frame
     c_raan = np.cos(raan); s_raan = np.sin(raan)
@@ -167,6 +167,6 @@ def kep2rv(sma, ecc, incl, raan, argp, tano, mu):
         [                        s_argp*s_incl,                         c_argp*s_incl,         c_incl]
     ])
 
-    r_ine = R.dot(r_pf)
-    v_ine = R.dot(v_pf)
+    r_ine = R.dot(r_PQW)
+    v_ine = R.dot(v_PQW)
     return r_ine, v_ine

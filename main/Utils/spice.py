@@ -4,6 +4,7 @@ import spiceypy
 
 _KERNELS_LOADED = False
 
+# Load all default kernels for the whole simulation
 def load_kernels():
     global _KERNELS_LOADED
     if _KERNELS_LOADED:
@@ -17,6 +18,11 @@ def load_kernels():
 
     _KERNELS_LOADED = True
 
+# Load a single kernel, useful for testing
+def load_kernel(path):
+    spiceypy.furnsh(path)
+
+# Clear all kernels
 def clear_kernels():
     spiceypy.kclear()
 
@@ -45,3 +51,7 @@ def get_orientation(from_frame: str, to_frame: str, et: float):
     r = spiceypy.pxform(from_frame, to_frame, et)
     # Convert matrix to quaternion
     return spiceypy.m2q(r)
+
+# Convert state (position, velocity) to classical orbital elements
+def get_classical_elements(state, et, mu):
+    return spiceypy.oscelt(state, et, mu)

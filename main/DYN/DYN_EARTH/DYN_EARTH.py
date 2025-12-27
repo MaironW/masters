@@ -11,16 +11,12 @@ def initialize(DYN_TIME_out):
     time_UTC_ini = DYN_TIME_out["time_UTC"]
     EARTHpos_SSB_ini, EARTHvel_SSB_ini = spice.get_state("EARTH", time_UTC_ini)
     MOONpos_SSB_ini,  MOONvel_SSB_ini  = spice.get_state("MOON",  time_UTC_ini)
-    ECIq_TER_ini = spice.get_orientation("ITRF93", "J2000", time_UTC_ini)
-    TERq_ECI_ini = spice.get_orientation("J2000", "ITRF93", time_UTC_ini)
     # Update output
     DYN_EARTH_out = {
         "EARTHpos_SSB" : EARTHpos_SSB_ini,
         "EARTHvel_SSB" : EARTHvel_SSB_ini,
         "MOONpos_SSB"  : MOONpos_SSB_ini,
         "MOONvel_SSB"  : MOONvel_SSB_ini,
-        "ECIq_TER"     : ECIq_TER_ini,
-        "TERq_ECI"     : TERq_ECI_ini,
     }
     return DYN_EARTH_out
 
@@ -28,15 +24,11 @@ def initialize(DYN_TIME_out):
 def outputs(t, DYN_out):
     EARTHpos_SSB, EARTHvel_SSB = spice.get_state("EARTH", DYN_out["DYN_TIME"]["time_UTC"])
     MOONpos_SSB, MOONvel_SSB   = spice.get_state("MOON",  DYN_out["DYN_TIME"]["time_UTC"])
-    ECIq_TER = spice.get_orientation("ITRF93", "J2000", DYN_out["DYN_TIME"]["time_UTC"])
-    TERq_ECI = spice.get_orientation("J2000", "ITRF93", DYN_out["DYN_TIME"]["time_UTC"])
 
     DYN_out["DYN_EARTH"]["EARTHpos_SSB"] = EARTHpos_SSB
     DYN_out["DYN_EARTH"]["EARTHvel_SSB"] = EARTHvel_SSB
     DYN_out["DYN_EARTH"]["MOONpos_SSB"]  = MOONpos_SSB
     DYN_out["DYN_EARTH"]["MOONvel_SSB"]  = MOONvel_SSB
-    DYN_out["DYN_EARTH"]["ECIq_TER"]     = ECIq_TER
-    DYN_out["DYN_EARTH"]["TERq_ECI"]     = TERq_ECI
  
     return DYN_out
 

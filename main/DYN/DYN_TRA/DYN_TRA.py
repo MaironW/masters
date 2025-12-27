@@ -54,19 +54,6 @@ def initialize(DYN_EARTH_out, DYN_MARS_out, DYN_SUN_out):
         SCpos_MCI_ini = SCpos_SSB_ini - DYN_MARS_out["MARSpos_SSB"]
         SCvel_MCI_ini = SCvel_SSB_ini - DYN_MARS_out["MARSvel_SSB"]
 
-    # Get frame rotation quaternions
-    TERq_ECI = DYN_EARTH_out["TERq_ECI"]
-    MARq_MCI = DYN_MARS_out["MARq_MCI"]
-    SUNq_SSB = DYN_SUN_out["SUNq_SSB"]
-
-    # Convert inertial references to rotational ones
-    SCpos_SUN_ini = quaternions.qvecrot(SCpos_SSB_ini, SUNq_SSB)
-    SCvel_SUN_ini = quaternions.qvecrot(SCvel_SSB_ini, SUNq_SSB)
-    SCpos_TER_ini = quaternions.qvecrot(SCpos_ECI_ini, TERq_ECI)
-    SCvel_TER_ini = quaternions.qvecrot(SCvel_ECI_ini, TERq_ECI)
-    SCpos_MAR_ini = quaternions.qvecrot(SCpos_MCI_ini, MARq_MCI)
-    SCvel_MAR_ini = quaternions.qvecrot(SCvel_MCI_ini, MARq_MCI)
-
     DYN_TRA_out = {
         "SCpos_SSB" : SCpos_SSB_ini,
         "SCvel_SSB" : SCvel_SSB_ini,
@@ -76,13 +63,8 @@ def initialize(DYN_EARTH_out, DYN_MARS_out, DYN_SUN_out):
         "SCvel_ECI" : SCvel_ECI_ini,
         "SCpos_MCI" : SCpos_MCI_ini,
         "SCvel_MCI" : SCvel_MCI_ini,
-        "SCpos_SUN" : SCpos_SUN_ini,
-        "SCvel_SUN" : SCvel_SUN_ini,
-        "SCpos_TER" : SCpos_TER_ini,
-        "SCvel_TER" : SCvel_TER_ini,
-        "SCpos_MAR" : SCpos_MAR_ini,
-        "SCvel_MAR" : SCvel_MAR_ini,
     }
+
     return DYN_TRA_out
 
 # Module main function
@@ -99,19 +81,6 @@ def outputs(t, DYN_out):
     SCpos_MCI = SCpos_SSB - DYN_out["DYN_MARS"]["MARSpos_SSB"]
     SCvel_MCI = SCvel_SSB - DYN_out["DYN_MARS"]["MARSvel_SSB"]
 
-    # Get frame rotation quaternions
-    TERq_ECI = DYN_out["DYN_EARTH"]["TERq_ECI"]
-    MARq_MCI = DYN_out["DYN_MARS"]["MARq_MCI"]
-    SUNq_SSB = DYN_out["DYN_SUN"]["SUNq_SSB"]
-
-    # Convert inertial references to rotational ones
-    SCpos_SUN = quaternions.qvecrot(SCpos_SSB, SUNq_SSB)
-    SCvel_SUN = quaternions.qvecrot(SCvel_SSB, SUNq_SSB)
-    SCpos_TER = quaternions.qvecrot(SCpos_ECI, TERq_ECI)
-    SCvel_TER = quaternions.qvecrot(SCvel_ECI, TERq_ECI)
-    SCpos_MAR = quaternions.qvecrot(SCpos_MCI, MARq_MCI)
-    SCvel_MAR = quaternions.qvecrot(SCvel_MCI, MARq_MCI)
-
     DYN_out["DYN_TRA"]["SCpos_SSB"] = SCpos_SSB
     DYN_out["DYN_TRA"]["SCvel_SSB"] = SCvel_SSB
     DYN_out["DYN_TRA"]["SCpos_SCI"] = SCpos_SCI
@@ -120,12 +89,6 @@ def outputs(t, DYN_out):
     DYN_out["DYN_TRA"]["SCvel_ECI"] = SCvel_ECI
     DYN_out["DYN_TRA"]["SCpos_MCI"] = SCpos_MCI
     DYN_out["DYN_TRA"]["SCvel_MCI"] = SCvel_MCI
-    DYN_out["DYN_TRA"]["SCpos_SUN"] = SCpos_SUN
-    DYN_out["DYN_TRA"]["SCvel_SUN"] = SCvel_SUN
-    DYN_out["DYN_TRA"]["SCpos_TER"] = SCpos_TER
-    DYN_out["DYN_TRA"]["SCvel_TER"] = SCvel_TER
-    DYN_out["DYN_TRA"]["SCpos_MAR"] = SCpos_MAR
-    DYN_out["DYN_TRA"]["SCvel_MAR"] = SCvel_MAR
 
     return dict(DYN_out)
 

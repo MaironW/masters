@@ -12,13 +12,13 @@ from Utils import integrator
 
 # Load data or run new simulation
 DYN_log_save = False
-DYN_log_load = True
+DYN_log_load = False
 DYN_log_path = "Logs/DYN"
 
 # Simulation parameters
-sim_dt         = 60     # [s]
-sim_time_start = 0      # [s]
-sim_time_end   = 3600*5 # [s] 24 h
+sim_dt         = 600            # [s] 10 min
+sim_time_start = 0              # [s]
+sim_time_end   = 3600*24*20     # [s] 20 days
 sim_time       = sim_time_start # [s]
 step           = 0
 n_steps        = int((sim_time_end - sim_time_start)/sim_dt) + 1
@@ -78,6 +78,7 @@ fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0],      timeline["
 fig, ax = PPC.plot([0], [0], label=["EARTH"], style='o')
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_ECI"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_ECI"][:,1], label=["SCpos_ECI"], xlabel="x [km]", ylabel="y [km]", title="SCpos_ECI", fig=fig, ax=ax)
 fig, ax = PPC.plot(timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"][:,0]-timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,0], timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"][:,1]-timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,1], label=["MOONpos_ECI"], fig=fig, ax=ax)
-# fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_SSB"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_SSB", title="grvacc_SSB")
+
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_SSB"], label=["x","y","z"], xlabel="time_SIM [s]", ylabel="grvacc_SSB", title="grvacc_SSB")
 
 PPC.show_plot()

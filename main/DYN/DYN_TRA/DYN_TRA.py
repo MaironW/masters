@@ -3,7 +3,6 @@
 
 from .DYN_TRA_par import DYN_TRA_par
 from Utils.constants import CONSTANTS_par
-from Utils import quaternions
 import numpy as np
 
 # Module output dictionary

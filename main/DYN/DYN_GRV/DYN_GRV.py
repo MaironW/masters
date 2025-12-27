@@ -4,7 +4,6 @@
 import numpy as np
 from .DYN_GRV_par import DYN_GRV_par
 from Utils.constants import CONSTANTS_par
-from Utils import quaternions
 
 # Module output dictionary
 def initialize(DYN_TRA_out):

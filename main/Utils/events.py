@@ -8,7 +8,7 @@ from copy import deepcopy
 events = {
     "DYN.DYN_ATT.SSBq_BOF" : [
         (0,   np.array([1,0,0,0])),
-        (100, np.array([1,0.44,0.3,0])),
+        (10000, np.array([1,0.44,0.3,0])),
     ]
 }
 
@@ -36,7 +36,7 @@ def build_events_table(t_start, t_end, dt):
         # Update current values if any event occurs
         for var, times in event_times.items():
             for i, event_t in enumerate(times):
-                if event_t == t:
+                if event_t <= t:
                     current_values[var] = event_values[var][i]
         # Group values by module
         grouped = {}

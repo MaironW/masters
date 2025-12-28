@@ -2,6 +2,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import os
 
 # Initialize timeline to store data for post processing
 # Scalars  -> (n_steps,)
@@ -27,6 +28,40 @@ def update_timeline(timeline, output, step):
         else:
             t_node[idx] = o_node
     recurse(timeline, output, step)
+
+# Store the timeline data to be loaded in the future
+def store_timeline(timeline, path):
+    for module_name, module_dict in timeline["DYN"].items():
+        os.makedirs(path, exist_ok=True)
+        filename = os.path.join(path, f"{module_name}.npz")
+        np.savez_compressed(filename, data=module_dict)
+
+# Load timeline data from file
+def load_timeline(path):
+    timeline = {}
+    for fname in os.listdir(path):
+        if not fname.endswith(".npz"):
+            continue
+        module_name = fname[:-4] # remove ".npz"
+        full_path = os.path.join(path, fname)
+        data = np.load(full_path, allow_pickle=True)["data"].item()
+        timeline[module_name] = data
+    return timeline
+
+# Extracts one module (DYN, SEN, NAV) for a given step,
+# preserving the hierarchical structure exactly as stored.
+def load_module(timeline, step):
+    def recurse(node):
+        # Case 1: nested dict → recurse
+        if isinstance(node, dict):
+            return {k: recurse(v) for k, v in node.items()}
+        # Case 2: numpy array → extract the step-th entry
+        elif isinstance(node, np.ndarray):
+            return node[step]
+        # Safety: anything else is returned as-is
+        else:
+            return node
+    return recurse(timeline)
 
 # Plot function
 def plot(x, y, z=None, style='', xlabel=None, ylabel=None, zlabel=None, label=None, title=None, fig=None, ax=None, subplot=None):

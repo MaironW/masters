@@ -2,55 +2,68 @@
 # Simulates the dynamic behavior of the spacecraft
 # Inputs: DYN initial conditions and its own outputs (for propagation)
 
-from .DYN_TIME  import DYN_TIME
-from .DYN_SUN   import DYN_SUN
-from .DYN_EARTH import DYN_EARTH
-from .DYN_MARS  import DYN_MARS
-from .DYN_ATT   import DYN_ATT
-from .DYN_GRV   import DYN_GRV
-from .DYN_TRA   import DYN_TRA
+from .DYN_TIME.DYN_TIME   import DYN_TIME
+from .DYN_SUN.DYN_SUN     import DYN_SUN
+from .DYN_EARTH.DYN_EARTH import DYN_EARTH
+from .DYN_MARS.DYN_MARS   import DYN_MARS
+from .DYN_ATT.DYN_ATT     import DYN_ATT
+from .DYN_GRV.DYN_GRV     import DYN_GRV
+from .DYN_TRA.DYN_TRA     import DYN_TRA
 
-# Module output dictionary
+class DYN:
+    def __init__(self, par_override=None):
 
-def initialize():
-    DYN_TIME_out  = DYN_TIME.initialize()
-    DYN_SUN_out   = DYN_SUN.initialize(DYN_TIME_out)
-    DYN_EARTH_out = DYN_EARTH.initialize(DYN_TIME_out)
-    DYN_MARS_out  = DYN_MARS.initialize(DYN_TIME_out)
-    DYN_ATT_out   = DYN_ATT.initialize()
-    DYN_TRA_out   = DYN_TRA.initialize(DYN_EARTH_out, DYN_MARS_out, DYN_SUN_out)
-    DYN_GRV_out   = DYN_GRV.initialize(DYN_TRA_out)
+        par_override = par_override or {}
 
-    DYN_out = {
-        "DYN_TIME"  : DYN_TIME_out,
-        "DYN_SUN"   : DYN_SUN_out,
-        "DYN_EARTH" : DYN_EARTH_out,
-        "DYN_MARS"  : DYN_MARS_out,
-        "DYN_ATT"   : DYN_ATT_out,
-        "DYN_TRA"   : DYN_TRA_out,
-        "DYN_GRV"   : DYN_GRV_out,
-    }
-    print("DYN Module Initialized.")
-    return DYN_out
+        # Instantiate modules
+        self.DYN_TIME  = DYN_TIME(par_override.get("DYN_TIME"))
+        self.DYN_SUN   = DYN_SUN(par_override.get("DYN_SUN"))
+        self.DYN_EARTH = DYN_EARTH(par_override.get("DYN_EARTH"))
+        self.DYN_MARS  = DYN_MARS(par_override.get("DYN_MARS"))
+        self.DYN_ATT   = DYN_ATT(par_override.get("DYN_ATT"))
+        self.DYN_TRA   = DYN_TRA(par_override.get("DYN_TRA"))
+        self.DYN_GRV   = DYN_GRV(par_override.get("DYN_GRV"))
 
-# Update time-dependent, non-integrated Level-2 modules
-def update_algebraic(t, DYN_out, inputs):
-    DYN_out = DYN_TIME.outputs(t, DYN_out)
-    DYN_out = DYN_SUN.outputs(t, DYN_out)
-    DYN_out = DYN_EARTH.outputs(t, DYN_out)
-    DYN_out = DYN_MARS.outputs(t, DYN_out)
-    DYN_out = DYN_ATT.outputs(t, DYN_out, inputs)
-    DYN_out = DYN_TRA.outputs(t, DYN_out)
-    DYN_out = DYN_GRV.outputs(t, DYN_out)
-    return DYN_out
+        # Register modules
+        self.modules = [
+            self.DYN_TIME,
+            self.DYN_SUN,
+            self.DYN_EARTH,
+            self.DYN_MARS,
+            self.DYN_ATT,
+            self.DYN_TRA,
+            self.DYN_GRV,
+        ]
+   
+        # Initialize all modules
+        for m in self.modules:
+            m.initialize(self.snapshot())
 
-# Return a dict of modules that have dynamic (integrated) states
-def get_dynamic_modules():
-    return {
-        "DYN_TIME"  : DYN_TIME,
-        "DYN_SUN"   : DYN_SUN,
-        "DYN_EARTH" : DYN_EARTH,
-        "DYN_MARS"  : DYN_MARS,
-        "DYN_TRA"   : DYN_TRA,
-        "DYN_GRV"   : DYN_GRV,
-    }
+        print("DYN Module Initialized.")
+
+    # Organize dynamic modules
+    @property
+    def dynamic_modules(self):
+        return [m for m in self.modules if m.is_dynamic]
+
+    # Update time-dependent, non-integrated Level-2 modules
+    def update_algebraic(self, t, inputs):
+        for m in self.modules:
+            m.update_algebraic(t, self.snapshot(), inputs)
+
+    # Return a dict of modules that have dynamic (integrated) states
+    def get_dynamic_modules(self):
+        return self.dynamic_modules
+
+    def get_state(self):
+        return [m.get_state() for m in self.dynamic_modules]
+
+    def set_state(self, vecs):
+        for m, v in zip(self.dynamic_modules, vecs):
+            m.set_state(v)
+
+    def derivatives(self, t):
+        return [m.derivatives(t, self.snapshot()) for m in self.dynamic_modules]
+
+    def snapshot(self):
+        return {m.name: m.state.copy() for m in self.modules}

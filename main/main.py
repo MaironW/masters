@@ -3,21 +3,22 @@
 # Executes the PPC module to show results
 
 from DYN.DYN import DYN
-from PPC   import PPC
-from Utils import spice
-from Utils import events
-from Utils import integrator
+from PPC     import PPC
+from SIM_par import SIM_par
+from Utils   import spice
+from Utils   import events
+from Utils   import integrator
 
 # Load data or run new simulation
-DYN_log_save = False
-DYN_log_load = False
-DYN_log_path = "Logs/DYN"
+DYN_log_save = SIM_par["DYN_log_save"]
+DYN_log_load = SIM_par["DYN_log_load"]
+DYN_log_path = SIM_par["DYN_log_path"]
 
 # Simulation parameters
-sim_dt         = 600            # [s] 10 min
-sim_time_start = 0              # [s]
-sim_time_end   = 3600*24*20     # [s] 20 days
-sim_time       = sim_time_start # [s]
+sim_dt         = SIM_par["dt"]
+sim_time_start = SIM_par["time_start"]
+sim_time_end   = SIM_par["time_end"]
+sim_time       = sim_time_start
 step           = 0
 n_steps        = int((sim_time_end - sim_time_start)/sim_dt) + 1
 

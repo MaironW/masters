@@ -16,7 +16,10 @@ class DYN_SUN(Level2Module):
         if par_override is not None:
             par.update(par_override)
         # Set initial dummy state
-        self.state = par
+        self.state = {
+            "SUNpos_SSB" : par["SUNpos_SSB_ini"],
+            "SUNvel_SSB" : par["SUNvel_SSB_ini"]
+        }
         super().__init__("DYN_SUN", par)
 
     # Initialization
@@ -32,21 +35,9 @@ class DYN_SUN(Level2Module):
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, states):
+    def update_algebraic(self, t, states, inputs=None):
         time_UTC = states["DYN_TIME"]["time_UTC"]
         SUNpos_SSB, SUNvel_SSB = spice.get_state("SUN", time_UTC)
         self.state["SUNpos_SSB"] = SUNpos_SSB
         self.state["SUNvel_SSB"] = SUNvel_SSB
         return self.state
-
-    # Module computation of derivatives to be integrated
-    def derivatives(self, t):
-        return np.array([])
-
-    # Return integrated variables
-    def get_state(self):
-        return np.array([])
-
-    # Update integrated variables into the state dict
-    def set_state(self, vec):
-        pass

@@ -17,9 +17,9 @@ def _unflatten(vec, shapes):
     return out
 
 # Perform one Runge-Kutta 4 step over all modules
-def rk4_step(t, dt, state):
+def rk4_step(t, dt, state, inputs):
     # Initial algebraic evaluation
-    state.update_algebraic(t)
+    state.update_algebraic(t, inputs)
 
     # Pack dynamic state
     state_0_list = state.get_state()
@@ -34,7 +34,7 @@ def rk4_step(t, dt, state):
 
         # Inject dynamic state
         state_tmp.set_state(vecs)
-        state_tmp.update_algebraic(t_local)
+        state_tmp.update_algebraic(t_local, inputs)
 
         # Compute derivatives of dynamic models
         dy = state_tmp.derivatives(t_local)
@@ -48,6 +48,6 @@ def rk4_step(t, dt, state):
 
     # Write back final state
     state.set_state(_unflatten(state_next, sizes))
-    state.update_algebraic(t + dt)
+    state.update_algebraic(t + dt, inputs)
 
     return state

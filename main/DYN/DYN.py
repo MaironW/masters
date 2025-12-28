@@ -5,10 +5,10 @@
 from .DYN_TIME.DYN_TIME   import DYN_TIME
 from .DYN_SUN.DYN_SUN     import DYN_SUN
 from .DYN_EARTH.DYN_EARTH import DYN_EARTH
-# from .DYN_MARS.DYN_MARS   import DYN_MARS
-# from .DYN_ATT.DYN_ATT     import DYN_ATT
-# from .DYN_GRV.DYN_GRV     import DYN_GRV
-# from .DYN_TRA.DYN_TRA     import DYN_TRA
+from .DYN_MARS.DYN_MARS   import DYN_MARS
+from .DYN_ATT.DYN_ATT     import DYN_ATT
+from .DYN_GRV.DYN_GRV     import DYN_GRV
+from .DYN_TRA.DYN_TRA     import DYN_TRA
 
 class DYN:
     def __init__(self, par_override=None):
@@ -19,12 +19,20 @@ class DYN:
         self.DYN_TIME  = DYN_TIME(par_override.get("DYN_TIME"))
         self.DYN_SUN   = DYN_SUN(par_override.get("DYN_SUN"))
         self.DYN_EARTH = DYN_EARTH(par_override.get("DYN_EARTH"))
+        self.DYN_MARS  = DYN_MARS(par_override.get("DYN_MARS"))
+        self.DYN_ATT   = DYN_ATT(par_override.get("DYN_ATT"))
+        self.DYN_TRA   = DYN_TRA(par_override.get("DYN_TRA"))
+        self.DYN_GRV   = DYN_GRV(par_override.get("DYN_GRV"))
 
         # Register modules
         self.modules = [
             self.DYN_TIME,
             self.DYN_SUN,
-            self.DYN_EARTH
+            self.DYN_EARTH,
+            self.DYN_MARS,
+            self.DYN_ATT,
+            self.DYN_TRA,
+            self.DYN_GRV,
         ]
    
         # Initialize all modules
@@ -39,9 +47,9 @@ class DYN:
         return [m for m in self.modules if m.is_dynamic]
 
     # Update time-dependent, non-integrated Level-2 modules
-    def update_algebraic(self, t):
+    def update_algebraic(self, t, inputs):
         for m in self.modules:
-            m.update_algebraic(t, self.snapshot())
+            m.update_algebraic(t, self.snapshot(), inputs)
 
     # Return a dict of modules that have dynamic (integrated) states
     def get_dynamic_modules(self):
@@ -55,7 +63,7 @@ class DYN:
             m.set_state(v)
 
     def derivatives(self, t):
-        return [m.derivatives(t) for m in self.dynamic_modules]
+        return [m.derivatives(t, self.snapshot()) for m in self.dynamic_modules]
 
     def snapshot(self):
         return {m.name: m.state.copy() for m in self.modules}

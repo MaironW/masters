@@ -16,7 +16,12 @@ class DYN_EARTH(Level2Module):
         if par_override is not None:
             par.update(par_override)
         # Set initial dummy state
-        self.state = par
+        self.state = {
+            "EARTHpos_SSB" : par["EARTHpos_SSB_ini"],
+            "EARTHvel_SSB" : par["EARTHvel_SSB_ini"],
+            "MOONpos_SSB"  : par["MOONpos_SSB_ini"],
+            "MOONvel_SSB"  : par["MOONvel_SSB_ini"],
+        }
         super().__init__("DYN_EARTH", par)
 
     # Initialization
@@ -35,7 +40,7 @@ class DYN_EARTH(Level2Module):
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, states):
+    def update_algebraic(self, t, states, inputs=None):
         time_UTC = states["DYN_TIME"]["time_UTC"]
         EARTHpos_SSB, EARTHvel_SSB = spice.get_state("EARTH", time_UTC)
         MOONpos_SSB, MOONvel_SSB   = spice.get_state("MOON",  time_UTC)
@@ -44,18 +49,5 @@ class DYN_EARTH(Level2Module):
         self.state["EARTHvel_SSB"] = EARTHvel_SSB
         self.state["MOONpos_SSB"]  = MOONpos_SSB
         self.state["MOONvel_SSB"]  = MOONvel_SSB
-    
+
         return self.state
-
-    # Module computation of derivatives to be integrated
-    def derivatives(self, t):
-        return np.array([])
-
-    # Return integrated variables
-    def get_state(self):
-        return np.array([])
-
-    # Update integrated variables into the state dict
-    def set_state(self, vec):
-        pass
-

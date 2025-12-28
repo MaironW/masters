@@ -9,10 +9,10 @@ class Level2Module():
     def initialize(self, states):
         pass
 
-    def update_algebraic(self, t, states):
+    def update_algebraic(self, t, states, inputs=None):
         pass
 
-    def derivatives(self, t):
+    def derivatives(self, t, states):
         return []
 
     def get_state(self):

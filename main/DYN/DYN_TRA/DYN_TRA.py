@@ -27,6 +27,60 @@ class DYN_TRA(Level2Module):
         # Let DYN_TRA be integrated
         self.is_dynamic = True
 
+        if self.par["ref_elements"] == 'kep':
+            self.state = self.initialize_keplerian(states)
+        else: # 'rvi'
+            self.state = self.initialize_rvi(states)
+
+        return self.state
+
+    # Module main function
+    def update_algebraic(self, t, states, inputs=None):
+        # Get parameters and states to make code more readable
+        SCpos_SSB = states["DYN_TRA"]["SCpos_SSB"]  # [km]
+        SCvel_SSB = states["DYN_TRA"]["SCvel_SSB"]  # [km/s]
+
+        # Convert SSB states into other inertial refernces
+        SCpos_SCI = SCpos_SSB - states["DYN_SUN"]["SUNpos_SSB"]
+        SCvel_SCI = SCvel_SSB - states["DYN_SUN"]["SUNvel_SSB"]
+        SCpos_ECI = SCpos_SSB - states["DYN_EARTH"]["EARTHpos_SSB"]
+        SCvel_ECI = SCvel_SSB - states["DYN_EARTH"]["EARTHvel_SSB"]
+        SCpos_MCI = SCpos_SSB - states["DYN_MARS"]["MARSpos_SSB"]
+        SCvel_MCI = SCvel_SSB - states["DYN_MARS"]["MARSvel_SSB"]
+
+        self.state["SCpos_SSB"] = SCpos_SSB
+        self.state["SCvel_SSB"] = SCvel_SSB
+        self.state["SCpos_SCI"] = SCpos_SCI
+        self.state["SCvel_SCI"] = SCvel_SCI
+        self.state["SCpos_ECI"] = SCpos_ECI
+        self.state["SCvel_ECI"] = SCvel_ECI
+        self.state["SCpos_MCI"] = SCpos_MCI
+        self.state["SCvel_MCI"] = SCvel_MCI
+
+        return self.state
+
+    # Module computation of derivatives to be integrated
+    def derivatives(self, t, states):
+        # Get parameters and states to make code more readable
+        SCvel_SSB  = self.state["SCvel_SSB"]         # [km/s]
+        grvacc_SSB = states["DYN_GRV"]["grvacc_SSB"] # [km/s^2]
+        # Return derivatives
+        dSCpos_SSB = SCvel_SSB
+        dSCvel_SSB = grvacc_SSB
+        return np.hstack([dSCpos_SSB, dSCvel_SSB])
+
+    # Return integrated variables
+    def get_state(self):
+        return np.hstack((self.state["SCpos_SSB"], self.state["SCvel_SSB"]))
+
+    # Update integrated variables into the state dict
+    def set_state(self, vec):
+        self.state["SCpos_SSB"] = vec[0:3]
+        self.state["SCvel_SSB"] = vec[3:6]
+        return self.state
+
+    # Use Keplerian Elements to initialize DYN_TRA
+    def initialize_keplerian(self, states):
         # Get initial conditions based on Keplerian elements
         BODY_ini = DYN_TRA_par["BODY_ini"]
         sma_ini  = DYN_TRA_par["sma_ini"]
@@ -87,50 +141,29 @@ class DYN_TRA(Level2Module):
 
         return self.state
 
-    # Module main function
-    def update_algebraic(self, t, states, inputs=None):
-        # Get parameters and states to make code more readable
-        SCpos_SSB = states["DYN_TRA"]["SCpos_SSB"]  # [km]
-        SCvel_SSB = states["DYN_TRA"]["SCvel_SSB"]  # [km/s]
-        
-        # Convert SSB states into other inertial refernces
-        SCpos_SCI = SCpos_SSB - states["DYN_SUN"]["SUNpos_SSB"]
-        SCvel_SCI = SCvel_SSB - states["DYN_SUN"]["SUNvel_SSB"]
-        SCpos_ECI = SCpos_SSB - states["DYN_EARTH"]["EARTHpos_SSB"]
-        SCvel_ECI = SCvel_SSB - states["DYN_EARTH"]["EARTHvel_SSB"]
-        SCpos_MCI = SCpos_SSB - states["DYN_MARS"]["MARSpos_SSB"]
-        SCvel_MCI = SCvel_SSB - states["DYN_MARS"]["MARSvel_SSB"]
-        
-        
-        self.state["SCpos_SSB"] = SCpos_SSB
-        self.state["SCvel_SSB"] = SCvel_SSB
-        self.state["SCpos_SCI"] = SCpos_SCI
-        self.state["SCvel_SCI"] = SCvel_SCI
-        self.state["SCpos_ECI"] = SCpos_ECI
-        self.state["SCvel_ECI"] = SCvel_ECI
-        self.state["SCpos_MCI"] = SCpos_MCI
-        self.state["SCvel_MCI"] = SCvel_MCI
+    # Use state vectors (position and velocitu) in the inertial frame to initialize DYN_TRA
+    def initialize_rvi(self, states):
+        SCpos_SSB_ini = self.par["SCpos_SSB_ini"]
+        SCvel_SSB_ini = self.par["SCvel_SSB_ini"]
+        SCpos_ECI_ini = SCpos_SSB_ini - states["DYN_EARTH"]["EARTHpos_SSB"]
+        SCvel_ECI_ini = SCvel_SSB_ini - states["DYN_EARTH"]["EARTHvel_SSB"]
+        SCpos_MCI_ini = SCpos_SSB_ini - states["DYN_MARS"]["MARSpos_SSB"]
+        SCvel_MCI_ini = SCvel_SSB_ini - states["DYN_MARS"]["MARSvel_SSB"]
+        SCpos_SCI_ini = SCpos_SSB_ini - states["DYN_SUN"]["SUNpos_SSB"]
+        SCvel_SCI_ini = SCvel_SSB_ini - states["DYN_SUN"]["SUNvel_SSB"]
 
-        return self.state
+        # Update output
+        self.state = {
+            "SCpos_SSB" : SCpos_SSB_ini,
+            "SCvel_SSB" : SCvel_SSB_ini,
+            "SCpos_ECI" : SCpos_ECI_ini,
+            "SCvel_ECI" : SCvel_ECI_ini,
+            "SCpos_MCI" : SCpos_MCI_ini,
+            "SCvel_MCI" : SCvel_MCI_ini,
+            "SCpos_SCI" : SCpos_SCI_ini,
+            "SCvel_SCI" : SCvel_SCI_ini,
+        }
 
-    # Module computation of derivatives to be integrated
-    def derivatives(self, t, states):
-        # Get parameters and states to make code more readable
-        SCvel_SSB  = self.state["SCvel_SSB"]         # [km/s]
-        grvacc_SSB = states["DYN_GRV"]["grvacc_SSB"] # [km/s^2]
-        # Return derivatives
-        dSCpos_SSB = SCvel_SSB
-        dSCvel_SSB = grvacc_SSB
-        return np.hstack([dSCpos_SSB, dSCvel_SSB])
-
-    # Return integrated variables
-    def get_state(self):
-        return np.hstack((self.state["SCpos_SSB"], self.state["SCvel_SSB"]))
-
-    # Update integrated variables into the state dict
-    def set_state(self, vec):
-        self.state["SCpos_SSB"] = vec[0:3]
-        self.state["SCvel_SSB"] = vec[3:6]
         return self.state
 
     # Convert Keplerian elements to cartesian position and velocity
@@ -154,3 +187,5 @@ class DYN_TRA(Level2Module):
         r_ine = R.dot(r_PQW)
         v_ine = R.dot(v_PQW)
         return r_ine, v_ine
+
+

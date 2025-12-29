@@ -3,7 +3,7 @@
 from PPC import PPC
 
 def DYN_TIME_plot(timeline):
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TIME"]["time_UTC"], xlabel="time_SIM [s]", ylabel="time_UTC [s]", title="Time")
+    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TIME"]["time_ET"], xlabel="time_SIM [s]", ylabel="time_ET [s]", title="Time")
 
 def DYN_SUN_plot(timeline):
     # Sun state

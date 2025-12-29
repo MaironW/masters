@@ -29,8 +29,8 @@ class DYN_SUN(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, states, inputs=None):
-        time_UTC = states["DYN_TIME"]["time_UTC"]
-        SUNpos_SSB, SUNvel_SSB = spice.get_state("SUN", time_UTC)
+        time_ET = states["DYN_TIME"]["time_ET"]
+        SUNpos_SSB, SUNvel_SSB = spice.get_state("SUN", time_ET)
         self.state["SUNpos_SSB"] = SUNpos_SSB
         self.state["SUNvel_SSB"] = SUNvel_SSB
         return self.state

@@ -23,9 +23,7 @@ class DYN_GRV(Level2Module):
 
     # Initialization
     def initialize(self, states):
-        self.state = {
-            "grvacc_SSB" : DYN_GRV_par["grvacc_SSB_ini"],
-        }
+        self.state = self.update_algebraic(0, states)
         return self.state
 
     # Module main function

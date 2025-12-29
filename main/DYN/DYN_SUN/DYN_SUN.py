@@ -24,14 +24,7 @@ class DYN_SUN(Level2Module):
 
     # Initialization
     def initialize(self, states):
-        # Get initial position and orientation based on time
-        time_UTC_ini = states["DYN_TIME"]["time_UTC"]
-        SUNpos_SSB_ini, SUNvel_SSB_ini = spice.get_state("SUN", time_UTC_ini)
-        # Update output
-        self.state = {
-            "SUNpos_SSB" : SUNpos_SSB_ini,
-            "SUNvel_SSB" : SUNvel_SSB_ini,
-        }
+        self.state = self.update_algebraic(0, states)
         return self.state
 
     # Module main function

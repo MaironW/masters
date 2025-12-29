@@ -14,7 +14,9 @@ def init_timeline(sample, n_steps):
             return {k: recurse(v) for k, v in node.items()}
         else:
             arr = np.array(node)
-            return np.full((n_steps, *arr.shape), np.nan)
+            out = np.full((n_steps, *arr.shape), np.nan)
+            out[0] = arr
+            return out
     return recurse(sample)
 
 # Fill preallocated timeline arrays with values at index=step.

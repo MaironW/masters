@@ -37,7 +37,7 @@ else:
     timeline = {"DYN": PPC.init_timeline(DYN_obj.snapshot(), n_steps)}
 
 # Main loop
-for step in range(n_steps):
+for step in range(1, n_steps):
     # Load external inputs
     inputs = events_table[sim_time]
 

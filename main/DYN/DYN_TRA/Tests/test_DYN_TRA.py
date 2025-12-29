@@ -134,13 +134,13 @@ for step in range(1, n_steps):
     if DYN_log_load:
         DYN_out = PPC.load_module(timeline["DYN"], step)
     else:
-        # Update MRO state
-        time_UTC = DYN_obj.snapshot()["DYN_TIME"]["time_UTC"]
-        MROpos_SSB, MROvel_SSB = spice.get_state("MRO", time_UTC)
         # Update algebraic modules first
         DYN_obj.update_algebraic(sim_time, inputs)
         # Integrate all dynamic states together
         DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
+        # Update MRO state
+        time_UTC = DYN_obj.snapshot()["DYN_TIME"]["time_UTC"]
+        MROpos_SSB, MROvel_SSB = spice.get_state("MRO", time_UTC)
         # Save results into the timeline
         output = {"DYN" : DYN_obj.snapshot(),
                   "MRO" : {"MROpos_SSB" : MROpos_SSB, "MROvel_SSB" : MROvel_SSB}}
@@ -199,9 +199,9 @@ vel_error_x = SCvel_SSB[:,0] - MROvel_SSB[:,0]
 vel_error_y = SCvel_SSB[:,1] - MROvel_SSB[:,1]
 vel_error_z = SCvel_SSB[:,2] - MROvel_SSB[:,2]
 vel_error = np.sqrt(vel_error_x**2 + vel_error_y**2 + vel_error_z**2)
-fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_x, ylabel="vel_error_x [km]", label="SC", title="Error MRO vs SC vel", subplot=(4,1,1))
-fig, ax_y = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_y, ylabel="vel_error_y [km]", label="SC", fig=fig, subplot=(4,1,2))
-fig, ax_z = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_z, ylabel="vel_error_z [km]", label="SC", fig=fig, subplot=(4,1,3))
-fig, ax_t = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error, xlabel="Time SIM [s]", ylabel="vel_error [km]", label="SC", fig=fig, subplot=(4,1,4))
+fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_x, ylabel="vel_error_x [km/s]", label="SC", title="Error MRO vs SC vel", subplot=(4,1,1))
+fig, ax_y = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_y, ylabel="vel_error_y [km/s]", label="SC", fig=fig, subplot=(4,1,2))
+fig, ax_z = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_z, ylabel="vel_error_z [km/s]", label="SC", fig=fig, subplot=(4,1,3))
+fig, ax_t = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error, xlabel="Time SIM [s]", ylabel="vel_error [km/s]", label="SC", fig=fig, subplot=(4,1,4))
 
 PPC.show_plot()

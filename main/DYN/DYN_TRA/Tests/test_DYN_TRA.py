@@ -35,7 +35,7 @@ MROpos_SSB_ini, MROvel_SSB_ini = spice.get_state("MRO", time_TDB_ini)
 
 SIM_par = {
     # Time parameters
-    "dt"           : 1, # [s] 10 min
+    "dt"           : 600, # [s] 10 min
     "time_start"   : 0,   # [s]
     "time_end"     : int(time_TDB_end - time_TDB_ini), # [s]
 

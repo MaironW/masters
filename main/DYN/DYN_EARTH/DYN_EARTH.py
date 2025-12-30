@@ -26,24 +26,14 @@ class DYN_EARTH(Level2Module):
 
     # Initialization
     def initialize(self, states):
-        # Get initial position and orientation based on time
-        time_UTC_ini = states["DYN_TIME"]["time_UTC"]
-        EARTHpos_SSB_ini, EARTHvel_SSB_ini = spice.get_state("EARTH", time_UTC_ini)
-        MOONpos_SSB_ini,  MOONvel_SSB_ini  = spice.get_state("MOON",  time_UTC_ini)
-        # Update output
-        self.state = {
-            "EARTHpos_SSB" : EARTHpos_SSB_ini,
-            "EARTHvel_SSB" : EARTHvel_SSB_ini,
-            "MOONpos_SSB"  : MOONpos_SSB_ini,
-            "MOONvel_SSB"  : MOONvel_SSB_ini,
-        }
+        self.state = self.update_algebraic(0, states)
         return self.state
 
     # Module main function
     def update_algebraic(self, t, states, inputs=None):
-        time_UTC = states["DYN_TIME"]["time_UTC"]
-        EARTHpos_SSB, EARTHvel_SSB = spice.get_state("EARTH", time_UTC)
-        MOONpos_SSB, MOONvel_SSB   = spice.get_state("MOON",  time_UTC)
+        time_ET = states["DYN_TIME"]["time_ET"]
+        EARTHpos_SSB, EARTHvel_SSB = spice.get_state("EARTH", time_ET)
+        MOONpos_SSB, MOONvel_SSB   = spice.get_state("MOON",  time_ET)
 
         self.state["EARTHpos_SSB"] = EARTHpos_SSB
         self.state["EARTHvel_SSB"] = EARTHvel_SSB

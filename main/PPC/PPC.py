@@ -14,7 +14,9 @@ def init_timeline(sample, n_steps):
             return {k: recurse(v) for k, v in node.items()}
         else:
             arr = np.array(node)
-            return np.full((n_steps, *arr.shape), np.nan)
+            out = np.full((n_steps, *arr.shape), np.nan)
+            out[0] = arr
+            return out
     return recurse(sample)
 
 # Fill preallocated timeline arrays with values at index=step.
@@ -64,7 +66,7 @@ def load_module(timeline, step):
     return recurse(timeline)
 
 # Plot function
-def plot(x, y, z=None, style='', xlabel=None, ylabel=None, zlabel=None, label=None, title=None, fig=None, ax=None, subplot=None):
+def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=None, label=None, title=None, fig=None, ax=None, subplot=None, aspect=None, zorder=None):
     if fig is None:
         fig = plt.figure()
 
@@ -82,13 +84,22 @@ def plot(x, y, z=None, style='', xlabel=None, ylabel=None, zlabel=None, label=No
             else:
                 ax = fig.add_subplot(111, projection='3d')
 
+    # Apply colors
+    kwargs = {}
+    if color is not None:
+        kwargs['color'] = color
+
+    # Apply zorder
+    if zorder is not None:
+        kwargs['zorder'] = zorder
+
     # Plot data
     if z is None: # Plot 2D
-        ax.plot(x, y, style, label=label)
+        ax.plot(x, y, style, **kwargs, label=label)
         if xlabel: ax.set_xlabel(xlabel)
         if ylabel: ax.set_ylabel(ylabel)
     else: # Plot 3D
-        ax.plot(x, y, z, style, label=label)
+        ax.plot(x, y, z, style, **kwargs, label=label)
         if xlabel: ax.set_xlabel(xlabel)
         if ylabel: ax.set_ylabel(ylabel)
         if zlabel: ax.set_zlabel(zlabel)
@@ -100,6 +111,10 @@ def plot(x, y, z=None, style='', xlabel=None, ylabel=None, zlabel=None, label=No
 
     if title:
         ax.set_title(title)
+
+    if aspect:
+        ax.set_aspect(aspect)
+
     ax.grid(True)
 
     return fig, ax

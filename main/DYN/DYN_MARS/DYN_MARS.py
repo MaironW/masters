@@ -28,28 +28,15 @@ class DYN_MARS(Level2Module):
 
     # Initialization
     def initialize(self, states):
-        # Get initial position and orientation based on time
-        time_UTC_ini = states["DYN_TIME"]["time_UTC"]
-        MARSpos_SSB_ini,   MARSvel_SSB_ini   = spice.get_state("MARS",   time_UTC_ini)
-        DEIMOSpos_SSB_ini, DEIMOSvel_SSB_ini = spice.get_state("DEIMOS", time_UTC_ini)
-        PHOBOSpos_SSB_ini, PHOBOSvel_SSB_ini = spice.get_state("PHOBOS", time_UTC_ini)
-        # Update output
-        self.state = {
-            "MARSpos_SSB"   : MARSpos_SSB_ini,
-            "MARSvel_SSB"   : MARSvel_SSB_ini,
-            "DEIMOSpos_SSB" : DEIMOSpos_SSB_ini,
-            "DEIMOSvel_SSB" : DEIMOSvel_SSB_ini,
-            "PHOBOSpos_SSB" : PHOBOSpos_SSB_ini,
-            "PHOBOSvel_SSB" : PHOBOSvel_SSB_ini,
-        }
+        self.state = self.update_algebraic(0, states)
         return self.state
 
     # Module main function
     def update_algebraic(self, t, states, inputs=None):
-        time_UTC = states["DYN_TIME"]["time_UTC"]
-        MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   time_UTC)
-        DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", time_UTC)
-        PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", time_UTC)
+        time_ET = states["DYN_TIME"]["time_ET"]
+        MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   time_ET)
+        DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", time_ET)
+        PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", time_ET)
 
         self.state["MARSpos_SSB"]   = MARSpos_SSB
         self.state["MARSvel_SSB"]   = MARSvel_SSB

@@ -7,7 +7,7 @@ from copy import deepcopy
 # The simulation will hold the lastest value based on the current time step
 events = {
     "DYN.DYN_ATT.SSBq_BOF" : [
-        (0,   np.array([1,0,0,0])),
+        (0,     np.array([1,0,0,0])),
         (10000, np.array([1,0.44,0.3,0])),
     ]
 }

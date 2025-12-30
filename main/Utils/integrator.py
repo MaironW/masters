@@ -18,9 +18,6 @@ def _unflatten(vec, shapes):
 
 # Perform one Runge-Kutta 4 step over all modules
 def rk4_step(t, dt, state, inputs):
-    # Initial algebraic evaluation
-    state.update_algebraic(t, inputs)
-
     # Pack dynamic state
     state_0_list = state.get_state()
     sizes = [len(v) for v in state_0_list]
@@ -48,6 +45,5 @@ def rk4_step(t, dt, state, inputs):
 
     # Write back final state
     state.set_state(_unflatten(state_next, sizes))
-    state.update_algebraic(t + dt, inputs)
 
     return state

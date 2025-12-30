@@ -66,7 +66,7 @@ def load_module(timeline, step):
     return recurse(timeline)
 
 # Plot function
-def plot(x, y, z=None, style='', xlabel=None, ylabel=None, zlabel=None, label=None, title=None, fig=None, ax=None, subplot=None):
+def plot(x, y, z=None, style='', xlabel=None, ylabel=None, zlabel=None, label=None, title=None, fig=None, ax=None, subplot=None, aspect=None):
     if fig is None:
         fig = plt.figure()
 
@@ -102,6 +102,10 @@ def plot(x, y, z=None, style='', xlabel=None, ylabel=None, zlabel=None, label=No
 
     if title:
         ax.set_title(title)
+
+    if aspect:
+        ax.set_aspect(aspect)
+
     ax.grid(True)
 
     return fig, ax

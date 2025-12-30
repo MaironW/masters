@@ -12,15 +12,32 @@ from Utils         import spice
 from Utils         import events
 from Utils         import integrator
 
+##################
+# MRO PARAMETERS #
+##################
+
+# Load NASA's MRO data with SPICE
+# https://naif.jpl.nasa.gov/pub/naif/pds/data/mro-m-spice-6-v1.0/mrosp_1000/data
+kernel_dir = "DYN/DYN_TRA/Tests/kernels/"
+spice.load_kernel(kernel_dir + "mro_cruise.bsp")
+spice.load_kernel(kernel_dir + "mro_sclkscet_00021_65536.tsc")
+
+# Get Spacecraft initial condition
+# MRO trajectory will be compared during the cruise phase, in a period of time without any trajectory correction maneuvers
+time_ET_ini = spice.get_time("2005-08-28 T00:00:00") # On 2005-08-27 MRO underwent its first trajectory correction
+time_ET_end = spice.get_time("2005-11-07 T00:00:00") # On 2005-11-08 MRO underwent its second trajectory correction
+
+MROpos_SSB_ini, MROvel_SSB_ini = spice.get_state("MRO", time_ET_ini)
+
 #########
 # SETUP #
 #########
 
 SIM_par = {
     # Time parameters
-    "dt"           : 1,       # [s] 10 min
-    "time_start"   : 0,         # [s]
-    "time_end"     : 10,      # [s]
+    "dt"           : 600, # [s] 10 min
+    "time_start"   : 0,   # [s]
+    "time_end"     : int(time_ET_end - time_ET_ini), # [s]
 
     # Log parameters
     "DYN_log_save" : False,
@@ -54,19 +71,7 @@ n_steps        = int((sim_time_end - sim_time_start)/sim_dt) + 1
 # Initialize inputs table
 events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt)
 
-##################
-# MRO PARAMETERS #
-##################
 
-# Load NASA's MRO data with SPICE
-# https://naif.jpl.nasa.gov/pub/naif/pds/data/mro-m-spice-6-v1.0/mrosp_1000/data
-kernel_dir = "DYN/DYN_TRA/Tests/kernels/"
-spice.load_kernel(kernel_dir + "mro_cruise.bsp")
-spice.load_kernel(kernel_dir + "mro_sclkscet_00021_65536.tsc")
-
-# Get Spacecraft initial condition
-time_ET_ini = spice.get_time("2005-08-15 T00:00:00")
-MROpos_SSB_ini, MROvel_SSB_ini = spice.get_state("MRO", time_ET_ini)
 
 ######################
 # INITIALIZE MODULES #
@@ -155,7 +160,7 @@ spice.clear_kernels()
 ###########
 
 # Plot spacecraft position vs MRO position
-fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], ylabel="posx_SSB [km]", label="SC", title="MRO vs SC pos", subplot=(3,1,1))
+fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], ylabel="posx_SSB [km]", label="SC", title="pos SC vs MRO", subplot=(3,1,1))
 fig, ax_y = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], ylabel="posy_SSB [km]", label="SC", fig=fig, subplot=(3,1,2))
 fig, ax_z = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2], xlabel="Time SIM [s]", ylabel="posz_SSB [km]", label="SC", fig=fig, subplot=(3,1,3))
 PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["MRO"]["MROpos_SSB"][:,0], label="MRO", fig=fig, ax=ax_x)
@@ -163,7 +168,7 @@ PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["MRO"]["MROpos_SSB"][
 PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["MRO"]["MROpos_SSB"][:,2], label="MRO", fig=fig, ax=ax_z)
 
 # Plot spacecraft velocity vs MRO velocity
-fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"][:,0], ylabel="velx_SSB [km/s]", label="SC", title="MRO vs SC vel", subplot=(3,1,1))
+fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"][:,0], ylabel="velx_SSB [km/s]", label="SC", title="vel SC vs MRO", subplot=(3,1,1))
 fig, ax_y = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"][:,1], ylabel="vely_SSB [km/s]", label="SC", fig=fig, subplot=(3,1,2))
 fig, ax_z = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"][:,2], xlabel="Time SIM [s]", ylabel="velz_SSB [km/s]", label="SC", fig=fig, subplot=(3,1,3))
 PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["MRO"]["MROvel_SSB"][:,0], label="MRO", fig=fig, ax=ax_x)
@@ -177,7 +182,7 @@ pos_error_x = SCpos_SSB[:,0] - MROpos_SSB[:,0]
 pos_error_y = SCpos_SSB[:,1] - MROpos_SSB[:,1]
 pos_error_z = SCpos_SSB[:,2] - MROpos_SSB[:,2]
 pos_error = np.sqrt(pos_error_x**2 + pos_error_y**2 + pos_error_z**2)
-fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], pos_error_x, ylabel="pos_error_x [km]", label="SC vs MRO x", title="Error MRO vs SC pos", subplot=(4,1,1))
+fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], pos_error_x, ylabel="pos_error_x [km]", label="SC vs MRO x", title="Error pos SC vs MRO", subplot=(4,1,1))
 fig, ax_y = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], pos_error_y, ylabel="pos_error_y [km]", label="SC vs MRO y", fig=fig, subplot=(4,1,2))
 fig, ax_z = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], pos_error_z, ylabel="pos_error_z [km]", label="SC vs MRO z", fig=fig, subplot=(4,1,3))
 fig, ax_t = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], pos_error, xlabel="Time SIM [s]", ylabel="pos_error [km]", label="SC vs MRO", fig=fig, subplot=(4,1,4))
@@ -189,9 +194,20 @@ vel_error_x = SCvel_SSB[:,0] - MROvel_SSB[:,0]
 vel_error_y = SCvel_SSB[:,1] - MROvel_SSB[:,1]
 vel_error_z = SCvel_SSB[:,2] - MROvel_SSB[:,2]
 vel_error = np.sqrt(vel_error_x**2 + vel_error_y**2 + vel_error_z**2)
-fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_x, ylabel="vel_error_x [km/s]", label="SC vs MRO x", title="Error MRO vs SC vel", subplot=(4,1,1))
+fig, ax_x = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_x, ylabel="vel_error_x [km/s]", label="SC vs MRO x", title="Error vel SC vs MRO", subplot=(4,1,1))
 fig, ax_y = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_y, ylabel="vel_error_y [km/s]", label="SC vs MRO y", fig=fig, subplot=(4,1,2))
 fig, ax_z = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error_z, ylabel="vel_error_z [km/s]", label="SC vs MRO z", fig=fig, subplot=(4,1,3))
 fig, ax_t = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], vel_error, xlabel="Time SIM [s]", ylabel="vel_error [km/s]", label="SC vs MRO", fig=fig, subplot=(4,1,4))
+
+# Trajectoy in the orbital plane
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], xlabel="pos x SSB [km]", ylabel="pos y SSB [km]", aspect='equal')
+PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,1], label='SC', style='x', fig=fig, ax=ax)
+PPC.plot(timeline["MRO"]["MROpos_SSB"][:,0], timeline["MRO"]["MROpos_SSB"][:,1], fig=fig, ax=ax)
+PPC.plot(timeline["MRO"]["MROpos_SSB"][-1,0], timeline["MRO"]["MROpos_SSB"][-1,1], label="MRO", style='x', fig=fig, ax=ax)
+PPC.plot(timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,0], timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,1], fig=fig, ax=ax)
+PPC.plot(timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][-1,0], timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][-1,1], label="Earth", style='o', fig=fig, ax=ax)
+PPC.plot(timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,0], timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,1], fig=fig, ax=ax)
+PPC.plot(timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][-1,0], timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][-1,1], label="Mars", style='o', fig=fig, ax=ax)
+PPC.plot(timeline["DYN"]["DYN_SUN"]["SUNpos_SSB"][0,0], timeline["DYN"]["DYN_SUN"]["SUNpos_SSB"][0,1], label="Sun", style='o', fig=fig, ax=ax)
 
 PPC.show_plot()

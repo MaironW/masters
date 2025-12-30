@@ -2,6 +2,15 @@
 
 from PPC import PPC
 
+colors = {
+    "blue"    : "#0066FF",
+    "red"     : "#CC0000",
+    "green"   : "#33CC00",
+    "magenta" : "#FF00FF",
+    "orange"  : "#FE9920",
+    "grey"    : "#363636",
+}
+
 def DYN_TIME_plot(timeline):
     PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TIME"]["time_ET"], xlabel="time_SIM [s]", ylabel="time_ET [s]", title="Time")
 

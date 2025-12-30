@@ -33,10 +33,10 @@ class DYN_MARS(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, states, inputs=None):
-        time_ET = states["DYN_TIME"]["time_ET"]
-        MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   time_ET)
-        DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", time_ET)
-        PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", time_ET)
+        time_TDB = states["DYN_TIME"]["time_TDB"]
+        MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   time_TDB)
+        DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", time_TDB)
+        PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", time_TDB)
 
         self.state["MARSpos_SSB"]   = MARSpos_SSB
         self.state["MARSvel_SSB"]   = MARSvel_SSB

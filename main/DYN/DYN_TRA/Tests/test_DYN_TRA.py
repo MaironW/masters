@@ -24,10 +24,10 @@ spice.load_kernel(kernel_dir + "mro_sclkscet_00021_65536.tsc")
 
 # Get Spacecraft initial condition
 # MRO trajectory will be compared during the cruise phase, in a period of time without any trajectory correction maneuvers
-time_ET_ini = spice.get_time("2005-10-01 T00:00:00")
-time_ET_end = spice.get_time("2005-10-31 T00:00:00")
+time_TDB_ini = spice.get_time("2005-10-01 T00:00:00")
+time_TDB_end = spice.get_time("2005-10-31 T00:00:00")
 
-MROpos_SSB_ini, MROvel_SSB_ini = spice.get_state("MRO", time_ET_ini)
+MROpos_SSB_ini, MROvel_SSB_ini = spice.get_state("MRO", time_TDB_ini)
 
 #########
 # SETUP #
@@ -35,9 +35,9 @@ MROpos_SSB_ini, MROvel_SSB_ini = spice.get_state("MRO", time_ET_ini)
 
 SIM_par = {
     # Time parameters
-    "dt"           : 600, # [s] 10 min
+    "dt"           : 1, # [s] 10 min
     "time_start"   : 0,   # [s]
-    "time_end"     : int(time_ET_end - time_ET_ini), # [s]
+    "time_end"     : int(time_TDB_end - time_TDB_ini), # [s]
 
     # Log parameters
     "DYN_log_save" : False,
@@ -71,15 +71,13 @@ n_steps        = int((sim_time_end - sim_time_start)/sim_dt) + 1
 # Initialize inputs table
 events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt)
 
-
-
 ######################
 # INITIALIZE MODULES #
 ######################
 
 DYN_TIME_par = {
     "time_SIM_ini" : 0,
-    "time_ET_ini"  : time_ET_ini,
+    "time_TDB_ini"  : time_TDB_ini,
 }
 
 DYN_TRA_par = {
@@ -140,8 +138,8 @@ for step in range(1, n_steps):
     integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
 
     # Update MRO state
-    time_ET = DYN_obj.snapshot()["DYN_TIME"]["time_ET"]
-    MROpos_SSB, MROvel_SSB = spice.get_state("MRO", time_ET)
+    time_TDB = DYN_obj.snapshot()["DYN_TIME"]["time_TDB"]
+    MROpos_SSB, MROvel_SSB = spice.get_state("MRO", time_TDB)
 
     # Save results into the timeline
     output = {"DYN" : DYN_obj.snapshot(),

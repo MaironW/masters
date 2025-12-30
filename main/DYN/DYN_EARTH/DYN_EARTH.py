@@ -31,9 +31,9 @@ class DYN_EARTH(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, states, inputs=None):
-        time_ET = states["DYN_TIME"]["time_ET"]
-        EARTHpos_SSB, EARTHvel_SSB = spice.get_state("EARTH", time_ET)
-        MOONpos_SSB, MOONvel_SSB   = spice.get_state("MOON",  time_ET)
+        time_TDB = states["DYN_TIME"]["time_TDB"]
+        EARTHpos_SSB, EARTHvel_SSB = spice.get_state("EARTH", time_TDB)
+        MOONpos_SSB, MOONvel_SSB   = spice.get_state("MOON",  time_TDB)
 
         self.state["EARTHpos_SSB"] = EARTHpos_SSB
         self.state["EARTHvel_SSB"] = EARTHvel_SSB

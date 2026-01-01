@@ -6,3 +6,6 @@ wget https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/planets/de440s.bsp
 wget https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/pck00010.tpc
 wget https://naif.jpl.nasa.gov/pub/naif/generic_kernels/spk/satellites/a_old_versions/mar097.bsp
 wget https://naif.jpl.nasa.gov/pub/naif/generic_kernels/pck/earth_000101_260114_251018.bpc
+
+# Not a Kernel, but star catalogue
+wget https://cdsarc.cds.unistra.fr/ftp/cats/I/239/hip_main.dat

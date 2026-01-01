@@ -66,6 +66,11 @@ def DYN_TRA_plot(timeline):
     fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"], ylabel="SCpos_SSB [km]", label=["x","y","z"], title="SCpos_SSB", subplot=(2,1,1))
     PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"], ylabel="SCvel_SSB [km]", label=["x","y","z"], title="SCvel_SSB", fig=fig, subplot=(2,1,2))
 
+def DYN_STR_plot(timeline):
+    # 3D sky sphere
+    x, y, z = timeline["DYN"]["DYN_STR"]["STARSpos_SSB"][0,:]
+    PPC.plot(x, y, z, style='.', label="STARS", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect='equal')
+
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,
     "DYN_SUN"   : DYN_SUN_plot,
@@ -73,4 +78,5 @@ PPC_plots = {
     "DYN_MARS"  : DYN_MARS_plot,
     "DYN_GRV"   : DYN_GRV_plot,
     "DYN_TRA"   : DYN_TRA_plot,
+    "DYN_STR"   : DYN_STR_plot,
 }

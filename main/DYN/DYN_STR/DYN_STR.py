@@ -18,7 +18,7 @@ class DYN_STR(Level2Module):
         # Apply user overrides
         if par_override is not None:
             par.update(par_override)
-        # Set initial dummy state
+        # Dummy state
         self.state = {
             "STARSpos_SSB" : par["STARSpos_SSB_ini"]
         }
@@ -31,15 +31,15 @@ class DYN_STR(Level2Module):
             star_df = hipparcos.load_dataframe(f)
 
         # Filter stars by magnitude
-        star_magnitude_min = self.par["star_magnitude_min"]
-        star_df = star_df[star_df["magnitude"] <= star_magnitude_min]
+        magnitude_min = self.par["magnitude_min"]
+        star_df = star_df[star_df["magnitude"] <= magnitude_min]
 
         # Get star coordinates
         stars = Star.from_dataframe(star_df)
         pos   = stars._position_au
         norm  = np.linalg.norm(pos, axis=0)
 
-        # Update state
+        # Update parameters
         STARSpos_SSB = pos/norm
         self.state["STARSpos_SSB"] = STARSpos_SSB
 

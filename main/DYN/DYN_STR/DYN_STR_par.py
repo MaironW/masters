@@ -4,5 +4,5 @@ import numpy as np
 
 DYN_STR_par = {
     "STARSpos_SSB_ini" : np.array([0,0,0]), # Initial position of the stars in the SSB frame at the initial epoch
-    "star_magnitude_min" : 3,               # DYN_STR will only select stars with higher brightness than this value
+    "magnitude_min"    : 3,                 # DYN_STR will only select stars with higher brightness than this value
 }

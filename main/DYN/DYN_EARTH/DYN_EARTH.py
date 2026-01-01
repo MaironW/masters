@@ -2,7 +2,6 @@
 # Simulates the propagation of the Earth position relative to the SSB frame
 
 import copy
-import numpy as np
 
 from Utils import spice
 from Utils.level2module import Level2Module

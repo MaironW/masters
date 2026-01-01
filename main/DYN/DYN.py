@@ -9,6 +9,7 @@ from .DYN_MARS.DYN_MARS   import DYN_MARS
 from .DYN_ATT.DYN_ATT     import DYN_ATT
 from .DYN_GRV.DYN_GRV     import DYN_GRV
 from .DYN_TRA.DYN_TRA     import DYN_TRA
+from .DYN_STR.DYN_STR     import DYN_STR
 
 class DYN:
     def __init__(self, par_override=None):
@@ -23,6 +24,7 @@ class DYN:
         self.DYN_ATT   = DYN_ATT(par_override.get("DYN_ATT"))
         self.DYN_TRA   = DYN_TRA(par_override.get("DYN_TRA"))
         self.DYN_GRV   = DYN_GRV(par_override.get("DYN_GRV"))
+        self.DYN_STR   = DYN_STR(par_override.get("DYN_STR"))
 
         # Register modules
         self.modules = [
@@ -33,6 +35,7 @@ class DYN:
             self.DYN_ATT,
             self.DYN_TRA,
             self.DYN_GRV,
+            self.DYN_STR,
         ]
    
         # Initialize all modules

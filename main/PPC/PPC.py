@@ -1,6 +1,7 @@
 # Module to organize outputs and show results
 
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
 
@@ -64,6 +65,10 @@ def load_module(timeline, step):
         else:
             return node
     return recurse(timeline)
+
+# Change default matplotlib configuration
+def setup_plot(colors):
+    mpl.rcParams['axes.prop_cycle'] = mpl.cycler(color=colors)
 
 # Plot function
 def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=None, label=None, title=None, fig=None, ax=None, subplot=None, aspect=None, zorder=None):

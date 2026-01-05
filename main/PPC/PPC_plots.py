@@ -74,7 +74,7 @@ def DYN_TRA_plot(timeline):
 def DYN_STR_plot(timeline):
     # 3D sky sphere
     x, y, z = timeline["DYN"]["DYN_STR"]["STARSpos_SSB"][0,:]
-    PPC.plot(x, y, z, style='.', label="STARS", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect='equal')
+    PPC.plot(x, y, z, style='.', label="Stars", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect='equal')
 
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,

@@ -2,7 +2,6 @@
 # Simulates the propagation of time for the simulation
 
 import copy
-import numpy as np
 
 from Utils.level2module import Level2Module
 from .DYN_TIME_par import DYN_TIME_par

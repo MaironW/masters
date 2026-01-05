@@ -3,6 +3,7 @@
 # Executes the PPC module to show results
 
 from DYN.DYN       import DYN
+from SEN.SEN       import SEN
 from PPC           import PPC
 from PPC.PPC_plots import PPC_plots
 from SIM_par       import SIM_par
@@ -28,13 +29,20 @@ events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt)
 
 # Initialize Level-1 modules
 DYN_obj = DYN()
+SEN_obj = SEN()
 
 # Initialize or load timeline
 if DYN_log_load:
     DYN_timeline = PPC.load_timeline(DYN_log_path)
-    timeline = {"DYN" : DYN_timeline}
+    timeline = {
+        "DYN" : DYN_timeline,
+        "SEN": PPC.init_timeline(SEN_obj.snapshot(), n_steps),
+    }
 else:
-    timeline = {"DYN": PPC.init_timeline(DYN_obj.snapshot(), n_steps)}
+    timeline = {
+        "DYN": PPC.init_timeline(DYN_obj.snapshot(), n_steps),
+        "SEN": PPC.init_timeline(DYN_obj.snapshot(), n_steps),
+    }
 
 # Main loop
 for step in range(1, n_steps):
@@ -49,8 +57,13 @@ for step in range(1, n_steps):
         DYN_obj.update_algebraic(sim_time, inputs)
         # Integrate all dynamic states together
         DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
+        # Update SEN
+        SEN_obj.update_algebraic(sim_time, inputs)
         # Save results into the timeline
-        output = {"DYN" : DYN_obj.snapshot()}
+        output = {
+            "DYN" : DYN_obj.snapshot(),
+            "SEN" : SEN_obj.snapshot()
+        }
         PPC.update_timeline(timeline, output, step)
 
     # Update time

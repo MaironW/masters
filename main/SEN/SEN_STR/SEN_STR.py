@@ -15,12 +15,23 @@ class SEN_STR(Level2Module):
         if par_override is not None:
             par.update(par_override)
         # Set initial dummy state
-        self.state = {}
+        self.state = {
+            "STRoutflg"         : par["STRoutflg_ini"],
+            "time_STR"          : par["time_STR_ini"],
+            "STARSpos_BOF_mes"  : par["BODYpos_BOF_mes_ini"],
+            "BOFq_SSB_mes"      : par["BOFq_SSB_mes_ini"],
+            "SUNpos_BOF_mes"    : par["BODYpos_BOF_mes_ini"],
+            "EARTHpos_BOF_mes"  : par["BODYpos_BOF_mes_ini"],
+            "MOONpos_BOF_mes"   : par["BODYpos_BOF_mes_ini"],
+            "MARSpos_BOF_mes"   : par["BODYpos_BOF_mes_ini"],
+            "DEIMOSpos_BOF_mes" : par["BODYpos_BOF_mes_ini"],
+            "PHOBOSpos_BOF_mes" : par["BODYpos_BOF_mes_ini"],
+        }
         super().__init__("SEN_STR", par)
 
     # Initialization
     def initialize(self, states):
-        self.state = {}
+        self.state = self.update_algebraic(0, states)
         return self.state
 
     # Module main function

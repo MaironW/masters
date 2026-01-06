@@ -41,7 +41,7 @@ if DYN_log_load:
 else:
     timeline = {
         "DYN": PPC.init_timeline(DYN_obj.snapshot(), n_steps),
-        "SEN": PPC.init_timeline(DYN_obj.snapshot(), n_steps),
+        "SEN": PPC.init_timeline(SEN_obj.snapshot(), n_steps),
     }
 
 # Main loop

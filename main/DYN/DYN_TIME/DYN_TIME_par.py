@@ -6,6 +6,6 @@ time_TDB_ini = spice.get_time("2005-08-15 T00:00:00") # [s] ET initial time rela
 
 # Parameters for Module DYN_TIME
 DYN_TIME_par = {
-    "time_SIM_ini" : time_SIM_ini,
-    "time_TDB_ini" : time_TDB_ini,
+    "time_SIM_ini" : time_SIM_ini, # [s] Initial simulation time
+    "time_TDB_ini" : time_TDB_ini, # [s] Initial Barycentric Dynamic Time
 }

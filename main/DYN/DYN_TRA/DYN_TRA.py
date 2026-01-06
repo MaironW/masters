@@ -27,9 +27,9 @@ class DYN_TRA(Level2Module):
         # Let DYN_TRA be integrated
         self.is_dynamic = True
 
-        if self.par["ref_elements"] == 'kep':
+        if self.par["ref_elements"] == "kep":
             self.state = self.initialize_keplerian(states)
-        else: # 'rvi'
+        else: # "rvi"
             self.state = self.initialize_rvi(states)
 
         return self.state

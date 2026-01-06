@@ -6,7 +6,7 @@ from Utils.level1module import Level1Module
 from .SEN_STR.SEN_STR   import SEN_STR
 
 class SEN(Level1Module):
-    def __init__(self, par_override=None):
+    def __init__(self, DYN_obj, par_override=None):
 
         par_override = par_override or {}
 
@@ -15,11 +15,16 @@ class SEN(Level1Module):
 
         # Register modules
         self.modules = [
-            self.SEN_STR,
+        self.SEN_STR,
         ]
 
         # Initialize all modules
         for m in self.modules:
-            m.initialize(self.snapshot())
+            m.initialize(DYN_obj.snapshot(), self.snapshot())
 
         print("SEN Module Initialized.")
+
+    # Update time-dependent, non-integrated Level-2 modules
+    def update_algebraic(self, t, DYN_obj, inputs):
+        for m in self.modules:
+            m.update_algebraic(t, DYN_obj.snapshot(), self.snapshot(), inputs)

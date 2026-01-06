@@ -29,7 +29,7 @@ events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt)
 
 # Initialize Level-1 modules
 DYN_obj = DYN()
-SEN_obj = SEN()
+SEN_obj = SEN(DYN_obj)
 
 # Initialize or load timeline
 if DYN_log_load:
@@ -58,13 +58,13 @@ for step in range(1, n_steps):
         # Integrate all dynamic states together
         DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
         # Update SEN
-        SEN_obj.update_algebraic(sim_time, inputs)
+        SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
         # Save results into the timeline
-        output = {
+        states = {
             "DYN" : DYN_obj.snapshot(),
-            "SEN" : SEN_obj.snapshot()
+            "SEN" : SEN_obj.snapshot(),
         }
-        PPC.update_timeline(timeline, output, step)
+        PPC.update_timeline(timeline, states, step)
 
     # Update time
     sim_time += sim_dt

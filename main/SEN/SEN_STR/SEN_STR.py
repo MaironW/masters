@@ -3,6 +3,7 @@
 # Inputs: The spacecraft real attitude and position of celestial bodies
 
 import copy
+import numpy as np
 
 from Utils.level2module import Level2Module
 from .SEN_STR_par import SEN_STR_par
@@ -30,10 +31,18 @@ class SEN_STR(Level2Module):
         super().__init__("SEN_STR", par)
 
     # Initialization
-    def initialize(self, states):
-        self.state = self.update_algebraic(0, states)
+    def initialize(self, DYN_states, SEN_states):
+        self.state = self.update_algebraic(0, DYN_states, SEN_states)
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, states, inputs=None):
+    def update_algebraic(self, t, DYN_states, SEN_states, inputs=None):
+        time_SIM = DYN_states["DYN_TIME"]["time_SIM"]
+        self.state["time_STR"] = self.update_time_STR(time_SIM)
         return self.state
+
+    # Update the STR time reference based on SIM time
+    def update_time_STR(self, time_SIM):
+        dt = self.par["dt"]
+        time_STR = np.floor(time_SIM/dt) * dt
+        return time_STR

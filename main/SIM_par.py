@@ -19,6 +19,7 @@ SIM_par = {
         # "DYN_MARS",
         "DYN_TRA",
         # "DYN_GRV",
-        # "DYN_STR",
+        "DYN_STR",
+        "SEN_STR",
     ],
 }

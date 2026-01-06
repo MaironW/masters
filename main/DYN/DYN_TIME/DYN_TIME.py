@@ -32,5 +32,5 @@ class DYN_TIME(Level2Module):
     def update_algebraic(self, t, states, inputs=None):
         # Update time according to the integrator time
         self.state["time_SIM"] = self.par["time_SIM_ini"] + t
-        self.state["time_TDB"] = self.par["time_TDB_ini"]  + t
+        self.state["time_TDB"] = self.par["time_TDB_ini"] + t
         return self.state

@@ -76,6 +76,13 @@ def DYN_STR_plot(timeline):
     x, y, z = timeline["DYN"]["DYN_STR"]["STARSpos_SSB"][0,:]
     PPC.plot(x, y, z, style='.', label="Stars", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect='equal')
 
+def SEN_STR_plot(timeline):
+    # Compare STR and SIM times
+    time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    time_STR = timeline["SEN"]["SEN_STR"]["time_STR"]
+    fig, ax = PPC.plot(time_SIM, time_SIM, xlabel="time_SIM [s]", ylabel="time [s]", label="time_SIM")
+    PPC.plot(time_SIM, time_STR, ylabel="time [s]", label="time_STR", fig=fig, ax=ax)
+
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,
     "DYN_SUN"   : DYN_SUN_plot,
@@ -84,4 +91,5 @@ PPC_plots = {
     "DYN_GRV"   : DYN_GRV_plot,
     "DYN_TRA"   : DYN_TRA_plot,
     "DYN_STR"   : DYN_STR_plot,
+    "SEN_STR"   : SEN_STR_plot,
 }

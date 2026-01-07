@@ -77,19 +77,27 @@ def DYN_ATT_plot(timeline):
 
 def DYN_STR_plot(timeline):
     # 3D sky sphere
-    x, y, z = timeline["DYN"]["DYN_STR"]["STARSpos_SSB"][0].T
+    x, y, z = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0].T
     PPC.plot(x, y, z, style='.', label="Stars", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect='equal')
 
 def SEN_STR_plot(timeline):
-    # Compare STR and SIM times
     time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     time_STR = timeline["SEN"]["SEN_STR"]["time_STR"]
+    SUNdir_BOF_mes    = timeline["SEN"]["SEN_STR"]["SUNdir_BOF_mes"].T
+    EARTHdir_BOF_mes  = timeline["SEN"]["SEN_STR"]["EARTHdir_BOF_mes"].T
+    MARSdir_BOF_mes   = timeline["SEN"]["SEN_STR"]["MARSdir_BOF_mes"].T
+    STARSdir_BOF_mes  = timeline["SEN"]["SEN_STR"]["STARSdir_BOF_mes"][0].T
+    
+    # Compare STR and SIM times
     fig, ax = PPC.plot(time_SIM, time_SIM, xlabel="time_SIM [s]", ylabel="time [s]", label="time_SIM", title="STR Time")
     PPC.plot(time_SIM, time_STR, ylabel="time [s]", label="time_STR", fig=fig, ax=ax)
 
     # 3D sky sphere
-    x, y, z = timeline["SEN"]["SEN_STR"]["STARSpos_BOF_mes"][0].T
-    PPC.plot(x, y, z, style='.', label="Stars", xlabel="X BOF", ylabel="Y BOF", zlabel="Z BOF", title="Star Field Normalized in BOF frame", aspect='equal')
+    fig, ax = PPC.plot(STARSdir_BOF_mes[0,:], STARSdir_BOF_mes[1,:], STARSdir_BOF_mes[2,:], style='.', label="Stars", xlabel="X BOF", ylabel="Y BOF", zlabel="Z BOF", title="Star Field Normalized in BOF frame", aspect='equal', color=colors["black"])
+    PPC.plot(SUNdir_BOF_mes[0,:],   SUNdir_BOF_mes[0,:],   SUNdir_BOF_mes[0,:],   style='.-', label="Sun",     fig=fig, ax=ax, color=colors["orange"])
+    PPC.plot(EARTHdir_BOF_mes[0,:], EARTHdir_BOF_mes[0,:], EARTHdir_BOF_mes[0,:], style='.-', label="Earth",   fig=fig, ax=ax, color=colors["blue"])
+    PPC.plot(MARSdir_BOF_mes[0,:],  MARSdir_BOF_mes[0,:],  MARSdir_BOF_mes[0,:],  style='.-', label="Mars",    fig=fig, ax=ax, color=colors["red"])
+
 
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,

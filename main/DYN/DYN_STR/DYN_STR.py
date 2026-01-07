@@ -20,7 +20,7 @@ class DYN_STR(Level2Module):
             par.update(par_override)
         # Dummy state
         self.state = {
-            "STARSpos_SSB" : par["STARSpos_SSB_ini"]
+            "STARSdir_SSB" : par["STARSdir_SSB_ini"]
         }
         super().__init__("DYN_STR", par)
 
@@ -47,9 +47,9 @@ class DYN_STR(Level2Module):
         norm  = np.linalg.norm(pos, axis=0)
 
         # Update parameters
-        STARSpos_SSB = pos/norm
-        STARSpos_SSB = STARSpos_SSB.T
-        self.state["STARSpos_SSB"] = STARSpos_SSB
+        STARSdir_SSB = pos/norm
+        STARSdir_SSB = STARSdir_SSB.T
+        self.state["STARSdir_SSB"] = STARSdir_SSB
 
         return self.state
 

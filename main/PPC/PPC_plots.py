@@ -71,17 +71,25 @@ def DYN_TRA_plot(timeline):
     fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"], ylabel="SCpos_SSB [km]", label=["x","y","z"], title="SCpos_SSB", subplot=(2,1,1))
     PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"], ylabel="SCvel_SSB [km]", label=["x","y","z"], title="SCvel_SSB", fig=fig, subplot=(2,1,2))
 
+def DYN_ATT_plot(timeline):
+    # Spacecraft attitude
+    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_ATT"]["BOFq_SSB"], xlabel="time_SIM [s]", ylabel="BOFq_SSB", label=["q0","q1","q2","q3"], title="Spacecraft Attitude")
+
 def DYN_STR_plot(timeline):
     # 3D sky sphere
-    x, y, z = timeline["DYN"]["DYN_STR"]["STARSpos_SSB"][0,:]
+    x, y, z = timeline["DYN"]["DYN_STR"]["STARSpos_SSB"][0].T
     PPC.plot(x, y, z, style='.', label="Stars", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect='equal')
 
 def SEN_STR_plot(timeline):
     # Compare STR and SIM times
     time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     time_STR = timeline["SEN"]["SEN_STR"]["time_STR"]
-    fig, ax = PPC.plot(time_SIM, time_SIM, xlabel="time_SIM [s]", ylabel="time [s]", label="time_SIM")
+    fig, ax = PPC.plot(time_SIM, time_SIM, xlabel="time_SIM [s]", ylabel="time [s]", label="time_SIM", title="STR Time")
     PPC.plot(time_SIM, time_STR, ylabel="time [s]", label="time_STR", fig=fig, ax=ax)
+
+    # 3D sky sphere
+    x, y, z = timeline["SEN"]["SEN_STR"]["STARSpos_BOF_mes"][0].T
+    PPC.plot(x, y, z, style='.', label="Stars", xlabel="X BOF", ylabel="Y BOF", zlabel="Z BOF", title="Star Field Normalized in BOF frame", aspect='equal')
 
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,
@@ -90,6 +98,7 @@ PPC_plots = {
     "DYN_MARS"  : DYN_MARS_plot,
     "DYN_GRV"   : DYN_GRV_plot,
     "DYN_TRA"   : DYN_TRA_plot,
+    "DYN_ATT"   : DYN_ATT_plot,
     "DYN_STR"   : DYN_STR_plot,
     "SEN_STR"   : SEN_STR_plot,
 }

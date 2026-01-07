@@ -34,6 +34,13 @@ class DYN_STR(Level2Module):
         magnitude_min = self.par["magnitude_min"]
         star_df = star_df[star_df["magnitude"] <= magnitude_min]
 
+        # Sort stars by mangitude
+        star_df = star_df.sort_values(by='magnitude', ascending=True)
+
+        # Collect only the maximum number of stars allowed
+        num_stars_max = self.par["num_stars_max"]
+        star_df = star_df.head(num_stars_max)
+
         # Get star coordinates
         stars = Star.from_dataframe(star_df)
         pos   = stars._position_au
@@ -41,6 +48,7 @@ class DYN_STR(Level2Module):
 
         # Update parameters
         STARSpos_SSB = pos/norm
+        STARSpos_SSB = STARSpos_SSB.T
         self.state["STARSpos_SSB"] = STARSpos_SSB
 
         return self.state

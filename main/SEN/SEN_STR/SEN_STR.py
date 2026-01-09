@@ -20,35 +20,37 @@ class SEN_STR(Level2Module):
         self.state = {
             "STRoutflg"         : par["STRoutflg_ini"],
             "time_STR"          : par["time_STR_ini"],
-            "STARSdir_BOF_mes"  : par["BODYdir_BOF_mes_ini"],
             "BOFq_SSB_mes"      : par["BOFq_SSB_mes_ini"],
-            "SUNdir_BOF_mes"    : par["BODYdir_BOF_mes_ini"],
-            "EARTHdir_BOF_mes"  : par["BODYdir_BOF_mes_ini"],
-            "MOONdir_BOF_mes"   : par["BODYdir_BOF_mes_ini"],
-            "MARSdir_BOF_mes"   : par["BODYdir_BOF_mes_ini"],
-            "DEIMOSdir_BOF_mes" : par["BODYdir_BOF_mes_ini"],
-            "PHOBOSdir_BOF_mes" : par["BODYdir_BOF_mes_ini"],
+
+            "STARSdir_STR_mes"  : par["BODYdir_mes_ini"],
+            "SUNdir_STR_mes"    : par["BODYdir_mes_ini"],
+            "EARTHdir_STR_mes"  : par["BODYdir_mes_ini"],
+            "MOONdir_STR_mes"   : par["BODYdir_mes_ini"],
+            "MARSdir_STR_mes"   : par["BODYdir_mes_ini"],
+            "DEIMOSdir_STR_mes" : par["BODYdir_mes_ini"],
+            "PHOBOSdir_STR_mes" : par["BODYdir_mes_ini"],
+
+            "STARSdir_SSB_mes"  : par["BODYdir_mes_ini"],
+            "SUNdir_SSB_mes"    : par["BODYdir_mes_ini"],
+            "EARTHdir_SSB_mes"  : par["BODYdir_mes_ini"],
+            "MOONdir_SSB_mes"   : par["BODYdir_mes_ini"],
+            "MARSdir_SSB_mes"   : par["BODYdir_mes_ini"],
+            "DEIMOSdir_SSB_mes" : par["BODYdir_mes_ini"],
+            "PHOBOSdir_SSB_mes" : par["BODYdir_mes_ini"],
         }
+        # Last time update for quantization
+        self._last_update_time = -par["dt"]
+        self._last_state = copy.deepcopy(self.state)
         super().__init__("SEN_STR", par)
 
     # Initialization
     def initialize(self, DYN_states, SEN_states):
-        # Allocate STARSdir_BOF_mes
-        STARSdir_SSB  = DYN_states["DYN_STR"]["STARSdir_SSB"]
-        m, n = STARSdir_SSB.shape
-        STARSdir_BOF_mes = np.zeros((m, n))
-        self.state["STARSdir_BOF_mes"] = STARSdir_BOF_mes
-
-        # Initialize other variables
+        # Initialize variables
         self.state = self.update_algebraic(0, DYN_states, SEN_states)
         return self.state
 
     # Module main function
     def update_algebraic(self, t, DYN_states, SEN_states, inputs=None):
-        # Time
-        time_SIM = DYN_states["DYN_TIME"]["time_SIM"]
-        self.update_time_STR(time_SIM)
-
         # Satellite attitude
         BOFq_SSB = DYN_states["DYN_ATT"]["BOFq_SSB"]
 
@@ -97,46 +99,82 @@ class SEN_STR(Level2Module):
         STARSdir_STR  = quaternions.qvecrot(STARSdir_SC,  STRq_SSB)
 
         # Filter out objects outside of the FOV
-        self.state["SUNdir_STR"]    = self.filter_visible_objects(SUNdir_STR)
-        self.state["EARTHdir_STR"]  = self.filter_visible_objects(EARTHdir_STR)
-        self.state["MOONdir_STR"]   = self.filter_visible_objects(MOONdir_STR)
-        self.state["MARSdir_STR"]   = self.filter_visible_objects(MARSdir_STR)
-        self.state["DEIMOSdir_STR"] = self.filter_visible_objects(DEIMOSdir_STR)
-        self.state["PHOBOSdir_STR"] = self.filter_visible_objects(PHOBOSdir_STR)
-        self.state["STARSdir_STR"]  = self.filter_visible_objects(STARSdir_STR)
+        SUNdir_STR    = self.mask_visible_objects(SUNdir_STR)
+        EARTHdir_STR  = self.mask_visible_objects(EARTHdir_STR)
+        MOONdir_STR   = self.mask_visible_objects(MOONdir_STR)
+        MARSdir_STR   = self.mask_visible_objects(MARSdir_STR)
+        DEIMOSdir_STR = self.mask_visible_objects(DEIMOSdir_STR)
+        PHOBOSdir_STR = self.mask_visible_objects(PHOBOSdir_STR)
+        STARSdir_STR  = self.mask_visible_objects(STARSdir_STR)
 
-        # Compute noise quaternion
+        # Compute noise quaternion (the same for all objects)
+        noise_mean = self.par["noise_mean"]
+        noise_std  = self.par["noise_std"]
+        noise_STR  = np.random.normal(noise_mean, noise_std, size=3)
+        noiseq_STR = quaternions.rotvec2q(noise_STR)
 
         # Apply noise to each direction vector
+        SUNdir_STR_mes    = quaternions.qvecrot(SUNdir_STR,    noiseq_STR)
+        EARTHdir_STR_mes  = quaternions.qvecrot(EARTHdir_STR,  noiseq_STR)
+        MOONdir_STR_mes   = quaternions.qvecrot(MOONdir_STR,   noiseq_STR)
+        MARSdir_STR_mes   = quaternions.qvecrot(MARSdir_STR,   noiseq_STR)
+        DEIMOSdir_STR_mes = quaternions.qvecrot(DEIMOSdir_STR, noiseq_STR)
+        PHOBOSdir_STR_mes = quaternions.qvecrot(PHOBOSdir_STR, noiseq_STR)
+        STARSdir_STR_mes  = quaternions.qvecrot(STARSdir_STR,  noiseq_STR)
 
         # Convert back to SSB
+        SSBq_STR = quaternions.qtrans(STRq_SSB)
+        SUNdir_SSB_mes    = quaternions.qvecrot(SUNdir_STR_mes,    SSBq_STR)
+        EARTHdir_SSB_mes  = quaternions.qvecrot(EARTHdir_STR_mes,  SSBq_STR)
+        MOONdir_SSB_mes   = quaternions.qvecrot(MOONdir_STR_mes,   SSBq_STR)
+        MARSdir_SSB_mes   = quaternions.qvecrot(MARSdir_STR_mes,   SSBq_STR)
+        DEIMOSdir_SSB_mes = quaternions.qvecrot(DEIMOSdir_STR_mes, SSBq_STR)
+        PHOBOSdir_SSB_mes = quaternions.qvecrot(PHOBOSdir_STR_mes, SSBq_STR)
+        STARSdir_SSB_mes  = quaternions.qvecrot(STARSdir_STR_mes,  SSBq_STR)
 
         # Compute BOFq_SSB_mes
+        BOFq_STR = quaternions.qtrans(STRq_BOF)
+        SSBq_STR_mes = quaternions.qprod(SSBq_STR, noiseq_STR)
+        STRq_SSB_mes = quaternions.qtrans(SSBq_STR_mes)
+        BOFq_SSB_mes = quaternions.qprod(BOFq_STR, STRq_SSB_mes)
 
-        # NAV_CeleNav will receive STARSdir_SSB_mes + BODYdir_SSB_mes
+        # Apply time quantization to all states
+        time_SIM = DYN_states["DYN_TIME"]["time_SIM"]
+        if time_SIM - self._last_update_time >= self.par["dt"]:
+            self.state["time_STR"]          = time_SIM
+
+            self.state["SUNdir_STR_mes"]    = SUNdir_STR_mes
+            self.state["EARTHdir_STR_mes"]  = EARTHdir_STR_mes
+            self.state["MOONdir_STR_mes"]   = MOONdir_STR_mes
+            self.state["MARSdir_STR_mes"]   = MARSdir_STR_mes
+            self.state["DEIMOSdir_STR_mes"] = DEIMOSdir_STR_mes
+            self.state["PHOBOSdir_STR_mes"] = PHOBOSdir_STR_mes
+            self.state["STARSdir_STR_mes"]  = STARSdir_STR_mes
+
+            self.state["SUNdir_SSB_mes"]    = SUNdir_SSB_mes
+            self.state["EARTHdir_SSB_mes"]  = EARTHdir_SSB_mes
+            self.state["MOONdir_SSB_mes"]   = MOONdir_SSB_mes
+            self.state["MARSdir_SSB_mes"]   = MARSdir_SSB_mes
+            self.state["DEIMOSdir_SSB_mes"] = DEIMOSdir_SSB_mes
+            self.state["PHOBOSdir_SSB_mes"] = PHOBOSdir_SSB_mes
+            self.state["STARSdir_SSB_mes"]  = STARSdir_SSB_mes
+
+            self.state["BOFq_SSB_mes"]      = BOFq_SSB_mes
+
+            self._last_state = copy.deepcopy(self.state)
+        else:
+            self.state = copy.deepcopy(self._last_state)
 
         return self.state
-
-    # Update the STR time reference based on SIM time
-    def update_time_STR(self, time_SIM):
-        dt = self.par["dt"]
-        time_STR = np.floor(time_SIM/dt) * dt
-        self.state["time_STR"] = time_STR
-
-    # Convert a position expressed in SSB to a measured normalized direction in BOF frame
-    # TODO: Quanticize
-    def SCpos_to_BOFdir(self, pos_SC):
-        BOFq_SSB_mes = self.state["BOFq_SSB_mes"]
-        dir_BOF_mes  = quaternions.qvecrot(pos_SC, BOFq_SSB_mes)
-        dir_BOF_mes  = dir_BOF_mes/np.linalg.norm(dir_BOF_mes, axis=-1, keepdims=True)
-        return dir_BOF_mes
 
     # Return the direction (unitary) vector from a position vector in any given frame
     def dir_from_pos(self, pos):
         return pos/np.linalg.norm(pos, axis=-1, keepdims=True)
 
-    def filter_visible_objects(self, dir_STR):
+    def mask_visible_objects(self, dir_STR):
         STR_boresight = np.array([0, 0, 1])
         cos_field_of_view = self.par["cos_field_of_view"]
         visible = (dir_STR @ STR_boresight) >= cos_field_of_view
-        return dir_STR[visible]
+        dir_STR_masked = np.full(dir_STR.shape, np.nan, dtype=float)
+        dir_STR_masked[visible] = dir_STR[visible]
+        return dir_STR_masked

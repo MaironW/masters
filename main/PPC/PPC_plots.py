@@ -78,26 +78,48 @@ def DYN_ATT_plot(timeline):
 def DYN_STR_plot(timeline):
     # 3D sky sphere
     x, y, z = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0].T
-    PPC.plot(x, y, z, style='.', label="Stars", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect='equal')
+    PPC.plot(x, y, z, style='.', label="Stars", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect='equal', color=colors["black"])
 
 def SEN_STR_plot(timeline):
     time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     time_STR = timeline["SEN"]["SEN_STR"]["time_STR"]
-    SUNdir_BOF_mes    = timeline["SEN"]["SEN_STR"]["SUNdir_BOF_mes"].T
-    EARTHdir_BOF_mes  = timeline["SEN"]["SEN_STR"]["EARTHdir_BOF_mes"].T
-    MARSdir_BOF_mes   = timeline["SEN"]["SEN_STR"]["MARSdir_BOF_mes"].T
-    STARSdir_BOF_mes  = timeline["SEN"]["SEN_STR"]["STARSdir_BOF_mes"][0].T
-    
+
+    SUNdir_STR_mes    = timeline["SEN"]["SEN_STR"]["SUNdir_STR_mes"].T
+    EARTHdir_STR_mes  = timeline["SEN"]["SEN_STR"]["EARTHdir_STR_mes"].T
+    MARSdir_STR_mes   = timeline["SEN"]["SEN_STR"]["MARSdir_STR_mes"].T
+    STARSdir_STR_mes  = timeline["SEN"]["SEN_STR"]["STARSdir_STR_mes"].T # [coord, star, time]
+
+    SUNdir_SSB_mes    = timeline["SEN"]["SEN_STR"]["SUNdir_SSB_mes"].T
+    EARTHdir_SSB_mes  = timeline["SEN"]["SEN_STR"]["EARTHdir_SSB_mes"].T
+    MARSdir_SSB_mes   = timeline["SEN"]["SEN_STR"]["MARSdir_SSB_mes"].T
+    STARSdir_SSB_mes  = timeline["SEN"]["SEN_STR"]["STARSdir_SSB_mes"].T
+
+    STARSdir_SSB = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"].T
+
     # Compare STR and SIM times
     fig, ax = PPC.plot(time_SIM, time_SIM, xlabel="time_SIM [s]", ylabel="time [s]", label="time_SIM", title="STR Time")
     PPC.plot(time_SIM, time_STR, ylabel="time [s]", label="time_STR", fig=fig, ax=ax)
 
-    # 3D sky sphere
-    fig, ax = PPC.plot(STARSdir_BOF_mes[0,:], STARSdir_BOF_mes[1,:], STARSdir_BOF_mes[2,:], style='.', label="Stars", xlabel="X BOF", ylabel="Y BOF", zlabel="Z BOF", title="Star Field Normalized in BOF frame", aspect='equal', color=colors["black"])
-    PPC.plot(SUNdir_BOF_mes[0,:],   SUNdir_BOF_mes[0,:],   SUNdir_BOF_mes[0,:],   style='.-', label="Sun",     fig=fig, ax=ax, color=colors["orange"])
-    PPC.plot(EARTHdir_BOF_mes[0,:], EARTHdir_BOF_mes[0,:], EARTHdir_BOF_mes[0,:], style='.-', label="Earth",   fig=fig, ax=ax, color=colors["blue"])
-    PPC.plot(MARSdir_BOF_mes[0,:],  MARSdir_BOF_mes[0,:],  MARSdir_BOF_mes[0,:],  style='.-', label="Mars",    fig=fig, ax=ax, color=colors["red"])
+    # Plot STR Gnomonic lens projection
+    SUNproj   = PPC.gnomonic_projection(SUNdir_STR_mes)
+    EARTHproj = PPC.gnomonic_projection(EARTHdir_STR_mes)
+    MARSproj  = PPC.gnomonic_projection(MARSdir_STR_mes)
+    STARSproj  = PPC.gnomonic_projection(STARSdir_STR_mes)
 
+    fig, ax = PPC.plot([], [], xlabel="X STR", ylabel="Y STR", label="Stars", aspect="equal", color=colors["green"])
+    PPC.plot(SUNproj[0],   SUNproj[1],    label="Sun",   style='.', fig=fig, ax=ax, color=colors["orange"])
+    PPC.plot(EARTHproj[0], EARTHproj[1],  label="Earth", style='.', fig=fig, ax=ax, color=colors["blue"])
+    PPC.plot(MARSproj[0],  MARSproj[1],   label="Mars",  style='.', fig=fig, ax=ax, color=colors["red"])
+    PPC.plot(STARSproj[0], STARSproj[1],                 style='.', fig=fig, ax=ax, color=colors["green"])
+
+    # 3D sky sphere on step 0
+    fig, ax = PPC.plot(STARSdir_SSB[0,:,0], STARSdir_SSB[1,:,0], STARSdir_SSB[2,:,0], style='.', label="Stars", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized in SSB frame", aspect='equal', color=colors["black"])
+    PPC.plot(STARSdir_SSB_mes[0,:,0], STARSdir_SSB_mes[1,:,0], STARSdir_SSB_mes[2,:,0],   style='.', label="Visible Stars", fig=fig, ax=ax, color=colors["green"])
+    PPC.plot(SUNdir_SSB_mes[0,:],     SUNdir_SSB_mes[0,:],     SUNdir_SSB_mes[0,:],   style='.-', label="Sun",   fig=fig, ax=ax, color=colors["orange"])
+    PPC.plot(EARTHdir_SSB_mes[0,:],   EARTHdir_SSB_mes[0,:],   EARTHdir_SSB_mes[0,:], style='.-', label="Earth", fig=fig, ax=ax, color=colors["blue"])
+    PPC.plot(MARSdir_SSB_mes[0,:],    MARSdir_SSB_mes[0,:],    MARSdir_SSB_mes[0,:],  style='.-', label="Mars",  fig=fig, ax=ax, color=colors["red"])
+    PPC.plot(MARSdir_SSB_mes[0,:],    MARSdir_SSB_mes[0,:],    MARSdir_SSB_mes[0,:],  style='.-', label="Mars",  fig=fig, ax=ax, color=colors["red"])
+    PPC.plot([0], [0], [0],  style='+', label="SC",  fig=fig, ax=ax, color=colors["magenta"])
 
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,

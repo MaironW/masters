@@ -29,4 +29,20 @@ def qvecrot(v, q):
     q0 = q[..., 0]
     qv = q[..., 1:]
     tmp = 2*np.cross(qv, v)
-    return v + q0[..., None] * tmp + np.cross(qv, tmp)
+    v_new = v + q0[..., None] * tmp + np.cross(qv, tmp)
+    return v_new
+
+# Convert small angle vector to quaternion
+def rotvec2q(v):
+    theta = np.linalg.norm(v)
+    if theta < 1e-12:
+        return np.array([0, 0, 0, 0])
+    axis = v/theta
+    half = 0.5 * theta
+    q = np.array([
+        np.cos(half),
+        axis[0] * np.sin(half),
+        axis[1] * np.sin(half),
+        axis[2] * np.sin(half),
+    ])
+    return q

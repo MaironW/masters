@@ -15,12 +15,12 @@ class SEN(Level1Module):
 
         # Register modules
         self.modules = [
-        self.SEN_STR,
+            self.SEN_STR,
         ]
 
         # Initialize all modules
         for m in self.modules:
-            m.initialize(DYN_obj.snapshot(), self.snapshot())
+            m.state = m.initialize(DYN_obj.snapshot(), self.snapshot())
 
         print("SEN Module Initialized.")
 

@@ -16,7 +16,7 @@ class DYN_ATT(Level2Module):
             par.update(par_override)
         # Set initial dummy state
         self.state = {
-            "SSBq_BOF" : par["SSBq_BOF_ini"]
+            "BOFq_SSB" : par["BOFq_SSB_ini"]
         }
         super().__init__("DYN_ATT", par)
 
@@ -26,5 +26,5 @@ class DYN_ATT(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, states, inputs):
-        self.state["SSBq_BOF"] = inputs["DYN"]["DYN_ATT"]["SSBq_BOF"]
+        self.state["BOFq_SSB"] = inputs["DYN"]["DYN_ATT"]["BOFq_SSB"]
         return self.state

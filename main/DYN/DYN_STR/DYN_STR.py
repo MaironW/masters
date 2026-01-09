@@ -20,7 +20,7 @@ class DYN_STR(Level2Module):
             par.update(par_override)
         # Dummy state
         self.state = {
-            "STARSpos_SSB" : par["STARSpos_SSB_ini"]
+            "STARSdir_SSB" : par["STARSdir_SSB_ini"]
         }
         super().__init__("DYN_STR", par)
 
@@ -34,14 +34,22 @@ class DYN_STR(Level2Module):
         magnitude_min = self.par["magnitude_min"]
         star_df = star_df[star_df["magnitude"] <= magnitude_min]
 
+        # Sort stars by mangitude
+        star_df = star_df.sort_values(by='magnitude', ascending=True)
+
+        # Collect only the maximum number of stars allowed
+        num_stars_max = self.par["num_stars_max"]
+        star_df = star_df.head(num_stars_max)
+
         # Get star coordinates
         stars = Star.from_dataframe(star_df)
         pos   = stars._position_au
         norm  = np.linalg.norm(pos, axis=0)
 
         # Update parameters
-        STARSpos_SSB = pos/norm
-        self.state["STARSpos_SSB"] = STARSpos_SSB
+        STARSdir_SSB = pos/norm
+        STARSdir_SSB = STARSdir_SSB.T
+        self.state["STARSdir_SSB"] = STARSdir_SSB
 
         return self.state
 

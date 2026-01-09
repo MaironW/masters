@@ -127,3 +127,13 @@ def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=No
 # Show plots after they are generated
 def show_plot():
     plt.show()
+
+# Generate a gnomonic projection of a vector
+def gnomonic_projection(vec):
+    x, y, z = vec
+    mask = z > 0
+    u = np.full_like(z, np.nan)
+    v = np.full_like(z, np.nan)
+    u[mask] = x[mask] / z[mask]
+    v[mask] = y[mask] / z[mask]
+    return u, v

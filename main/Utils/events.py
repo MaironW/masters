@@ -3,16 +3,21 @@
 import numpy as np
 from copy import deepcopy
 
-# Events definition (time, value)
+# Default eeents definition (time, value)
 # The simulation will hold the lastest value based on the current time step
-events = {
+events_sequence = {
     "DYN.DYN_ATT.BOFq_SSB" : [
-        (0,     np.array([1,0,0,0])),
+        (0, np.array([1,0,0,0])),
+    ],
+    "SEN.SEN_STR.STRenableflg" : [
+        (0,     1),
+        (6000,  0),
+        (36000, 1),
     ]
 }
 
 # Build a full per-time-step dictionary of parameter values
-def build_events_table(t_start, t_end, dt):
+def build_events_table(t_start, t_end, dt, events=events_sequence):
     # Intialize the value state for all parameters
     current_values = {}
     for var, changes in events.items():

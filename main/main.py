@@ -25,7 +25,8 @@ step           = 0
 n_steps        = int((sim_time_end - sim_time_start)/sim_dt) + 1
 
 # Initialize inputs table
-events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt)
+events_sequence = events.events_sequence
+events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt, events=events_sequence)
 
 # Initialize Level-1 modules
 DYN_obj = DYN()

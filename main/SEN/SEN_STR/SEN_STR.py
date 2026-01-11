@@ -142,7 +142,7 @@ class SEN_STR(Level2Module):
 
             # Compute noise quaternion (the same for all objects)
             noise_mean = self.par["noise_mean"]
-            noise_std  = self.par["noise_std"]
+            noise_std  = [self.par["noise_std"], self.par["noise_std"], 0]
             noise_STR  = np.random.normal(noise_mean, noise_std, size=3)
             noiseq_STR = quaternions.rotvec2q(noise_STR)
 

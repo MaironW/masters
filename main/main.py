@@ -37,16 +37,19 @@ if DYN_log_load:
     DYN_timeline = PPC.load_timeline(DYN_log_path)
     timeline = {
         "DYN" : DYN_timeline,
-        "SEN": PPC.init_timeline(SEN_obj.snapshot(), n_steps),
+        "SEN" : PPC.init_timeline(SEN_obj.snapshot(), n_steps),
     }
 else:
     timeline = {
-        "DYN": PPC.init_timeline(DYN_obj.snapshot(), n_steps),
-        "SEN": PPC.init_timeline(SEN_obj.snapshot(), n_steps),
+        "DYN" : PPC.init_timeline(DYN_obj.snapshot(), n_steps),
+        "SEN" : PPC.init_timeline(SEN_obj.snapshot(), n_steps),
     }
 
 # Main loop
 for step in range(1, n_steps):
+    # Update time
+    sim_time += sim_dt
+
     # Load external inputs
     inputs = events_table[sim_time]
 
@@ -67,9 +70,6 @@ for step in range(1, n_steps):
         }
         PPC.update_timeline(timeline, states, step)
 
-    # Update time
-    sim_time += sim_dt
-
 # Save log (currently only for DYN module)
 if DYN_log_save:
     PPC.store_timeline(timeline, DYN_log_path)
@@ -80,5 +80,5 @@ spice.clear_kernels()
 # Plots
 for key in SIM_par["PPC_plot_list"]:
     if key in PPC_plots:
-        PPC_plots[key](timeline)
+        PPC_plots[key](timeline, DYN_obj, SEN_obj)
 PPC.show_plot()

@@ -3,7 +3,7 @@ from Utils import quaternions
 from Utils.constants import CONSTANTS_par
 
 # Pre-computation
-field_of_view     = 30*CONSTANTS_par["deg2rad_cst"]
+field_of_view     = 20*CONSTANTS_par["deg2rad_cst"]
 cos_field_of_view = np.cos(field_of_view)
 
 # STR orientation on BOF frame

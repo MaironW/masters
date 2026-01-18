@@ -10,7 +10,7 @@ events_sequence = {
         (0, np.array([1,0,0,0])),
     ],
     "SEN.SEN_STR.STRenableflg" : [
-        (0,     1),
+        (100,   1),
         (6000,  0),
         (36000, 1),
     ]

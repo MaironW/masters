@@ -117,10 +117,10 @@ class SEN_STR(Level2Module):
             PHOBOSdir_SC = self.dir_from_pos(PHOBOSpos_SC)
 
             # Stars direction relative to the SSB
-            STARSdir_SSB  = DYN_states["DYN_STR"]["STARSdir_SSB"]
+            STARSdir_SSB = DYN_states["DYN_STR"]["STARSdir_SSB"]
 
             # Stars directions relative to the Spacecraft
-            STARSdir_SC  = STARSdir_SSB
+            STARSdir_SC = STARSdir_SSB.copy()
 
             # Rotate to STR frame
             SUNdir_STR    = quaternions.qvecrot(SUNdir_SC,    STRq_SSB)
@@ -142,11 +142,11 @@ class SEN_STR(Level2Module):
 
             # Compute noise quaternion (the same for all objects)
             noise_mean = self.par["noise_mean"]
-            noise_std  = [self.par["noise_std"], self.par["noise_std"], 0]
+            noise_std  = [self.par["noise_std"], self.par["noise_std"], self.par["noise_std"]]
             noise_STR  = np.random.normal(noise_mean, noise_std, size=3)
             noiseq_STR = quaternions.rotvec2q(noise_STR)
 
-            # Apply noise to each direction vector
+            # Apply noise on the focal plane
             SUNdir_STR_mes    = quaternions.qvecrot(SUNdir_STR,    noiseq_STR)
             EARTHdir_STR_mes  = quaternions.qvecrot(EARTHdir_STR,  noiseq_STR)
             MOONdir_STR_mes   = quaternions.qvecrot(MOONdir_STR,   noiseq_STR)
@@ -167,7 +167,7 @@ class SEN_STR(Level2Module):
 
             # Compute BOFq_SSB_mes
             BOFq_STR     = quaternions.qtrans(STRq_BOF)
-            SSBq_STR_mes = quaternions.qprod(SSBq_STR, noiseq_STR)
+            SSBq_STR_mes = quaternions.qprod(noiseq_STR, SSBq_STR)
             STRq_SSB_mes = quaternions.qtrans(SSBq_STR_mes)
             BOFq_SSB_mes = quaternions.qprod(BOFq_STR, STRq_SSB_mes)
 

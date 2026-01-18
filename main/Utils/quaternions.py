@@ -22,21 +22,22 @@ def qtrans(q):
     return q_conj
 
 # Rotate vector by quaternion
-def qvecrot(v, q):
-    v = np.asarray(v)
-    q = np.asanyarray(q)
-    q = q / np.linalg.norm(q, axis=-1, keepdims=True)
-    q0 = q[..., 0]
-    qv = q[..., 1:]
-    tmp = 2*np.cross(qv, v)
-    v_new = v + q0[..., None] * tmp + np.cross(qv, tmp)
-    return v_new
+def qvecrot(v_A, Bq_A):
+    v_A = np.asarray(v_A)
+    Bq_A = np.asanyarray(Bq_A)
+    Bq_A = qnorm(Bq_A)
+    vq = np.zeros((*v_A.shape[:-1], 4))
+    vq[..., 1:] = v_A
+    Aq_B = qtrans(Bq_A)
+    vq_B = qprod(Aq_B, qprod(vq, Bq_A))
+    v_B = vq_B[..., 1:]
+    return v_B
 
 # Convert small angle vector to quaternion
 def rotvec2q(v):
     theta = np.linalg.norm(v)
     if theta < 1e-12:
-        return np.array([0, 0, 0, 0])
+        return np.array([1, 0, 0, 0])
     axis = v/theta
     half = 0.5 * theta
     q = np.array([
@@ -45,4 +46,51 @@ def rotvec2q(v):
         axis[1] * np.sin(half),
         axis[2] * np.sin(half),
     ])
+    q = qnorm(q)
+    q = qchksign(q)
     return q
+
+# Returns the quaternion which gives the minimum rotation from vector a to vector b
+def vecqvec(a, b):
+    a = qnorm(a)
+    b = qnorm(b)
+
+    v = np.cross(a, b)
+    c = np.dot(a, b)
+
+    if c < -0.999999:
+        raise ValueError("180 deg rotation: choose secondary constraint")
+
+    q = np.zeros(4)
+    q[0] = 1.0 + c
+    q[1:] = v
+    q = qnorm(q)
+    q = qchksign(q)
+    return q
+
+# Normalize a quaternion
+def qnorm(q):
+    q = q / np.linalg.norm(q, axis=-1, keepdims=True)
+    return q
+
+# Make a quaternion aways scalar positive
+def qchksign(q):
+    q = np.asarray(q)
+    sign = np.where(q[..., 0] < 0, -1, 1)
+    return q*sign[..., None]
+
+# Return 3 axis vectors of the frame B relative to frame A
+def q2axis(Bq_A):
+    Bq_A = np.asarray(Bq_A)
+    
+    xA = np.array([1,0,0])
+    yA = np.array([0,1,0])
+    zA = np.array([0,0,1])
+
+    Aq_B = qtrans(Bq_A)
+
+    xB = qvecrot(xA, Aq_B)
+    yB = qvecrot(yA, Aq_B)
+    zB = qvecrot(zA, Aq_B)
+
+    return xB, yB, zB

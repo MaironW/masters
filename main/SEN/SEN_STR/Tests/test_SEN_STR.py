@@ -109,13 +109,13 @@ for step in range(1, n_steps):
     ###################
 
     # Spacecraft is aways pointing +STRz to Mars
-    # No roll allowed in the STR
     DYN_last_state = DYN_obj.snapshot()
     MARSpos_SSB = DYN_last_state["DYN_MARS"]["MARSpos_SSB"]
     SCpos_SSB   = DYN_last_state["DYN_TRA"]["SCpos_SSB"]
     STRy_STR    = np.array([0,1,0])
     STRz_STR    = np.array([0,0,1])
     STRq_BOF    = SEN_obj.SEN_STR.par["STRq_BOF"]
+
     BOFq_STR    = quaternions.qtrans(STRq_BOF)
 
     # Line of sight from SC to Mars
@@ -123,32 +123,10 @@ for step in range(1, n_steps):
     MARSdir_SC = SEN_obj.SEN_STR.dir_from_pos(MARSpos_SC)
 
     # STR boresight in the BOF frame
-    STRz_BOF = quaternions.qvecrot(STRz_STR, STRq_BOF)
+    STRz_BOF = quaternions.qvecprod(BOFq_STR, STRz_STR)
 
     # Get the quaternion which points STRz_BOF to MARSu_SSB
     BOFq_SSB_tgt = quaternions.vecqvec(STRz_BOF, MARSdir_SC)
-
-    # STRy in the SSB frame
-    SSBq_BOF = quaternions.qtrans(BOFq_SSB_tgt)
-    SSBq_STR = quaternions.qprod(SSBq_BOF, BOFq_STR)
-    STRy_SSB = quaternions.qvecrot(STRy_STR, SSBq_STR)
-
-    # Project STRy into the reference plane SSBz
-    SSBz = np.array([0,0,1])
-    STRy_proj  = STRy_SSB - np.dot(STRy_SSB, SSBz) * SSBz
-    STRy_proj /= np.linalg.norm(STRy_proj)
-
-    # Compute the roll correction quaternion
-    STRy_tgt   = np.array([0,1,0])
-    roll_axis  = MARSdir_SC
-    sin_ang    = np.dot(roll_axis, np.cross(STRy_proj, STRy_tgt))
-    cos_ang    = np.dot(STRy_proj, STRy_tgt)
-    roll_angle = np.arctan2(sin_ang, cos_ang)
-    roll_vec   = roll_angle * roll_axis
-    q_roll     = quaternions.rotvec2q(roll_vec)
-
-    # Final locked attitude
-    BOFq_SSB_tgt = quaternions.qprod(q_roll, BOFq_SSB_tgt)
 
     inputs["DYN"]["DYN_ATT"]["BOFq_SSB"] = BOFq_SSB_tgt
 
@@ -183,6 +161,7 @@ spice.clear_kernels()
 ###########
 
 field_of_view = SEN_obj.SEN_STR.par["field_of_view"]
+STRq_BOF      = SEN_obj.SEN_STR.par["STRq_BOF"]
 
 time_SIM          = timeline["DYN"]["DYN_TIME"]["time_SIM"]
 time_STR          = timeline["SEN"]["SEN_STR"]["time_STR"]
@@ -259,15 +238,26 @@ PPC.plot(MARSdir_SSB_mes[0,:],    MARSdir_SSB_mes[1,:],    MARSdir_SSB_mes[2,:],
 PPC.plot([0], [0], [0],  style='+', label="SC",  fig=fig, ax=ax, color=colors["magenta"])
 
 # Get axes in the SSB frame
+
 STRq_SSB = quaternions.qprod(STRq_BOF, BOFq_SSB)
 BOFx, BOFy, BOFz = quaternions.q2axis(BOFq_SSB)
 STRx, STRy, STRz = quaternions.q2axis(STRq_SSB)
+
+BOFx = BOFx[-1]
+BOFy = BOFy[-1]
+BOFz = BOFz[-1]
+
+PPC.plot([0, BOFx[0]], [0, BOFx[1]], [0, BOFx[2]], fig=fig, ax=ax, color=colors["blue"],  style='--', label="BOFx")
+PPC.plot([0, BOFy[0]], [0, BOFy[1]], [0, BOFy[2]], fig=fig, ax=ax, color=colors["red"],   style='--', label="BOFy")
+PPC.plot([0, BOFz[0]], [0, BOFz[1]], [0, BOFz[2]], fig=fig, ax=ax, color=colors["green"], style='--', label="BOFz")
 
 STRx = STRx[-1]
 STRy = STRy[-1]
 STRz = STRz[-1]
 
-PPC.plot([0, STRz[0]], [0, STRz[1]], [0, STRz[2]], fig=fig, ax=ax, color=colors["green"], label="STR boresight")
+PPC.plot([0, STRx[0]], [0, STRx[1]], [0, STRx[2]], fig=fig, ax=ax, color=colors["blue"],  label="STRx")
+PPC.plot([0, STRy[0]], [0, STRy[1]], [0, STRy[2]], fig=fig, ax=ax, color=colors["red"],   label="STRy")
+PPC.plot([0, STRz[0]], [0, STRz[1]], [0, STRz[2]], fig=fig, ax=ax, color=colors["green"], label="STRz")
 
 # Plot true vs measured Mars direction over time
 fig, ax = PPC.plot(time_SIM, MARSdir_SC.T, label=["x","y","z"], xlabel="time_SIM [s]", ylabel="MARSdir_SSB", title="Mars direction measurement")

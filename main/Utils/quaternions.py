@@ -14,6 +14,31 @@ def qprod(a, b):
     ], axis=-1)
     return q
 
+def qprod_ref(Aq_B, Bq_C):
+    Aq_B = np.asarray(Aq_B)
+    Bq_C = np.asarray(Bq_C)
+    w1, x1, y1, z1 = np.moveaxis(Aq_B, -1, 0)
+    w2, x2, y2, z2 = np.moveaxis(Bq_C, -1, 0)
+
+    s_AB = w1
+    s_BC = w2
+    v_AB = np.stack([x1,y1,z1], axis=-1)
+    v_BC = np.stack([x2,y2,z2], axis=-1)
+
+    s_AC = s_AB * s_BC - np.sum(v_AB * v_BC, axis=-1)
+    v_AC = s_AB[..., None] * v_BC + s_BC[..., None] * v_AB - np.cross(v_AB, v_BC)
+
+    Aq_C = np.concatenate([s_AC[..., None], v_AC], axis=-1)
+    return Aq_C
+
+# Difference between two quaternions
+def qerr(Aq_B, Cq_B):
+    Aq_B = np.asarray(Aq_B)
+    Cq_B = np.asarray(Cq_B)
+    Bq_A = qtrans(Aq_B)
+    Cq_A = qchksign(qprod(Cq_B, Bq_A))
+    return Cq_A
+
 # Quaternion transpose (conjugate)
 def qtrans(q):
     q = np.asarray(q)
@@ -22,10 +47,9 @@ def qtrans(q):
     return q_conj
 
 # Rotate vector by quaternion
-def qvecrot(v_A, Bq_A):
+def qvecprod(Bq_A, v_A):
     v_A = np.asarray(v_A)
     Bq_A = np.asanyarray(Bq_A)
-    Bq_A = qnorm(Bq_A)
     vq = np.zeros((*v_A.shape[:-1], 4))
     vq[..., 1:] = v_A
     Aq_B = qtrans(Bq_A)
@@ -82,15 +106,15 @@ def qchksign(q):
 # Return 3 axis vectors of the frame B relative to frame A
 def q2axis(Bq_A):
     Bq_A = np.asarray(Bq_A)
-    
+
     xA = np.array([1,0,0])
     yA = np.array([0,1,0])
     zA = np.array([0,0,1])
 
     Aq_B = qtrans(Bq_A)
 
-    xB = qvecrot(xA, Aq_B)
-    yB = qvecrot(yA, Aq_B)
-    zB = qvecrot(zA, Aq_B)
+    xB = qvecprod(Aq_B, xA)
+    yB = qvecprod(Aq_B, yA)
+    zB = qvecprod(Aq_B, zA)
 
     return xB, yB, zB

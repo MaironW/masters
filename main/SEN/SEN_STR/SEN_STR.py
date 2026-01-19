@@ -117,19 +117,19 @@ class SEN_STR(Level2Module):
             PHOBOSdir_SC = self.dir_from_pos(PHOBOSpos_SC)
 
             # Stars direction relative to the SSB
-            STARSdir_SSB  = DYN_states["DYN_STR"]["STARSdir_SSB"]
+            STARSdir_SSB = DYN_states["DYN_STR"]["STARSdir_SSB"]
 
             # Stars directions relative to the Spacecraft
-            STARSdir_SC  = STARSdir_SSB
+            STARSdir_SC = STARSdir_SSB.copy()
 
             # Rotate to STR frame
-            SUNdir_STR    = quaternions.qvecrot(SUNdir_SC,    STRq_SSB)
-            EARTHdir_STR  = quaternions.qvecrot(EARTHdir_SC,  STRq_SSB)
-            MOONdir_STR   = quaternions.qvecrot(MOONdir_SC,   STRq_SSB)
-            MARSdir_STR   = quaternions.qvecrot(MARSdir_SC,   STRq_SSB)
-            DEIMOSdir_STR = quaternions.qvecrot(DEIMOSdir_SC, STRq_SSB)
-            PHOBOSdir_STR = quaternions.qvecrot(PHOBOSdir_SC, STRq_SSB)
-            STARSdir_STR  = quaternions.qvecrot(STARSdir_SC,  STRq_SSB)
+            SUNdir_STR    = quaternions.qvecprod(STRq_SSB, SUNdir_SC)
+            EARTHdir_STR  = quaternions.qvecprod(STRq_SSB, EARTHdir_SC)
+            MOONdir_STR   = quaternions.qvecprod(STRq_SSB, MOONdir_SC)
+            MARSdir_STR   = quaternions.qvecprod(STRq_SSB, MARSdir_SC)
+            DEIMOSdir_STR = quaternions.qvecprod(STRq_SSB, DEIMOSdir_SC)
+            PHOBOSdir_STR = quaternions.qvecprod(STRq_SSB, PHOBOSdir_SC)
+            STARSdir_STR  = quaternions.qvecprod(STRq_SSB, STARSdir_SC)
 
             # Filter out objects outside of the FOV
             SUNdir_STR    = self.mask_visible_objects(SUNdir_STR)
@@ -142,28 +142,28 @@ class SEN_STR(Level2Module):
 
             # Compute noise quaternion (the same for all objects)
             noise_mean = self.par["noise_mean"]
-            noise_std  = [self.par["noise_std"], self.par["noise_std"], 0]
+            noise_std  = [self.par["noise_std"], self.par["noise_std"], self.par["noise_std"]]
             noise_STR  = np.random.normal(noise_mean, noise_std, size=3)
             noiseq_STR = quaternions.rotvec2q(noise_STR)
 
-            # Apply noise to each direction vector
-            SUNdir_STR_mes    = quaternions.qvecrot(SUNdir_STR,    noiseq_STR)
-            EARTHdir_STR_mes  = quaternions.qvecrot(EARTHdir_STR,  noiseq_STR)
-            MOONdir_STR_mes   = quaternions.qvecrot(MOONdir_STR,   noiseq_STR)
-            MARSdir_STR_mes   = quaternions.qvecrot(MARSdir_STR,   noiseq_STR)
-            DEIMOSdir_STR_mes = quaternions.qvecrot(DEIMOSdir_STR, noiseq_STR)
-            PHOBOSdir_STR_mes = quaternions.qvecrot(PHOBOSdir_STR, noiseq_STR)
-            STARSdir_STR_mes  = quaternions.qvecrot(STARSdir_STR,  noiseq_STR)
+            # Apply noise on the focal plane
+            SUNdir_STR_mes    = quaternions.qvecprod(noiseq_STR, SUNdir_STR)
+            EARTHdir_STR_mes  = quaternions.qvecprod(noiseq_STR, EARTHdir_STR)
+            MOONdir_STR_mes   = quaternions.qvecprod(noiseq_STR, MOONdir_STR)
+            MARSdir_STR_mes   = quaternions.qvecprod(noiseq_STR, MARSdir_STR)
+            DEIMOSdir_STR_mes = quaternions.qvecprod(noiseq_STR, DEIMOSdir_STR)
+            PHOBOSdir_STR_mes = quaternions.qvecprod(noiseq_STR, PHOBOSdir_STR)
+            STARSdir_STR_mes  = quaternions.qvecprod(noiseq_STR, STARSdir_STR)
 
             # Convert back to SSB
             SSBq_STR          = quaternions.qtrans(STRq_SSB)
-            SUNdir_SSB_mes    = quaternions.qvecrot(SUNdir_STR_mes,    SSBq_STR)
-            EARTHdir_SSB_mes  = quaternions.qvecrot(EARTHdir_STR_mes,  SSBq_STR)
-            MOONdir_SSB_mes   = quaternions.qvecrot(MOONdir_STR_mes,   SSBq_STR)
-            MARSdir_SSB_mes   = quaternions.qvecrot(MARSdir_STR_mes,   SSBq_STR)
-            DEIMOSdir_SSB_mes = quaternions.qvecrot(DEIMOSdir_STR_mes, SSBq_STR)
-            PHOBOSdir_SSB_mes = quaternions.qvecrot(PHOBOSdir_STR_mes, SSBq_STR)
-            STARSdir_SSB_mes  = quaternions.qvecrot(STARSdir_STR_mes,  SSBq_STR)
+            SUNdir_SSB_mes    = quaternions.qvecprod(SSBq_STR, SUNdir_STR_mes)
+            EARTHdir_SSB_mes  = quaternions.qvecprod(SSBq_STR, EARTHdir_STR_mes)
+            MOONdir_SSB_mes   = quaternions.qvecprod(SSBq_STR, MOONdir_STR_mes)
+            MARSdir_SSB_mes   = quaternions.qvecprod(SSBq_STR, MARSdir_STR_mes)
+            DEIMOSdir_SSB_mes = quaternions.qvecprod(SSBq_STR, DEIMOSdir_STR_mes)
+            PHOBOSdir_SSB_mes = quaternions.qvecprod(SSBq_STR, PHOBOSdir_STR_mes)
+            STARSdir_SSB_mes  = quaternions.qvecprod(SSBq_STR, STARSdir_STR_mes)
 
             # Compute BOFq_SSB_mes
             BOFq_STR     = quaternions.qtrans(STRq_BOF)

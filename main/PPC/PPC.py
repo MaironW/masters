@@ -5,6 +5,8 @@ import matplotlib as mpl
 import matplotlib.pyplot as plt
 import os
 
+from Utils.constants import CONSTANTS_par
+
 # Initialize timeline to store data for post processing
 # Scalars  -> (n_steps,)
 # Vectors  -> (n_steps, dim)
@@ -72,6 +74,7 @@ def setup_plot(colors):
 
 # Plot function
 def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=None, label=None, title=None, fig=None, ax=None, subplot=None, aspect=None, zorder=None):
+    # Create a new figure
     if fig is None:
         fig = plt.figure()
 
@@ -137,3 +140,45 @@ def gnomonic_projection(vec):
     u[mask] = x[mask] / z[mask]
     v[mask] = y[mask] / z[mask]
     return u, v
+
+# Return the boundary of the Gnomonic projection
+def gnomonic_boundary(field_of_view):
+    phi = np.linspace(0, 2*np.pi, 500)
+    r = np.tan(field_of_view)
+
+    u = r * np.cos(phi)
+    v = r * np.sin(phi)
+    return u, v
+
+# Generate Aitoff projection of a vector, in degrees
+def aitoff_projection(vec):
+    x, y, z = vec
+    ra   = np.arctan2(y, x)
+    decl = np.arcsin(z)
+
+    theta = np.arccos(np.cos(decl)*np.cos(ra/2))
+
+    sinc_theta = np.where(
+        np.abs(theta) < 1e-12,
+        1.0,
+        np.sin(theta)/theta
+    )
+
+    u = 2*np.cos(decl)*np.sin(ra/2)/sinc_theta
+    v = np.sin(decl)/sinc_theta
+
+    u *= CONSTANTS_par["rad2deg_cst"]
+    v *= CONSTANTS_par["rad2deg_cst"]
+
+    return u, v
+
+# Return the boundary of the Aitoff projection, in degrees
+def aitoff_boundary():
+    t  = np.linspace(0, 2*np.pi, 500)
+    x = np.pi*np.cos(t)
+    y = (np.pi/2)*np.sin(t)
+
+    x *= CONSTANTS_par["rad2deg_cst"]
+    y *= CONSTANTS_par["rad2deg_cst"]
+
+    return x, y

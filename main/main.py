@@ -4,6 +4,7 @@
 
 from DYN.DYN       import DYN
 from SEN.SEN       import SEN
+from NAV.NAV       import NAV
 from PPC           import PPC
 from PPC.PPC_plots import PPC_plots
 from SIM_par       import SIM_par
@@ -31,6 +32,7 @@ events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt, e
 # Initialize Level-1 modules
 DYN_obj = DYN()
 SEN_obj = SEN(DYN_obj)
+NAV_obj = NAV(SEN_obj)
 
 # Initialize or load timeline
 if DYN_log_load:
@@ -38,11 +40,13 @@ if DYN_log_load:
     timeline = {
         "DYN" : DYN_timeline,
         "SEN" : PPC.init_timeline(SEN_obj.snapshot(), n_steps),
+        "NAV" : PPC.init_timeline(NAV_obj.snapshot(), n_steps),
     }
 else:
     timeline = {
         "DYN" : PPC.init_timeline(DYN_obj.snapshot(), n_steps),
         "SEN" : PPC.init_timeline(SEN_obj.snapshot(), n_steps),
+        "NAV" : PPC.init_timeline(NAV_obj.snapshot(), n_steps),
     }
 
 # Main loop
@@ -61,14 +65,20 @@ for step in range(1, n_steps):
         DYN_obj.update_algebraic(sim_time, inputs)
         # Integrate all dynamic states together
         DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
-        # Update SEN
-        SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
-        # Save results into the timeline
-        states = {
-            "DYN" : DYN_obj.snapshot(),
-            "SEN" : SEN_obj.snapshot(),
-        }
-        PPC.update_timeline(timeline, states, step)
+    
+    # Update SEN
+    SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
+
+    # Update NAV
+    NAV_obj.update_algebraic(sim_time, SEN_obj, inputs)
+
+    # Save results into the timeline
+    states = {
+        "DYN" : DYN_obj.snapshot(),
+        "SEN" : SEN_obj.snapshot(),
+        "NAV" : NAV_obj.snapshot(),
+    }
+    PPC.update_timeline(timeline, states, step)
 
 # Save log (currently only for DYN module)
 if DYN_log_save:

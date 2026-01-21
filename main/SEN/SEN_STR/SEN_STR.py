@@ -65,22 +65,22 @@ class SEN_STR(Level2Module):
         # Make all outputs invalid if STRoutflg is zero
         # This simulates that the STR was turned OFF
         if self.state["STRoutflg"] == 0:
-            self.par["time_STR"]          = 0
-            self.par["SUNdir_STR_mes"]    = self.par["BODYdir_mes_ini"]
-            self.par["EARTHdir_STR_mes"]  = self.par["BODYdir_mes_ini"]
-            self.par["MOONdir_STR_mes"]   = self.par["BODYdir_mes_ini"]
-            self.par["MARSdir_STR_mes"]   = self.par["BODYdir_mes_ini"]
-            self.par["DEIMOSdir_STR_mes"] = self.par["BODYdir_mes_ini"]
-            self.par["PHOBOSdir_STR_mes"] = self.par["BODYdir_mes_ini"]
-            self.par["STARSdir_STR_mes"]  = self.par["STARSdir_mes_ini"]
-            self.par["SUNdir_SSB_mes"]    = self.par["BODYdir_mes_ini"]
-            self.par["EARTHdir_SSB_mes"]  = self.par["BODYdir_mes_ini"]
-            self.par["MOONdir_SSB_mes"]   = self.par["BODYdir_mes_ini"]
-            self.par["MARSdir_SSB_mes"]   = self.par["BODYdir_mes_ini"]
-            self.par["DEIMOSdir_SSB_mes"] = self.par["BODYdir_mes_ini"]
-            self.par["PHOBOSdir_SSB_mes"] = self.par["BODYdir_mes_ini"]
-            self.par["STARSdir_SSB_mes"]  = self.par["STARSdir_mes_ini"]
-            self.par["BOFq_SSB_mes"]      = self.par["BOFq_SSB_mes_ini"]
+            self.state["time_STR"]          = 0
+            self.state["SUNdir_STR_mes"]    = self.par["BODYdir_mes_ini"]
+            self.state["EARTHdir_STR_mes"]  = self.par["BODYdir_mes_ini"]
+            self.state["MOONdir_STR_mes"]   = self.par["BODYdir_mes_ini"]
+            self.state["MARSdir_STR_mes"]   = self.par["BODYdir_mes_ini"]
+            self.state["DEIMOSdir_STR_mes"] = self.par["BODYdir_mes_ini"]
+            self.state["PHOBOSdir_STR_mes"] = self.par["BODYdir_mes_ini"]
+            self.state["STARSdir_STR_mes"]  = self.par["STARSdir_mes_ini"]
+            self.state["SUNdir_SSB_mes"]    = self.par["BODYdir_mes_ini"]
+            self.state["EARTHdir_SSB_mes"]  = self.par["BODYdir_mes_ini"]
+            self.state["MOONdir_SSB_mes"]   = self.par["BODYdir_mes_ini"]
+            self.state["MARSdir_SSB_mes"]   = self.par["BODYdir_mes_ini"]
+            self.state["DEIMOSdir_SSB_mes"] = self.par["BODYdir_mes_ini"]
+            self.state["PHOBOSdir_SSB_mes"] = self.par["BODYdir_mes_ini"]
+            self.state["STARSdir_SSB_mes"]  = self.par["STARSdir_mes_ini"]
+            self.state["BOFq_SSB_mes"]      = self.par["BOFq_SSB_mes_ini"]
 
         # STR output is valid
         else:

@@ -29,12 +29,12 @@ class SEN_STR(Level2Module):
             "DEIMOSdir_STR_mes" : par["BODYdir_mes_ini"],
             "PHOBOSdir_STR_mes" : par["BODYdir_mes_ini"],
 
-            "SUNdir_SSB_mes"    : par["BODYdir_mes_ini"],
-            "EARTHdir_SSB_mes"  : par["BODYdir_mes_ini"],
-            "MOONdir_SSB_mes"   : par["BODYdir_mes_ini"],
-            "MARSdir_SSB_mes"   : par["BODYdir_mes_ini"],
-            "DEIMOSdir_SSB_mes" : par["BODYdir_mes_ini"],
-            "PHOBOSdir_SSB_mes" : par["BODYdir_mes_ini"],
+            "SUNdir_SC_mes"     : par["BODYdir_mes_ini"],
+            "EARTHdir_SC_mes"   : par["BODYdir_mes_ini"],
+            "MOONdir_SC_mes"    : par["BODYdir_mes_ini"],
+            "MARSdir_SC_mes"    : par["BODYdir_mes_ini"],
+            "DEIMOSdir_SC_mes"  : par["BODYdir_mes_ini"],
+            "PHOBOSdir_SC_mes"  : par["BODYdir_mes_ini"],
         }
         # Last time update for quantization
         self._last_update_time = -par["dt"]
@@ -49,7 +49,7 @@ class SEN_STR(Level2Module):
         # Allocate initial stars array
         self.par["STARSdir_mes_ini"] = np.full((m,n), np.nan)
         self.state["STARSdir_STR_mes"] = self.par["STARSdir_mes_ini"]
-        self.state["STARSdir_SSB_mes"] = self.par["STARSdir_mes_ini"]
+        self.state["STARSdir_SC_mes"] = self.par["STARSdir_mes_ini"]
 
         # Initialize other variables
         self.state = self.update_algebraic(0, DYN_states, SEN_states)
@@ -73,13 +73,13 @@ class SEN_STR(Level2Module):
             self.state["DEIMOSdir_STR_mes"] = self.par["BODYdir_mes_ini"]
             self.state["PHOBOSdir_STR_mes"] = self.par["BODYdir_mes_ini"]
             self.state["STARSdir_STR_mes"]  = self.par["STARSdir_mes_ini"]
-            self.state["SUNdir_SSB_mes"]    = self.par["BODYdir_mes_ini"]
-            self.state["EARTHdir_SSB_mes"]  = self.par["BODYdir_mes_ini"]
-            self.state["MOONdir_SSB_mes"]   = self.par["BODYdir_mes_ini"]
-            self.state["MARSdir_SSB_mes"]   = self.par["BODYdir_mes_ini"]
-            self.state["DEIMOSdir_SSB_mes"] = self.par["BODYdir_mes_ini"]
-            self.state["PHOBOSdir_SSB_mes"] = self.par["BODYdir_mes_ini"]
-            self.state["STARSdir_SSB_mes"]  = self.par["STARSdir_mes_ini"]
+            self.state["SUNdir_SC_mes"]     = self.par["BODYdir_mes_ini"]
+            self.state["EARTHdir_SC_mes"]   = self.par["BODYdir_mes_ini"]
+            self.state["MOONdir_SC_mes"]    = self.par["BODYdir_mes_ini"]
+            self.state["MARSdir_SC_mes"]    = self.par["BODYdir_mes_ini"]
+            self.state["DEIMOSdir_SC_mes"]  = self.par["BODYdir_mes_ini"]
+            self.state["PHOBOSdir_SC_mes"]  = self.par["BODYdir_mes_ini"]
+            self.state["STARSdir_SC_mes"]   = self.par["STARSdir_mes_ini"]
             self.state["BOFq_SSB_mes"]      = self.par["BOFq_SSB_mes_ini"]
 
         # STR output is valid
@@ -108,7 +108,7 @@ class SEN_STR(Level2Module):
             DEIMOSpos_SC = DEIMOSpos_SSB - SCpos_SSB
             PHOBOSpos_SC = PHOBOSpos_SSB - SCpos_SSB
 
-            # Directions relative to SC, expressed in the SSB frame
+            # Directions relative to SC
             SUNdir_SC    = self.dir_from_pos(SUNpos_SC)
             EARTHdir_SC  = self.dir_from_pos(EARTHpos_SC)
             MOONdir_SC   = self.dir_from_pos(MOONpos_SC)
@@ -155,15 +155,15 @@ class SEN_STR(Level2Module):
             PHOBOSdir_STR_mes = quaternions.qvecprod(noiseq_STR, PHOBOSdir_STR)
             STARSdir_STR_mes  = quaternions.qvecprod(noiseq_STR, STARSdir_STR)
 
-            # Convert back to SSB
-            SSBq_STR          = quaternions.qtrans(STRq_SSB)
-            SUNdir_SSB_mes    = quaternions.qvecprod(SSBq_STR, SUNdir_STR_mes)
-            EARTHdir_SSB_mes  = quaternions.qvecprod(SSBq_STR, EARTHdir_STR_mes)
-            MOONdir_SSB_mes   = quaternions.qvecprod(SSBq_STR, MOONdir_STR_mes)
-            MARSdir_SSB_mes   = quaternions.qvecprod(SSBq_STR, MARSdir_STR_mes)
-            DEIMOSdir_SSB_mes = quaternions.qvecprod(SSBq_STR, DEIMOSdir_STR_mes)
-            PHOBOSdir_SSB_mes = quaternions.qvecprod(SSBq_STR, PHOBOSdir_STR_mes)
-            STARSdir_SSB_mes  = quaternions.qvecprod(SSBq_STR, STARSdir_STR_mes)
+            # Convert back to SC
+            SSBq_STR         = quaternions.qtrans(STRq_SSB)
+            SUNdir_SC_mes    = quaternions.qvecprod(SSBq_STR, SUNdir_STR_mes)
+            EARTHdir_SC_mes  = quaternions.qvecprod(SSBq_STR, EARTHdir_STR_mes)
+            MOONdir_SC_mes   = quaternions.qvecprod(SSBq_STR, MOONdir_STR_mes)
+            MARSdir_SC_mes   = quaternions.qvecprod(SSBq_STR, MARSdir_STR_mes)
+            DEIMOSdir_SC_mes = quaternions.qvecprod(SSBq_STR, DEIMOSdir_STR_mes)
+            PHOBOSdir_SC_mes = quaternions.qvecprod(SSBq_STR, PHOBOSdir_STR_mes)
+            STARSdir_SC_mes  = quaternions.qvecprod(SSBq_STR, STARSdir_STR_mes)
 
             # Compute BOFq_SSB_mes
             BOFq_STR     = quaternions.qtrans(STRq_BOF)
@@ -182,13 +182,13 @@ class SEN_STR(Level2Module):
                 self.state["DEIMOSdir_STR_mes"] = DEIMOSdir_STR_mes
                 self.state["PHOBOSdir_STR_mes"] = PHOBOSdir_STR_mes
                 self.state["STARSdir_STR_mes"]  = STARSdir_STR_mes
-                self.state["SUNdir_SSB_mes"]    = SUNdir_SSB_mes
-                self.state["EARTHdir_SSB_mes"]  = EARTHdir_SSB_mes
-                self.state["MOONdir_SSB_mes"]   = MOONdir_SSB_mes
-                self.state["MARSdir_SSB_mes"]   = MARSdir_SSB_mes
-                self.state["DEIMOSdir_SSB_mes"] = DEIMOSdir_SSB_mes
-                self.state["PHOBOSdir_SSB_mes"] = PHOBOSdir_SSB_mes
-                self.state["STARSdir_SSB_mes"]  = STARSdir_SSB_mes
+                self.state["SUNdir_SC_mes"]     = SUNdir_SC_mes
+                self.state["EARTHdir_SC_mes"]   = EARTHdir_SC_mes
+                self.state["MOONdir_SC_mes"]    = MOONdir_SC_mes
+                self.state["MARSdir_SC_mes"]    = MARSdir_SC_mes
+                self.state["DEIMOSdir_SC_mes"]  = DEIMOSdir_SC_mes
+                self.state["PHOBOSdir_SC_mes"]  = PHOBOSdir_SC_mes
+                self.state["STARSdir_SC_mes"]   = STARSdir_SC_mes
                 self.state["BOFq_SSB_mes"]      = BOFq_SSB_mes
 
                 self._last_update_time = time_SIM

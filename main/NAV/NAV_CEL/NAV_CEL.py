@@ -18,12 +18,20 @@ class NAV_CEL(Level2Module):
         # Set initial dummy state
         self.state = {
             "NAV_CELoutflg"    : par["NAV_CELoutflg_ini"],
+
             "SUNangles_mes"    : par["BODYangles_mes_ini"],
             "EARTHangles_mes"  : par["BODYangles_mes_ini"],
             "MOONangles_mes"   : par["BODYangles_mes_ini"],
             "MARSangles_mes"   : par["BODYangles_mes_ini"],
             "DEIMOSangles_mes" : par["BODYangles_mes_ini"],
             "PHOBOSangles_mes" : par["BODYangles_mes_ini"],
+
+            "SUNsel_STARSdir_SC_mes"    : par["BODYsel_STARSdir_mes_ini"],
+            "EARTHsel_STARSdir_SC_mes"  : par["BODYsel_STARSdir_mes_ini"],
+            "MOONsel_STARSdir_SC_mes"   : par["BODYsel_STARSdir_mes_ini"],
+            "MARSsel_STARSdir_SC_mes"   : par["BODYsel_STARSdir_mes_ini"],
+            "DEIMOSsel_STARSdir_SC_mes" : par["BODYsel_STARSdir_mes_ini"],
+            "PHOBOSsel_STARSdir_SC_mes" : par["BODYsel_STARSdir_mes_ini"],
         }
         super().__init__("NAV_CEL", par)
 
@@ -69,12 +77,12 @@ class NAV_CEL(Level2Module):
             DEIMOSvisibility = self.body_visibility(DEIMOSdir_SC_mes)
 
             # Compute angles if body is visible
-            SUNangles_mes    = self.par["BODYangles_mes_ini"] if SUNvisibility    == False else self.los_angles(SUNdir_SC_mes,    STARSdir_SC_mes)
-            EARTHangles_mes  = self.par["BODYangles_mes_ini"] if EARTHvisibility  == False else self.los_angles(EARTHdir_SC_mes,  STARSdir_SC_mes)
-            MOONangles_mes   = self.par["BODYangles_mes_ini"] if MOONvisibility   == False else self.los_angles(MOONdir_SC_mes,   STARSdir_SC_mes)
-            MARSangles_mes   = self.par["BODYangles_mes_ini"] if MARSvisibility   == False else self.los_angles(MARSdir_SC_mes,   STARSdir_SC_mes)
-            PHOBOSangles_mes = self.par["BODYangles_mes_ini"] if PHOBOSvisibility == False else self.los_angles(PHOBOSdir_SC_mes, STARSdir_SC_mes)
-            DEIMOSangles_mes = self.par["BODYangles_mes_ini"] if DEIMOSvisibility == False else self.los_angles(DEIMOSdir_SC_mes, STARSdir_SC_mes)
+            SUNangles_mes,   SUNsel_STARSdir_SC_mes     = self.los_angles(SUNvisibility,    SUNdir_SC_mes,    STARSdir_SC_mes)
+            EARTHangles_mes,  EARTHsel_STARSdir_SC_mes  = self.los_angles(EARTHvisibility,  EARTHdir_SC_mes,  STARSdir_SC_mes)
+            MOONangles_mes,   MOONsel_STARSdir_SC_mes   = self.los_angles(MOONvisibility,   MOONdir_SC_mes,   STARSdir_SC_mes)
+            MARSangles_mes,   MARSsel_STARSdir_SC_mes   = self.los_angles(MARSvisibility,   MARSdir_SC_mes,   STARSdir_SC_mes)
+            DEIMOSangles_mes, DEIMOSsel_STARSdir_SC_mes = self.los_angles(DEIMOSvisibility, DEIMOSdir_SC_mes, STARSdir_SC_mes)
+            PHOBOSangles_mes, PHOBOSsel_STARSdir_SC_mes = self.los_angles(PHOBOSvisibility, PHOBOSdir_SC_mes, STARSdir_SC_mes)
 
             # If no angle is computed, set the output flag to invalid
             visibility_list = [
@@ -88,13 +96,21 @@ class NAV_CEL(Level2Module):
             NAV_CELoutflg = self.check_valid_output(visibility_list)
 
             # Update states
+            self.state["NAV_CELoutflg"]    = NAV_CELoutflg
+
             self.state["SUNangles_mes"]    = SUNangles_mes
             self.state["EARTHangles_mes"]  = EARTHangles_mes
             self.state["MOONangles_mes"]   = MOONangles_mes
             self.state["MARSangles_mes"]   = MARSangles_mes
             self.state["PHOBOSangles_mes"] = PHOBOSangles_mes
             self.state["DEIMOSangles_mes"] = DEIMOSangles_mes
-            self.state["NAV_CELoutflg"]    = NAV_CELoutflg
+
+            self.state["SUNsel_STARSdir_SC_mes"]    = SUNsel_STARSdir_SC_mes
+            self.state["EARTHsel_STARSdir_SC_mes"]  = EARTHsel_STARSdir_SC_mes
+            self.state["MOONsel_STARSdir_SC_mes"]   = MOONsel_STARSdir_SC_mes
+            self.state["MARSsel_STARSdir_SC_mes"]   = MARSsel_STARSdir_SC_mes
+            self.state["PHOBOSsel_STARSdir_SC_mes"] = PHOBOSsel_STARSdir_SC_mes
+            self.state["DEIMOSsel_STARSdir_SC_mes"] = DEIMOSsel_STARSdir_SC_mes
 
         return self.state
 
@@ -104,21 +120,39 @@ class NAV_CEL(Level2Module):
         return visible
 
     # Compute three line-of-sight angles between the body and the available stars
-    def los_angles(self, BODYdir_SC_mes, STARSdir_SC_mes):
-        cos_angles = STARSdir_SC_mes @ BODYdir_SC_mes
-        cos_angles = np.clip(cos_angles, -1.0, 1.0)
-        angles     = np.arccos(cos_angles)
+    # Return the direction vectors for the three selected stars
+    def los_angles(self, BODYvisibility, BODYdir_SC_mes, STARSdir_SC_mes):
+        # If body is visible
+        if BODYvisibility == True:
+            cos_angles = STARSdir_SC_mes @ BODYdir_SC_mes
+            cos_angles = np.clip(cos_angles, -1.0, 1.0)
+            angles     = np.arccos(cos_angles)
 
-        # Filter-out angles smaller than los_angle_min
-        valid_angles = angles >= self.par["los_angle_min"]
-        angles = angles[valid_angles]
+            # Filter-out angles smaller than los_angle_min and larger than los_angle_max
+            valid_angles = (angles >= self.par["los_angle_min"]) & (angles <= self.par["los_angle_max"])
+            angles = angles[valid_angles]
+            BODYsel_STARSdir_SC_mes = STARSdir_SC_mes[valid_angles]
 
-        # Select the three best angles (TODO: Define a criteria)
-    
-        return angles
+            # Select the three best angles
+            best_idx = self.score_stars(angles, BODYsel_STARSdir_SC_mes)
+            angles = angles[best_idx]
+            BODYsel_STARSdir_SC_mes = BODYsel_STARSdir_SC_mes[best_idx]
 
+        # If body is not visible
+        else:
+            angles = self.par["BODYangles_mes_ini"]
+            BODYsel_STARSdir_SC_mes = self.par["BODYsel_STARSdir_mes_ini"]
+
+        return angles, BODYsel_STARSdir_SC_mes
 
     # Return NAV_CEL output flag as valid only if there are at least two valid bodies
     def check_valid_output(self, visibility_list):
         at_least_two_valid_bodies = sum(visibility_list) >= 2
         return at_least_two_valid_bodies
+
+    # Select three out of valid stars to compute angles from
+    # TODO: Score by separation angle
+    def score_stars(self, angles, STARSdir_SC_mes):
+        # Just return the 3 first stars, as they are the brightest
+        best_idx = [0,1,2]
+        return best_idx

@@ -90,5 +90,5 @@ spice.clear_kernels()
 # Plots
 for key in SIM_par["PPC_plot_list"]:
     if key in PPC_plots:
-        PPC_plots[key](timeline, DYN_obj, SEN_obj)
+        PPC_plots[key](timeline, DYN_obj, SEN_obj, NAV_obj)
 PPC.show_plot()

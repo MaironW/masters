@@ -147,7 +147,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     DEIMOSdir_SC_mes = timeline["SEN"]["SEN_STR"]["DEIMOSdir_SC_mes"].T
     PHOBOSdir_SC_mes = timeline["SEN"]["SEN_STR"]["PHOBOSdir_SC_mes"].T
     STARSdir_SC_mes  = timeline["SEN"]["SEN_STR"]["STARSdir_SC_mes"].T
-    
+
     NAV_CELoutflg = timeline["NAV"]["NAV_CEL"]["NAV_CELoutflg"]
 
     SUNangles_mes    = timeline["NAV"]["NAV_CEL"]["SUNangles_mes"]
@@ -185,24 +185,24 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
     # Plot Selected stars for each body
     fig, ax = PPC.plot(STARSdir_SC_mes[0,:,1], STARSdir_SC_mes[1,:,1], STARSdir_SC_mes[2,:,1], style='.', label="Visible Stars", xlabel="X SC", ylabel="Y SC", zlabel="Z SC", title="Star Field Normalized in SC frame", aspect="equal", color=colors["green"])
-    if not PPC.is_nan(SUNangles_mes):    
+    if not PPC.is_nan(SUNangles_mes):
         PPC.plot(SUNsel_STARSdir_SC_mes[0,:,1], SUNsel_STARSdir_SC_mes[1,:,1], SUNsel_STARSdir_SC_mes[2,:,1], style='.', label="Sun selected stars", fig=fig, ax=ax, color=colors["orange"])
-        PPC.plot(SUNdir_SC_mes[0,:,1],          SUNdir_SC_mes[1,:,1],          SUNdir_SC_mes[2,:,1],          style='x', label="Sun",                fig=fig, ax=ax, color=colors["orange"])
-    if not PPC.is_nan(EARTHangles_mes):  
+        PPC.plot(SUNdir_SC_mes[0,:], SUNdir_SC_mes[1,:], SUNdir_SC_mes[2,:], style='x', label="Sun", fig=fig, ax=ax, color=colors["orange"])
+    if not PPC.is_nan(EARTHangles_mes):
         PPC.plot(EARTHsel_STARSdir_SC_mes[0,:,1], EARTHsel_STARSdir_SC_mes[1,:,1], EARTHsel_STARSdir_SC_mes[2,:,1], style='.', label="Earth selected stars",  fig=fig, ax=ax, color=colors["blue"])
-        PPC.plot(EARTHdir_SC_mes[0,:,1],          EARTHdir_SC_mes[1,:,1],          EARTHdir_SC_mes[2,:,1],          style='x', label="Earth",                 fig=fig, ax=ax, color=colors["blue"])
-    if not PPC.is_nan(MOONangles_mes):   
+        PPC.plot(EARTHdir_SC_mes[0,:], EARTHdir_SC_mes[1,:], EARTHdir_SC_mes[2,:], style='x', label="Earth", fig=fig, ax=ax, color=colors["blue"])
+    if not PPC.is_nan(MOONangles_mes):
         PPC.plot(MOONsel_STARSdir_SC_mes[0,:,1], MOONsel_STARSdir_SC_mes[1,:,1], MOONsel_STARSdir_SC_mes[2,:,1], style='.', label="Moon selected stars", fig=fig, ax=ax, color=colors["grey"])
-        PPC.plot(MOONdir_SC_mes[0,:,1],          MOONdir_SC_mes[1,:,1],          MOONdir_SC_mes[2,:,1],          style='x', label="Moon",                fig=fig, ax=ax, color=colors["grey"])
+        PPC.plot(MOONdir_SC_mes[0,:], MOONdir_SC_mes[1,:], MOONdir_SC_mes[2,:], style='x', label="Moon", fig=fig, ax=ax, color=colors["grey"])
     if not PPC.is_nan(MARSangles_mes):
         PPC.plot(MARSsel_STARSdir_SC_mes[0,:,1], MARSsel_STARSdir_SC_mes[1,:,1], MARSsel_STARSdir_SC_mes[2,:,1], style='.', label="Mars selected stars", fig=fig, ax=ax, color=colors["red"])
-        PPC.plot(MARSdir_SC_mes[0,:,1],          MARSdir_SC_mes[1,:,1],          MARSdir_SC_mes[2,:,1],          style='x', label="Mars",                fig=fig, ax=ax, color=colors["red"])
-    if not PPC.is_nan(DEIMOSangles_mes): 
-        PPC.plot(DEIMOSsel_STARSdir_SC_mes[0,:,1], DEIMOSsel_STARSdir_SC_mes[1, ], DEIMOSsel_STARSdir_SC_mes[2,:,1], style='.', label="Deimos selected stars", fig=fig, ax=ax, color=colors["lightgrey"])
-        PPC.plot(DEIMOSdir_SC_mes[0,:,1],          DEIMOSdir_SC_mes[1,:,1],        DEIMOSdir_SC_mes[2,:,1],          style='x', label="Deimos",                fig=fig, ax=ax, color=colors["lightgrey"])
-    if not PPC.is_nan(PHOBOSangles_mes): 
+        PPC.plot(MARSdir_SC_mes[0,:], MARSdir_SC_mes[1,:], MARSdir_SC_mes[2,:], style='x', label="Mars", fig=fig, ax=ax, color=colors["red"])
+    if not PPC.is_nan(DEIMOSangles_mes):
+        PPC.plot(DEIMOSsel_STARSdir_SC_mes[0,:,1], DEIMOSsel_STARSdir_SC_mes[1,:,1], DEIMOSsel_STARSdir_SC_mes[2,:,1], style='.', label="Deimos selected stars", fig=fig, ax=ax, color=colors["lightgrey"])
+        PPC.plot(DEIMOSdir_SC_mes[0,:], DEIMOSdir_SC_mes[1,:], DEIMOSdir_SC_mes[2,:], style='x', label="Deimos", fig=fig, ax=ax, color=colors["lightgrey"])
+    if not PPC.is_nan(PHOBOSangles_mes):
         PPC.plot(PHOBOSsel_STARSdir_SC_mes[0,:,1], PHOBOSsel_STARSdir_SC_mes[1,:,1], PHOBOSsel_STARSdir_SC_mes[2,:,1], style='.', label="Phobos selected stars", fig=fig, ax=ax, color=colors["darkgrey"])
-        PPC.plot(PHOBOSdir_SC_mes[0,:,1],          PHOBOSdir_SC_mes[1,:,1],          PHOBOSdir_SC_mes[2,:,1],          style='x', label="Phobos",                fig=fig, ax=ax, color=colors["darkgrey"])
+        PPC.plot(PHOBOSdir_SC_mes[0,:], PHOBOSdir_SC_mes[1,:], PHOBOSdir_SC_mes[2,:], style='x', label="Phobos", fig=fig, ax=ax, color=colors["darkgrey"])
 
     PPC.plot([0], [0], [0],  style='+', label="SC",  fig=fig, ax=ax, color=colors["magenta"])
 

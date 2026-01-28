@@ -67,7 +67,7 @@ events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt, e
 # INITIALIZE MODULES #
 ######################
 
-field_of_view     = 20*CONSTANTS_par["deg2rad_cst"]
+field_of_view     = 30*CONSTANTS_par["deg2rad_cst"]
 cos_field_of_view = np.cos(field_of_view)
 
 SEN_STR_par = {

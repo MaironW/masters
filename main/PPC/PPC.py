@@ -189,10 +189,6 @@ def aitoff_boundary():
 
     return x, y
 
-# Convert radians value into degrees
-def rad2deg(value_rad):
-    return value_rad*CONSTANTS_par["rad2deg_cst"]
-
 # Return true if array is entirely composed by nans
 def is_nan(array):
     return np.isnan(array).all()

@@ -34,6 +34,7 @@ SIM_par = {
 
     # List of default plots
     "PPC_plot_list" : [
+        "SEN_STR",
         "NAV_CEL",
     ],
 }
@@ -185,109 +186,6 @@ spice.clear_kernels()
 ###########
 # RESULTS #
 ###########
-
-field_of_view = SEN_obj.SEN_STR.par["field_of_view"]
-STRq_BOF      = SEN_obj.SEN_STR.par["STRq_BOF"]
-
-time_SIM          = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-time_STR          = timeline["SEN"]["SEN_STR"]["time_STR"]
-STRoutflg         = timeline["SEN"]["SEN_STR"]["STRoutflg"]
-SUNdir_STR_mes    = timeline["SEN"]["SEN_STR"]["SUNdir_STR_mes"].T
-EARTHdir_STR_mes  = timeline["SEN"]["SEN_STR"]["EARTHdir_STR_mes"].T
-MARSdir_STR_mes   = timeline["SEN"]["SEN_STR"]["MARSdir_STR_mes"].T
-STARSdir_STR_mes  = timeline["SEN"]["SEN_STR"]["STARSdir_STR_mes"].T # [coord, star, time]
-SUNdir_SC_mes     = timeline["SEN"]["SEN_STR"]["SUNdir_SC_mes"].T
-EARTHdir_SC_mes   = timeline["SEN"]["SEN_STR"]["EARTHdir_SC_mes"].T
-MARSdir_SC_mes    = timeline["SEN"]["SEN_STR"]["MARSdir_SC_mes"].T
-STARSdir_SC_mes   = timeline["SEN"]["SEN_STR"]["STARSdir_SC_mes"].T
-BOFq_SSB_mes      = timeline["SEN"]["SEN_STR"]["BOFq_SSB_mes"]
-
-SCpos_SSB    = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"].T
-STARSdir_SSB = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"].T
-SUNpos_SSB   = timeline["DYN"]["DYN_SUN"]["SUNpos_SSB"].T
-EARTHpos_SSB = timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"].T
-MARSpos_SSB  = timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"].T
-
-BOFq_SSB = timeline["DYN"]["DYN_ATT"]["BOFq_SSB"]
-
-# Get object directions
-SUNpos_SC   = SUNpos_SSB   - SCpos_SSB
-EARTHpos_SC = EARTHpos_SSB - SCpos_SSB
-MARSpos_SC  = MARSpos_SSB  - SCpos_SSB
-
-SUNdir_SC   = SEN_obj.SEN_STR.dir_from_pos(SUNpos_SC.T).T
-EARTHdir_SC = SEN_obj.SEN_STR.dir_from_pos(EARTHpos_SC.T).T
-MARSdir_SC  = SEN_obj.SEN_STR.dir_from_pos(MARSpos_SC.T).T
-
-# Plot status
-fig, ax = PPC.plot(time_SIM, STRoutflg, ylabel="STRoutflg", label="STRoutflag", title="STR output flag", subplot=(2,1,1))
-
-# Compare STR and SIM times
-fig, ax = PPC.plot(time_SIM, time_SIM, xlabel="time_SIM [s]", ylabel="time [s]", label="time_SIM", title="STR Time", fig=fig, subplot=(2,1,2))
-PPC.plot(time_SIM, time_STR, ylabel="time [s]", label="time_STR", fig=fig, ax=ax)
-
-# Plot BOFq_SSB
-fig, ax0 = PPC.plot(time_SIM, BOFq_SSB[:,0], label="BOFq_SSB[0]", title="Spacecraft orientation in the SSB frame", subplot=(4,1,1))
-fig, ax1 = PPC.plot(time_SIM, BOFq_SSB[:,1], label="BOFq_SSB[1]", subplot=(4,1,2), fig=fig)
-fig, ax2 = PPC.plot(time_SIM, BOFq_SSB[:,2], label="BOFq_SSB[2]", subplot=(4,1,3), fig=fig)
-fig, ax3 = PPC.plot(time_SIM, BOFq_SSB[:,3], xlabel="time_SIM [s]", label="BOFq_SSB[3]", subplot=(4,1,4), fig=fig)
-
-fig, ax0 = PPC.plot(time_SIM, BOFq_SSB_mes[:,0], label="BOFq_SSB_mes[0]", subplot=(4,1,1), fig=fig, ax=ax0)
-fig, ax1 = PPC.plot(time_SIM, BOFq_SSB_mes[:,1], label="BOFq_SSB_mes[1]", subplot=(4,1,2), fig=fig, ax=ax1)
-fig, ax2 = PPC.plot(time_SIM, BOFq_SSB_mes[:,2], label="BOFq_SSB_mes[2]", subplot=(4,1,3), fig=fig, ax=ax2)
-fig, ax3 = PPC.plot(time_SIM, BOFq_SSB_mes[:,3], label="BOFq_SSB_mes[3]", subplot=(4,1,4), fig=fig, ax=ax3)
-
-# Plot STR gnomonic lens projection
-SUNproj   = PPC.gnomonic_projection(SUNdir_STR_mes)
-EARTHproj = PPC.gnomonic_projection(EARTHdir_STR_mes)
-MARSproj  = PPC.gnomonic_projection(MARSdir_STR_mes)
-STARSproj = PPC.gnomonic_projection(STARSdir_STR_mes)
-boundary  = PPC.gnomonic_boundary(field_of_view)
-
-fig, ax = PPC.plot([], [], xlabel="X STR", ylabel="Y STR", style='.', label="Stars", aspect="equal", color=colors["green"])
-# PPC.plot(SUNproj[0],   SUNproj[1],   label="Sun",   style='.',  fig=fig, ax=ax, color=colors["orange"])
-# PPC.plot(EARTHproj[0], EARTHproj[1], label="Earth", style='.',  fig=fig, ax=ax, color=colors["blue"])
-PPC.plot(MARSproj[0],  MARSproj[1],  label="Mars",  style='.',  fig=fig, ax=ax, color=colors["red"])
-PPC.plot(STARSproj[0], STARSproj[1],                style='.',  fig=fig, ax=ax, color=colors["green"])
-PPC.plot(boundary[0], boundary[1],   label="FOV",   style='--', fig=fig, ax=ax, color=colors["darkgrey"])
-
-# 3D sky sphere on step 0
-fig, ax = PPC.plot(STARSdir_SSB[0,:,-1], STARSdir_SSB[1,:,-1], STARSdir_SSB[2,:,-1], style='.', label="Stars", xlabel="X SC", ylabel="Y SC", zlabel="Z SC", title="Star Field Normalized in SSB frame", aspect="equal", color=colors["black"])
-PPC.plot(SUNdir_SC[0,:],     SUNdir_SC[1,:],     SUNdir_SC[2,:],     style='.', label="Sun",           fig=fig, ax=ax, color=colors["orange"])
-PPC.plot(EARTHdir_SC[0,:],   EARTHdir_SC[1,:],   EARTHdir_SC[2,:],   style='.', label="Earth",         fig=fig, ax=ax, color=colors["blue"])
-PPC.plot(MARSdir_SC[0,:],    MARSdir_SC[1,:],    MARSdir_SC[2,:],    style='.', label="Mars",          fig=fig, ax=ax, color=colors["red"])
-
-PPC.plot(STARSdir_SC_mes[0,:,-1], STARSdir_SC_mes[1,:,-1], STARSdir_SC_mes[2,:,-1], style='x', label="Visible Stars", fig=fig, ax=ax, color=colors["green"])
-# PPC.plot(SUNdir_SC_mes[0,:],     SUNdir_SC_mes[1,:],     SUNdir_SC_mes[2,:],     style='x', label="Sun Meas",           fig=fig, ax=ax, color=colors["orange"])
-# PPC.plot(EARTHdir_SC_mes[0,:],   EARTHdir_SC_mes[1,:],   EARTHdir_SC_mes[2,:],   style='x', label="Earth Meas",         fig=fig, ax=ax, color=colors["blue"])
-PPC.plot(MARSdir_SC_mes[0,:],    MARSdir_SC_mes[1,:],    MARSdir_SC_mes[2,:],    style='x', label="Visible Mars",          fig=fig, ax=ax, color=colors["red"])
-PPC.plot([0], [0], [0],  style='+', label="SC",  fig=fig, ax=ax, color=colors["magenta"])
-
-# Get axes in the SSB frame
-
-STRq_SSB = quaternions.qprod(STRq_BOF, BOFq_SSB)
-BOFx, BOFy, BOFz = quaternions.q2axis(BOFq_SSB)
-STRx, STRy, STRz = quaternions.q2axis(STRq_SSB)
-
-BOFx = BOFx[-1]
-BOFy = BOFy[-1]
-BOFz = BOFz[-1]
-
-PPC.plot([0, BOFx[0]], [0, BOFx[1]], [0, BOFx[2]], fig=fig, ax=ax, color=colors["blue"],  style='--', label="BOFx")
-PPC.plot([0, BOFy[0]], [0, BOFy[1]], [0, BOFy[2]], fig=fig, ax=ax, color=colors["red"],   style='--', label="BOFy")
-PPC.plot([0, BOFz[0]], [0, BOFz[1]], [0, BOFz[2]], fig=fig, ax=ax, color=colors["green"], style='--', label="BOFz")
-
-STRx = STRx[-1]
-STRy = STRy[-1]
-STRz = STRz[-1]
-
-PPC.plot([0, STRx[0]], [0, STRx[1]], [0, STRx[2]], fig=fig, ax=ax, color=colors["blue"],  label="STRx")
-PPC.plot([0, STRy[0]], [0, STRy[1]], [0, STRy[2]], fig=fig, ax=ax, color=colors["red"],   label="STRy")
-PPC.plot([0, STRz[0]], [0, STRz[1]], [0, STRz[2]], fig=fig, ax=ax, color=colors["green"], label="STRz")
-
-# Plot true vs measured Mars direction over time
-fig, ax = PPC.plot(time_SIM, MARSdir_SC.T, label=["x","y","z"], xlabel="time_SIM [s]", ylabel="MARSdir_SSB", title="Mars direction measurement")
-PPC.plot(time_SIM, MARSdir_SC_mes.T, label=["x_mes","y_mes","z_mes"], xlabel="time_SIM [s]", ylabel="MARSdir_SC_mes", style='--', fig=fig, ax=ax)
 
 for key in SIM_par["PPC_plot_list"]:
     if key in PPC_plots:

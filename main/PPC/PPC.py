@@ -133,7 +133,10 @@ def show_plot():
 
 # Generate a gnomonic projection of a vector
 def gnomonic_projection(vec):
-    x, y, z = vec
+    x = vec[:,0]
+    y = vec[:,1]
+    z = vec[:,2]
+
     mask = z > 0
     u = np.full_like(z, np.nan)
     v = np.full_like(z, np.nan)
@@ -152,7 +155,10 @@ def gnomonic_boundary(field_of_view):
 
 # Generate Aitoff projection of a vector, in degrees
 def aitoff_projection(vec):
-    x, y, z = vec
+    x = vec[:,0]
+    y = vec[:,1]
+    z = vec[:,2]
+
     ra   = np.arctan2(y, x)
     decl = np.arcsin(z)
 
@@ -182,3 +188,7 @@ def aitoff_boundary():
     y *= CONSTANTS_par["rad2deg_cst"]
 
     return x, y
+
+# Return true if array is entirely composed by nans
+def is_nan(array):
+    return np.isnan(array).all()

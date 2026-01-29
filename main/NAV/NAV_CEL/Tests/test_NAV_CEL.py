@@ -1,19 +1,21 @@
-# SEN_STR Module Test
+# NAV_CEL Module Test
 # Generates the sensor field of view when the spacecraft is aways pointing to Mars
-# Compares the measurements with the simulated stars from DYN_STR
+# Compares the measurements with the simulated stars from NAV_CEL
 # Run from repository root with:
-#   python3 -m SEN.SEN_STR.Tests.test_SEN_STR
+#   python3 -m NAV.NAV_CEL.Tests.test_NAV_CEL
 
 import numpy as np
-from DYN.DYN       import DYN
-from SEN.SEN       import SEN
-from PPC           import PPC
-from PPC.PPC_plots import PPC_plots
-from PPC.PPC_plots import colors
-from Utils         import spice
-from Utils         import events
-from Utils         import integrator
-from Utils         import quaternions
+from DYN.DYN         import DYN
+from SEN.SEN         import SEN
+from NAV.NAV         import NAV
+from PPC             import PPC
+from PPC.PPC_plots   import PPC_plots
+from PPC.PPC_plots   import colors
+from Utils           import spice
+from Utils           import events
+from Utils           import integrator
+from Utils           import quaternions
+from Utils.constants import CONSTANTS_par
 
 #########
 # SETUP #
@@ -33,6 +35,7 @@ SIM_par = {
     # List of default plots
     "PPC_plot_list" : [
         "SEN_STR",
+        "NAV_CEL",
     ],
 }
 
@@ -65,6 +68,18 @@ events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt, e
 # INITIALIZE MODULES #
 ######################
 
+field_of_view     = 30*CONSTANTS_par["deg2rad_cst"]
+cos_field_of_view = np.cos(field_of_view)
+
+SEN_STR_par = {
+    "field_of_view"     : field_of_view,
+    "cos_field_of_view" : cos_field_of_view,
+}
+
+par_override = {
+    "SEN_STR"  : SEN_STR_par,
+}
+
 # Normally initialize DYN modules
 DYN_obj = DYN()
 
@@ -80,18 +95,27 @@ DYN_obj.modules = [
     DYN_obj.DYN_STR,
 ]
 
-# Normally initialize SEN modules
-SEN_obj = SEN(DYN_obj)
+# Initialize SEN modules with parameter override
+SEN_obj = SEN(DYN_obj, par_override)
 
 # Set only modules needed for the test
 SEN_obj.modules = [
     SEN_obj.SEN_STR,
 ]
 
+# Normally initialize NAV modules
+NAV_obj = NAV(SEN_obj)
+
+# Set only modules needed for the test
+NAV_obj.modules = [
+    NAV_obj.NAV_CEL,
+]
+
 # Initialize timeline
 timeline = {
     "DYN" : PPC.init_timeline(DYN_obj.snapshot(), n_steps),
-    "SEN" : PPC.init_timeline(SEN_obj.snapshot(), n_steps)
+    "SEN" : PPC.init_timeline(SEN_obj.snapshot(), n_steps),
+    "NAV" : PPC.init_timeline(NAV_obj.snapshot(), n_steps)
 }
 
 ########
@@ -138,11 +162,14 @@ for step in range(1, n_steps):
     integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
     # Update SEN
     SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
+    # Update NAV
+    NAV_obj.update_algebraic(sim_time, SEN_obj, inputs)
 
     # Save results into the timeline
     output = {
         "DYN" : DYN_obj.snapshot(),
         "SEN" : SEN_obj.snapshot(),
+        "NAV" : NAV_obj.snapshot(),
     }
     PPC.update_timeline(timeline, output, step)
 
@@ -160,41 +187,7 @@ spice.clear_kernels()
 # RESULTS #
 ###########
 
-field_of_view = SEN_obj.SEN_STR.par["field_of_view"]
-STRq_BOF      = SEN_obj.SEN_STR.par["STRq_BOF"]
-
-time_SIM          = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-time_STR          = timeline["SEN"]["SEN_STR"]["time_STR"]
-
-MARSdir_SC_mes    = timeline["SEN"]["SEN_STR"]["MARSdir_SC_mes"]
-BOFq_SSB_mes      = timeline["SEN"]["SEN_STR"]["BOFq_SSB_mes"]
-
-SCpos_SSB    = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
-STARSdir_SSB = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"]
-MARSpos_SSB  = timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"]
-
-BOFq_SSB = timeline["DYN"]["DYN_ATT"]["BOFq_SSB"]
-
-# Get object directions
-MARSpos_SC = MARSpos_SSB - SCpos_SSB
-MARSdir_SC = SEN_obj.SEN_STR.dir_from_pos(MARSpos_SC)
-
-# Plot BOFq_SSB
-fig, ax0 = PPC.plot(time_SIM, BOFq_SSB[:,0], label="BOFq_SSB[0]", title="Spacecraft orientation in the SSB frame", subplot=(4,1,1))
-fig, ax1 = PPC.plot(time_SIM, BOFq_SSB[:,1], label="BOFq_SSB[1]", subplot=(4,1,2), fig=fig)
-fig, ax2 = PPC.plot(time_SIM, BOFq_SSB[:,2], label="BOFq_SSB[2]", subplot=(4,1,3), fig=fig)
-fig, ax3 = PPC.plot(time_SIM, BOFq_SSB[:,3], xlabel="time_SIM [s]", label="BOFq_SSB[3]", subplot=(4,1,4), fig=fig)
-
-fig, ax0 = PPC.plot(time_SIM, BOFq_SSB_mes[:,0], label="BOFq_SSB_mes[0]", subplot=(4,1,1), fig=fig, ax=ax0)
-fig, ax1 = PPC.plot(time_SIM, BOFq_SSB_mes[:,1], label="BOFq_SSB_mes[1]", subplot=(4,1,2), fig=fig, ax=ax1)
-fig, ax2 = PPC.plot(time_SIM, BOFq_SSB_mes[:,2], label="BOFq_SSB_mes[2]", subplot=(4,1,3), fig=fig, ax=ax2)
-fig, ax3 = PPC.plot(time_SIM, BOFq_SSB_mes[:,3], label="BOFq_SSB_mes[3]", subplot=(4,1,4), fig=fig, ax=ax3)
-
-# Plot true vs measured Mars direction over time
-fig, ax = PPC.plot(time_SIM, MARSdir_SC, label=["x","y","z"], xlabel="time_SIM [s]", ylabel="MARSdir_SSB", title="Mars direction measurement")
-PPC.plot(time_SIM, MARSdir_SC_mes, label=["x_mes","y_mes","z_mes"], xlabel="time_SIM [s]", ylabel="MARSdir_SC_mes", style='--', fig=fig, ax=ax)
-
 for key in SIM_par["PPC_plot_list"]:
     if key in PPC_plots:
-        PPC_plots[key](timeline, DYN_obj, SEN_obj, None)
+        PPC_plots[key](timeline, DYN_obj, SEN_obj, NAV_obj)
 PPC.show_plot()

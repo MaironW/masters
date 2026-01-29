@@ -22,5 +22,6 @@ SIM_par = {
         # "DYN_ATT",
         # "DYN_STR",
         # "SEN_STR",
+        # "NAV_CEL",
     ],
 }

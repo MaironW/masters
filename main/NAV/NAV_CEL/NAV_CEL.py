@@ -36,12 +36,12 @@ class NAV_CEL(Level2Module):
         super().__init__("NAV_CEL", par)
 
     # Initialization
-    def initialize(self, SEN_states, NAV_states):
-        self.state = self.update_algebraic(0, SEN_states, NAV_states)
+    def initialize(self, SEN_states):
+        self.state = self.update_algebraic(0, SEN_states)
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
+    def update_algebraic(self, t, SEN_states, inputs=None):
         STRoutflg = SEN_states["SEN_STR"]["STRoutflg"]
 
         # Only update outputs if STRoutflg is valid

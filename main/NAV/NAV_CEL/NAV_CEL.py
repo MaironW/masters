@@ -81,8 +81,8 @@ class NAV_CEL(Level2Module):
             EARTHangles_mes,  EARTHsel_STARSdir_SC_mes  = self.los_angles(EARTHvisibility,  EARTHdir_SC_mes,  STARSdir_SC_mes)
             MOONangles_mes,   MOONsel_STARSdir_SC_mes   = self.los_angles(MOONvisibility,   MOONdir_SC_mes,   STARSdir_SC_mes)
             MARSangles_mes,   MARSsel_STARSdir_SC_mes   = self.los_angles(MARSvisibility,   MARSdir_SC_mes,   STARSdir_SC_mes)
-            # DEIMOSangles_mes, DEIMOSsel_STARSdir_SC_mes = self.los_angles(DEIMOSvisibility, DEIMOSdir_SC_mes, STARSdir_SC_mes)
-            # PHOBOSangles_mes, PHOBOSsel_STARSdir_SC_mes = self.los_angles(PHOBOSvisibility, PHOBOSdir_SC_mes, STARSdir_SC_mes)
+            DEIMOSangles_mes, DEIMOSsel_STARSdir_SC_mes = self.los_angles(DEIMOSvisibility, DEIMOSdir_SC_mes, STARSdir_SC_mes)
+            PHOBOSangles_mes, PHOBOSsel_STARSdir_SC_mes = self.los_angles(PHOBOSvisibility, PHOBOSdir_SC_mes, STARSdir_SC_mes)
 
             # If no angle is computed, set the output flag to invalid
             visibility_list = [
@@ -102,15 +102,15 @@ class NAV_CEL(Level2Module):
             self.state["EARTHangles_mes"]  = EARTHangles_mes
             self.state["MOONangles_mes"]   = MOONangles_mes
             self.state["MARSangles_mes"]   = MARSangles_mes
-            # self.state["PHOBOSangles_mes"] = PHOBOSangles_mes
-            # self.state["DEIMOSangles_mes"] = DEIMOSangles_mes
+            self.state["PHOBOSangles_mes"] = PHOBOSangles_mes
+            self.state["DEIMOSangles_mes"] = DEIMOSangles_mes
 
             self.state["SUNsel_STARSdir_SC_mes"]    = SUNsel_STARSdir_SC_mes
             self.state["EARTHsel_STARSdir_SC_mes"]  = EARTHsel_STARSdir_SC_mes
             self.state["MOONsel_STARSdir_SC_mes"]   = MOONsel_STARSdir_SC_mes
             self.state["MARSsel_STARSdir_SC_mes"]   = MARSsel_STARSdir_SC_mes
-            # self.state["PHOBOSsel_STARSdir_SC_mes"] = PHOBOSsel_STARSdir_SC_mes
-            # self.state["DEIMOSsel_STARSdir_SC_mes"] = DEIMOSsel_STARSdir_SC_mes
+            self.state["PHOBOSsel_STARSdir_SC_mes"] = PHOBOSsel_STARSdir_SC_mes
+            self.state["DEIMOSsel_STARSdir_SC_mes"] = DEIMOSsel_STARSdir_SC_mes
 
         return self.state
 
@@ -142,7 +142,7 @@ class NAV_CEL(Level2Module):
                 enough_number_of_stars = False
             else:
                 # Select the three best angles
-                best_idx = self.score_stars(angles, BODYsel_STARSdir_SC_mes)
+                best_idx = self.score_stars(BODYdir_SC_mes, BODYsel_STARSdir_SC_mes)
                 angles = angles[best_idx]
                 BODYsel_STARSdir_SC_mes = BODYsel_STARSdir_SC_mes[best_idx]
 
@@ -160,7 +160,27 @@ class NAV_CEL(Level2Module):
 
     # Select three out of valid stars to compute angles from
     # TODO: Score by separation angle
-    def score_stars(self, angles, STARSdir_SC_mes):
-        # Just return the 3 first stars, as they are the brightest
-        best_idx = [0,1,2]
+    def score_stars(self, BODYdir_SC_mes, STARSdir_SC_mes):
+        # Pick the farthest star from the body
+        i = np.argmin(np.abs(STARSdir_SC_mes @ BODYdir_SC_mes))
+        star1 = STARSdir_SC_mes[i]
+
+        # Pick the farthest star from star1
+        cross_norms = np.linalg.norm(np.cross(star1, STARSdir_SC_mes), axis=1)
+        cross_norms[i] = -1 # exclude star1
+        j = np.argmax(cross_norms)
+        star2 = STARSdir_SC_mes[j]
+
+        # Check if two first stars are too close to each other
+        # Just print a warning but no stop the code
+        normal_vec  = np.cross(star1, star2)
+        normal_norm = np.linalg.norm(normal_vec)
+        normal_dir  = normal_vec / normal_norm
+
+        # Pick the farthest star from plane of star1 and star2
+        plane_distance = np.abs(STARSdir_SC_mes @ normal_dir)
+        plane_distance[[i,j]] = -1 # exclude star1 and star2
+        k = np.argmax(plane_distance)
+
+        best_idx = [i,j,k]
         return best_idx

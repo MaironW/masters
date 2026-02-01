@@ -10,7 +10,6 @@ from SEN.SEN         import SEN
 from NAV.NAV         import NAV
 from PPC             import PPC
 from PPC.PPC_plots   import PPC_plots
-from PPC.PPC_plots   import colors
 from Utils           import spice
 from Utils           import events
 from Utils           import integrator
@@ -64,9 +63,43 @@ events_sequence["SEN.SEN_STR.STRenableflg"] = [
 # Initialize inputs table
 events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt, events=events_sequence)
 
+##################
+# MRO PARAMETERS #
+##################
+
+# Load NASA's MRO data with SPICE
+# https://naif.jpl.nasa.gov/pub/naif/pds/data/mro-m-spice-6-v1.0/mrosp_1000/data
+kernel_dir = "Utils/kernels/"
+spice.load_kernel(kernel_dir + "mro_cruise.bsp")
+spice.load_kernel(kernel_dir + "mro_sclkscet_00021_65536.tsc")
+
+# Get Spacecraft initial condition
+# Set time so that spacecraft starts closer to Mars
+time_TDB_ini = spice.get_time("2006-03-05 T00:00:00")
+
+MROpos_SSB_ini, MROvel_SSB_ini = spice.get_state("MRO", time_TDB_ini)
+
 ######################
 # INITIALIZE MODULES #
 ######################
+
+DYN_TIME_par = {
+    "time_SIM_ini" : 0,
+    "time_TDB_ini" : time_TDB_ini,
+}
+
+DYN_TRA_par = {
+    "ref_elements"  : "rvi",
+    "BODY_ini"      : "SUN",
+    "sma_ini"       : None,
+    "ecc_ini"       : None,
+    "incl_ini"      : None,
+    "raan_ini"      : None,
+    "argp_ini"      : None,
+    "tano_ini"      : None,
+    "SCpos_SSB_ini" : MROpos_SSB_ini, # [km]   Initial position relative to SSB frame
+    "SCvel_SSB_ini" : MROvel_SSB_ini, # [km/s] Initial velocity relative to SSB frame
+}
 
 field_of_view     = 30*CONSTANTS_par["deg2rad_cst"]
 cos_field_of_view = np.cos(field_of_view)
@@ -77,11 +110,13 @@ SEN_STR_par = {
 }
 
 par_override = {
+    "DYN_TIME" : DYN_TIME_par,
+    "DYN_TRA"  : DYN_TRA_par,
     "SEN_STR"  : SEN_STR_par,
 }
 
-# Normally initialize DYN modules
-DYN_obj = DYN()
+# Initialize DYN modules with overrided time
+DYN_obj = DYN(par_override)
 
 # Set only modules needed for the test
 DYN_obj.modules = [

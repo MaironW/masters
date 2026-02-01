@@ -18,7 +18,7 @@ from Utils         import integrator
 
 # Load NASA's MRO data with SPICE
 # https://naif.jpl.nasa.gov/pub/naif/pds/data/mro-m-spice-6-v1.0/mrosp_1000/data
-kernel_dir = "DYN/DYN_TRA/Tests/kernels/"
+kernel_dir = "Utils/kernels/"
 spice.load_kernel(kernel_dir + "mro_cruise.bsp")
 spice.load_kernel(kernel_dir + "mro_sclkscet_00021_65536.tsc")
 

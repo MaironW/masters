@@ -20,11 +20,11 @@ class SEN(Level1Module):
 
         # Initialize all modules
         for m in self.modules:
-            m.state = m.initialize(DYN_obj.snapshot(), self.snapshot())
+            m.state = m.initialize(DYN_obj.snapshot())
 
         print("SEN Module Initialized.")
 
     # Update time-dependent, non-integrated Level-2 modules
     def update_algebraic(self, t, DYN_obj, inputs):
         for m in self.modules:
-            m.update_algebraic(t, DYN_obj.snapshot(), self.snapshot(), inputs)
+            m.update_algebraic(t, DYN_obj.snapshot(), inputs)

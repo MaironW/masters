@@ -7,7 +7,6 @@ import numpy as np
 from skyfield.api import load, Star
 from skyfield.data import hipparcos
 
-from Utils import spice
 from Utils.level2module import Level2Module
 from .DYN_STR_par import DYN_STR_par
 

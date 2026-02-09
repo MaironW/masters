@@ -1,4 +1,4 @@
-# Level 2 Module SEN_PULSAR
+# Level 2 Module SEN_PSR
 # Simulates the range/rate readings of Pulsar X-Ray sources
 # Inputs: The Pulsar postion and frequency profile, spacecraft position, velocity and attitude with respect to the SSB
 

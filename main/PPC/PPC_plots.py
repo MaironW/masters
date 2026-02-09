@@ -11,6 +11,8 @@ colors = {
     "green"     : "#33CC00",
     "magenta"   : "#FF00FF",
     "orange"    : "#FE9920",
+    "purple"    : "#8052CF",
+    "yellow"    : "#F5F22B",
     "grey"      : "#505050",
     "lightgrey" : "#707070",
     "darkgrey"  : "#303030",
@@ -273,6 +275,34 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax3 = PPC.plot(time_SIM, STARSdir_SC_mes[:, :, 2], color=colors["green"], subplot=(3,1,3), fig=fig, ylabel='z')
     PPC.plot(time_SIM, MARSsel_STARSdir_SC_mes[:, :, 2], color=colors["red"], fig=fig, ax=ax3)
 
+def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    STARSdir_SSB   = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0] # [time, star, direction]
+    PULSARSdir_SSB = timeline["DYN"]["DYN_PSR"]["PULSARSdir_SSB"][0] # [time, pulsar, direction]
+
+    # Reshape stars into a big list of direction vectors
+    STARSdir_SSB_reshaped = STARSdir_SSB.reshape(-1, 3) # [time * star, direction]
+    x_star = STARSdir_SSB_reshaped[:,0]
+    y_star = STARSdir_SSB_reshaped[:,1]
+    z_star = STARSdir_SSB_reshaped[:,2]
+
+    # Reshape pulsars into a big list of direction vectors
+    PULSARSdir_SSB_reshaped = PULSARSdir_SSB.reshape(-1, 3) # [time * star, direction]
+    x_pulsar = PULSARSdir_SSB_reshaped[:,0]
+    y_pulsar = PULSARSdir_SSB_reshaped[:,1]
+    z_pulsar = PULSARSdir_SSB_reshaped[:,2]
+
+    # 3D sky sphere
+    fig, ax = PPC.plot(x_star, y_star, z_star, style='.', label="Stars",   xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect="equal", color=colors["black"])
+    PPC.plot(x_pulsar, y_pulsar, z_pulsar, style='x', label="Pulsars", color=colors["purple"], fig=fig, ax=ax)
+
+    # 2D sky sphere
+    STARSproj   = PPC.aitoff_projection(STARSdir_SSB_reshaped)
+    PULSARSproj = PPC.aitoff_projection(PULSARSdir_SSB_reshaped)
+    boundary  = PPC.aitoff_boundary()
+    fig, ax = PPC.plot(STARSproj[0], STARSproj[1], style='.', label="Stars", xlabel="Right Ascension [deg]", ylabel="Declination [deg]", title="Star Field - Aitoff Projection", aspect="equal", color=colors["black"])
+    PPC.plot(PULSARSproj[0], PULSARSproj[1], style='x', label="Pulsars", color=colors["purple"], fig=fig, ax=ax)
+    PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)
+
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,
     "DYN_SUN"   : DYN_SUN_plot,
@@ -282,6 +312,7 @@ PPC_plots = {
     "DYN_TRA"   : DYN_TRA_plot,
     "DYN_ATT"   : DYN_ATT_plot,
     "DYN_STR"   : DYN_STR_plot,
+    "DYN_PSR"   : DYN_PSR_plot,
     "SEN_STR"   : SEN_STR_plot,
     "NAV_CEL"   : NAV_CEL_plot,
 }

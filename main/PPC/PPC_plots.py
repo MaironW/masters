@@ -276,8 +276,12 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(time_SIM, MARSsel_STARSdir_SC_mes[:, :, 2], color=colors["red"], fig=fig, ax=ax3)
 
 def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM       = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     STARSdir_SSB   = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0] # [time, star, direction]
     PULSARSdir_SSB = timeline["DYN"]["DYN_PSR"]["PULSARSdir_SSB"][0] # [time, pulsar, direction]
+    phase_SSB      = timeline["DYN"]["DYN_PSR"]["phase_SSB"]
+    phase_SC       = timeline["DYN"]["DYN_PSR"]["phase_SC"]
+    PULSARname     = DYN_obj.DYN_PSR.par["name"]
 
     # Reshape stars into a big list of direction vectors
     STARSdir_SSB_reshaped = STARSdir_SSB.reshape(-1, 3) # [time * star, direction]
@@ -298,10 +302,19 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # 2D sky sphere
     STARSproj   = PPC.aitoff_projection(STARSdir_SSB_reshaped)
     PULSARSproj = PPC.aitoff_projection(PULSARSdir_SSB_reshaped)
-    boundary  = PPC.aitoff_boundary()
+    boundary    = PPC.aitoff_boundary()
     fig, ax = PPC.plot(STARSproj[0], STARSproj[1], style='.', label="Stars", xlabel="Right Ascension [deg]", ylabel="Declination [deg]", title="Star Field - Aitoff Projection", aspect="equal", color=colors["black"])
     PPC.plot(PULSARSproj[0], PULSARSproj[1], style='x', label="Pulsars", color=colors["purple"], fig=fig, ax=ax)
     PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)
+
+    # Pulsar signals on the SC
+    PULSARname = DYN_obj.DYN_PSR.par["name"]
+    fig, ax = PPC.plot(time_SIM, phase_SC[:,0], label=PULSARname[0], xlabel="time_SIM [s]", ylabel="phase_SC", title="True Pulsar Phase on SC")
+    PPC.plot(time_SIM, phase_SC[:,1], label=PULSARname[1], fig=fig, ax=ax)
+
+    # Pulsar signals on the SSB
+    fig, ax = PPC.plot(time_SIM, phase_SSB[:,0], label=PULSARname[0], xlabel="time_SIM [s]", ylabel="phase_SSB", title="True Pulsar Phase on SSB")
+    PPC.plot(time_SIM, phase_SSB[:,1], label=PULSARname[1], fig=fig, ax=ax)
 
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,

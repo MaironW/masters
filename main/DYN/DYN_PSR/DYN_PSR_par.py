@@ -9,7 +9,12 @@ DYN_PSR_par = {
     # - non-binary pulsars
     "selection_criteria" : "f0 > 50  && \
                             TYPE(HE) && \
-                            !TYPE(BINARY)",
-        
+                            !TYPE(BINARY) &&\
+                            exist(PEPOCH) && \
+                            exist(F0) && \
+                            exist(F1) && \
+                            exist(RAJD) && \
+                            exist(DECJD)",
+
     "PULSARSdir_SSB_ini" : np.array([0,0,0]), # Initial direction of the pulsars in the SSB frame at the initial epoch
 }

@@ -281,6 +281,7 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PULSARSdir_SSB = timeline["DYN"]["DYN_PSR"]["PULSARSdir_SSB"][0] # [time, pulsar, direction]
     phase_SSB      = timeline["DYN"]["DYN_PSR"]["phase_SSB"]
     phase_SC       = timeline["DYN"]["DYN_PSR"]["phase_SC"]
+    SCdt_SSB       = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
     PULSARname     = DYN_obj.DYN_PSR.par["name"]
 
     # Reshape stars into a big list of direction vectors
@@ -315,6 +316,10 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Pulsar signals on the SSB
     fig, ax = PPC.plot(time_SIM, phase_SSB[:,0], label=PULSARname[0], xlabel="time_SIM [s]", ylabel="phase_SSB", title="True Pulsar Phase on SSB")
     PPC.plot(time_SIM, phase_SSB[:,1], label=PULSARname[1], fig=fig, ax=ax)
+
+    # True delay for TOAs between SC and SSB
+    fig, ax = PPC.plot(time_SIM, SCdt_SSB[:,0], label=PULSARname[0], xlabel="time_SIM [s]", ylabel="SCdt_SSB [s]", title="True TOA delay on SC")
+    PPC.plot(time_SIM, SCdt_SSB[:,1], label=PULSARname[1], fig=fig, ax=ax)
 
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,

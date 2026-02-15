@@ -19,7 +19,10 @@ class DYN_PSR(Level2Module):
             par.update(par_override)
         # Dummy state
         self.state = {
-            "PULSARSdir_SSB" : par["PULSARSdir_SSB_ini"]
+            "PULSARSdir_SSB" : par["PULSARSdir_SSB_ini"],
+            "phase_SSB"      : par["phase_SSB_ini"],
+            "phase_SC"       : par["phase_SC_ini"],
+            "SCdt_SSB"       : par["SCdt_SSB_ini"]
         }
         super().__init__("DYN_PSR", par)
 
@@ -74,7 +77,6 @@ class DYN_PSR(Level2Module):
 
         # Compute pulsar rotational phase at the SSB
         dt_SSB = time_TDB - t0
-
         phase_SSB = f*dt_SSB + 1/2*df*dt_SSB**2
         phase_SSB = np.mod(phase_SSB, 1.0)
 
@@ -92,10 +94,11 @@ class DYN_PSR(Level2Module):
         # Update parameters
         self.state["phase_SSB"] = phase_SSB
         self.state["phase_SC"]  = phase_SC
+        self.state["SCdt_SSB"]  = roemer_delay
 
         return self.state
 
-    # Convert Right Ascension and Declination in Degrees to a direction vector
+    # Convert Right Ascension and Declination in degrees to a direction vector
     def radec2dir(self, ra, dec):
         ra  = np.deg2rad(ra)
         dec = np.deg2rad(dec)

@@ -50,6 +50,7 @@ class DYN_PSR(Level2Module):
         self.par["ra"]     = pulsar_data["RAJD"]   # [deg]  Rigth Ascension
         self.par["dec"]    = pulsar_data["DECJD"]  # [deg]  Declination
 
+        # Get RA and DEC to reduce notation
         ra  = self.par["ra"]
         dec = self.par["dec"]
 
@@ -77,7 +78,7 @@ class DYN_PSR(Level2Module):
 
         # Compute pulsar rotational phase at the SSB
         dt_SSB = time_TDB - t0
-        phase_SSB = f*dt_SSB + 1/2*df*dt_SSB**2
+        phase_SSB = self.pulsar_phase(f, df, dt_SSB)
         phase_SSB = np.mod(phase_SSB, 1.0)
 
         # Compute the time as perceived by the spacecraft
@@ -88,7 +89,7 @@ class DYN_PSR(Level2Module):
 
         # Compute pulsar rotational phase at the SC
         dt_SC = time_SC - t0
-        phase_SC = f*dt_SC + 1/2*df*dt_SC**2
+        phase_SC = self.pulsar_phase(f, df, dt_SC)
         phase_SC = np.mod(phase_SC, 1.0)
 
         # Update parameters
@@ -108,3 +109,10 @@ class DYN_PSR(Level2Module):
         z = np.sin(dec)
 
         return np.array([x, y, z])
+
+    # Return the phase of a pulsar with:
+    # f:  frequency
+    # df: frequency time derivative
+    # dt: time that passed since epoch t0
+    def pulsar_phase(self, f, df, dt):
+        return f*dt + 1/2*df*dt**2

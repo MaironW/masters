@@ -4,6 +4,7 @@
 
 from Utils.level1module import Level1Module
 from .SEN_STR.SEN_STR   import SEN_STR
+from .SEN_PSR.SEN_PSR   import SEN_PSR
 
 class SEN(Level1Module):
     def __init__(self, DYN_obj, par_override=None):
@@ -12,10 +13,12 @@ class SEN(Level1Module):
 
         # Instantiate modules
         self.SEN_STR = SEN_STR(par_override.get("SEN_STR"))
+        self.SEN_PSR = SEN_PSR(par_override.get("SEN_PSR"))
 
         # Register modules
         self.modules = [
             self.SEN_STR,
+            self.SEN_PSR,
         ]
 
         # Initialize all modules

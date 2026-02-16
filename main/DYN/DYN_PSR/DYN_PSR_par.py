@@ -15,11 +15,6 @@ DYN_PSR_par = {
                             exist(RAJD) && \
                             exist(DECJD)",
 
-    # X-ray properties
-    "background_photon_flux" : 50,    # [photon/m^2/s] Background photon flux
-    "pulsar_photon_flux"     : 1.93,  # [photon/m^2/s] Pulsar photon flux
-    "pulse_width"            : 0.3e-3, # [s]
-
     # Output initial values
     "PULSARSdir_SSB_ini" : np.array([0,0,0]), # Initial direction of the pulsars in the SSB frame at the initial epoch
     "phase_SSB_ini"      : np.array([0]), # Initial phase for the pulsars measured in the SSB

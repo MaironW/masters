@@ -187,7 +187,6 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot([0, STRy[0]], [0, STRy[1]], [0, STRy[2]], fig=fig, ax=ax, color=colors["red"],   label="STRy")
     PPC.plot([0, STRz[0]], [0, STRz[1]], [0, STRz[2]], fig=fig, ax=ax, color=colors["green"], label="STRz")
 
-
 def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM         = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     STRoutflg        = timeline["SEN"]["SEN_STR"]["STRoutflg"]
@@ -321,6 +320,28 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax = PPC.plot(time_SIM, SCdt_SSB[:,0], label=PULSARname[0], xlabel="time_SIM [s]", ylabel="SCdt_SSB [s]", title="True TOA delay on SC")
     PPC.plot(time_SIM, SCdt_SSB[:,1], label=PULSARname[1], fig=fig, ax=ax)
 
+def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    SCdt_SSB = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
+
+    time_PSR      = timeline["SEN"]["SEN_PSR"]["time_PSR"]
+    PSRoutflg     = timeline["SEN"]["SEN_PSR"]["PSRoutflg"]
+    SCdt_SSB_mes  = timeline["SEN"]["SEN_PSR"]["SCdt_SSB_mes"]
+
+    PULSARname = DYN_obj.DYN_PSR.par["name"]
+    n_pulsars  = SEN_obj.SEN_PSR.par["n_pulsars"]
+
+    # Pulsar signals on the SC
+    PULSARname = DYN_obj.DYN_PSR.par["name"]
+
+    # Measured vs True delay for TOAs between SC and SSB
+    fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB_mes [s]", title="Measured vs True TOA delay on SC", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Noise [s]", title="Measured vs True TOA delay on SC", fig=fig, subplot=(2,1,2))
+    noise = SCdt_SSB - SCdt_SSB_mes
+    for i in range(n_pulsars):
+        PPC.plot(time_SIM, SCdt_SSB_mes[:,i], label=f"{PULSARname[i]} Meas", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, noise[:,i], label=f"{PULSARname[i]} time noise",  fig=fig, ax=ax2)
+
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,
     "DYN_SUN"   : DYN_SUN_plot,
@@ -332,5 +353,6 @@ PPC_plots = {
     "DYN_STR"   : DYN_STR_plot,
     "DYN_PSR"   : DYN_PSR_plot,
     "SEN_STR"   : SEN_STR_plot,
+    "SEN_PSR"   : SEN_PSR_plot,
     "NAV_CEL"   : NAV_CEL_plot,
 }

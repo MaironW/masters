@@ -4,10 +4,9 @@
 import copy
 import numpy as np
 
-import psrqpy
-
 from Utils.constants import CONSTANTS_par
 from Utils.level2module import Level2Module
+from Utils.pulsar_database import PulsarDatabase
 from .DYN_PSR_par import DYN_PSR_par
 
 class DYN_PSR(Level2Module):
@@ -28,35 +27,21 @@ class DYN_PSR(Level2Module):
 
     # Initialization
     def initialize(self, states):
-        # Query Pulsar Database
-        # http://www.atnf.csiro.au/research/pulsar/psrcat/
-        param_list = ["NAME","RAJD","DECJD","PEPOCH","F0","F1"]
-        pulsar_df = psrqpy.QueryATNF(params=param_list, condition=self.par["selection_criteria"]).table.to_pandas()
-
-        # Convert data from astropy format to numpy array
-        pulsar_data = {}
-        pulsar_data["NAME"]   = np.array(pulsar_df["NAME"],   dtype=str)
-        pulsar_data["RAJD"]   = np.array(pulsar_df["RAJD"],   dtype=float)
-        pulsar_data["DECJD"]  = np.array(pulsar_df["DECJD"],  dtype=float)
-        pulsar_data["PEPOCH"] = np.array(pulsar_df["PEPOCH"], dtype=float)
-        pulsar_data["F0"]     = np.array(pulsar_df["F0"],     dtype=float)
-        pulsar_data["F1"]     = np.array(pulsar_df["F1"],     dtype=float)
+        # Load Pulsar database
+        kernel_dir = "Utils/kernels/"
+        pulsar_data_file = kernel_dir + "pulsar.csv"
+        pulsar_data = PulsarDatabase(pulsar_data_file)
 
         # Pulsar parameters should not change over the simulation
-        self.par["name"]   = pulsar_data["NAME"]   #        Pulsar name
-        self.par["t0_mjd"] = pulsar_data["PEPOCH"] # [MJD]  Epoch for frequency
-        self.par["f"]      = pulsar_data["F0"]     # [Hz]   Pulse frequency
-        self.par["df"]     = pulsar_data["F1"]     # [Hz/s] First derivative of pulse frequency
-        self.par["ra"]     = pulsar_data["RAJD"]   # [deg]  Rigth Ascension
-        self.par["dec"]    = pulsar_data["DECJD"]  # [deg]  Declination
+        self.par["name"]  = pulsar_data.name  #        Pulsar name
+        self.par["epoch"] = pulsar_data.epoch # [MJD]  Epoch for frequency
+        self.par["f"]     = pulsar_data.f     # [Hz]   Pulse frequency
+        self.par["df"]    = pulsar_data.df    # [Hz/s] First derivative of pulse frequency
+        self.par["ra"]    = pulsar_data.ra    # [deg]  Rigth Ascension
+        self.par["dec"]   = pulsar_data.dec   # [deg]  Declination
 
-        # Get RA and DEC to reduce notation
-        ra  = self.par["ra"]
-        dec = self.par["dec"]
-
-        # Compute pulsar direction in SSB
-        PULSARSdir_SSB = self.radec2dir(ra, dec)
-        self.state["PULSARSdir_SSB"] = PULSARSdir_SSB.T
+        # Pulsar direction in SSB already computed by the database
+        self.state["PULSARSdir_SSB"] = pulsar_data.PULSARdir_SSB # Direction of Pulsar from SSB
 
         # Update initial state
         self.state = self.update_algebraic(0, states)
@@ -69,12 +54,12 @@ class DYN_PSR(Level2Module):
         time_TDB  = states["DYN_TIME"]["time_TDB"]
         SCpos_SSB = states["DYN_TRA"]["SCpos_SSB"]
 
-        t0_mjd = self.par["t0_mjd"] # [MJD]  Epoch for frequency
-        f      = self.par["f"]      # [Hz]   Pulse frequency
-        df     = self.par["df"]     # [Hz/s] First derivative of pulse frequency
+        epoch  = self.par["epoch"] # [MJD]  Epoch for frequency
+        f      = self.par["f"]     # [Hz]   Pulse frequency
+        df     = self.par["df"]    # [Hz/s] First derivative of pulse frequency
 
         # Convert epoch from MJD to TDB
-        t0 = (t0_mjd - CONSTANTS_par["MJD2000epoch_relMJD_TDB_days"]) * CONSTANTS_par["day2sec_cst"]
+        t0 = (epoch - CONSTANTS_par["MJD2000epoch_relMJD_TDB_days"]) * CONSTANTS_par["day2sec_cst"]
 
         # Compute pulsar rotational phase at the SSB
         dt_SSB = time_TDB - t0
@@ -98,17 +83,6 @@ class DYN_PSR(Level2Module):
         self.state["SCdt_SSB"]  = roemer_delay
 
         return self.state
-
-    # Convert Right Ascension and Declination in degrees to a direction vector
-    def radec2dir(self, ra, dec):
-        ra  = np.deg2rad(ra)
-        dec = np.deg2rad(dec)
-
-        x = np.cos(dec)*np.cos(ra)
-        y = np.cos(dec)*np.sin(ra)
-        z = np.sin(dec)
-
-        return np.array([x, y, z])
 
     # Return the phase of a pulsar with:
     # f:  frequency

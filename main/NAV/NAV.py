@@ -4,6 +4,7 @@
 
 from Utils.level1module import Level1Module
 from .NAV_CEL.NAV_CEL   import NAV_CEL
+from .NAV_PSR.NAV_PSR   import NAV_PSR
 
 class NAV(Level1Module):
     def __init__(self, SEN_obj, par_override=None):
@@ -12,10 +13,12 @@ class NAV(Level1Module):
 
         # Instantiate modules
         self.NAV_CEL = NAV_CEL(par_override.get("NAV_CEL"))
+        self.NAV_PSR = NAV_PSR(par_override.get("NAV_PSR"))
 
         # Register modules
         self.modules = [
             self.NAV_CEL,
+            self.NAV_PSR,
         ]
 
         # Initialize all modules

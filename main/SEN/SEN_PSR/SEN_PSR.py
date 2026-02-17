@@ -76,12 +76,7 @@ class SEN_PSR(Level2Module):
 
         # PSR output is valid
         else:
-            # Satellite attitude
-            # X-ray detector attitude
-            # Pulsar directions relative to the SSB
-            # Pulsar directions relative to the Spacecraft
-            # Rotate to X-ray detector frame
-            # Filter out objects outside the FOV
+            # TODO: Filter out objects outside the sensor FOV
 
             # Sensor properties
             A      = self.par["detector_area"] # [m^2]
@@ -90,11 +85,12 @@ class SEN_PSR(Level2Module):
             t_bias = self.par["t_bias"]
 
             # X-ray properties
-            Bx = self.par["Bx"]
-            Fx = self.par["Fx"]
-            pf = self.par["pf"]
-            W  = self.par["W"]
-            d  = self.par["d"]
+            n_pulsars = self.par["n_pulsars"]
+            Bx        = self.par["Bx"]
+            Fx        = self.par["Fx"]
+            pf        = self.par["pf"]
+            W         = self.par["W"]
+            d         = self.par["d"]
 
             # Compute detector noise
             Ns_pulsed    = Fx*A_cm2*T_obs*pf       # Pulsed photon counts
@@ -102,7 +98,6 @@ class SEN_PSR(Level2Module):
             Nb           = Bx*A_cm2*T_obs*d        # Background photon counts
             SNR = Ns_pulsed / np.sqrt(Nb + Ns_nonpulsed + Ns_pulsed) # Signal to Noise Ratio
             sigma_TOA = 0.5*W / SNR
-            n_pulsars = len(Fx)
             noise = np.random.randn(n_pulsars) * sigma_TOA
 
             # Apply noise to true SCdt_SSB for visible pulsars

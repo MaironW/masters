@@ -321,9 +321,10 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     SCdt_SSB = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
 
-    time_PSR      = timeline["SEN"]["SEN_PSR"]["time_PSR"]
-    PSRoutflg     = timeline["SEN"]["SEN_PSR"]["PSRoutflg"]
-    SCdt_SSB_mes  = timeline["SEN"]["SEN_PSR"]["SCdt_SSB_mes"]
+    # TODO: Plot the other SEN_PSR outputs
+    time_PSR     = timeline["SEN"]["SEN_PSR"]["time_PSR"]
+    PSRoutflg    = timeline["SEN"]["SEN_PSR"]["PSRoutflg"]
+    SCdt_SSB_mes = timeline["SEN"]["SEN_PSR"]["SCdt_SSB_mes"]
 
     PULSARname = DYN_obj.DYN_PSR.par["name"]
     n_pulsars  = SEN_obj.SEN_PSR.par["n_pulsars"]

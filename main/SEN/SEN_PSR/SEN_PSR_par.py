@@ -8,8 +8,9 @@ SEN_PSR_par = {
     "t_bias"        : 0,   # [s]   Detector (spacecraft) clock bias
 
     # Output initial values
-    "PSRoutflg_ini"    : 0,             # PSR (X-ray) detector output flag
-    "time_PSR_ini"     : 0,             # PSR (X-ray) detector time
-    "SCdt_SSB_mes_ini" : np.array([0]), # [s] Measured time delay between the TOA of a pulse on the SC relative to the SSB (TDB)
-    "covariance_ini"   : np.array([0]), # [s] Sensor time delay covariance
+    "PSRoutflg_ini"         : 0,             # PSR (X-ray) detector output flag
+    "time_PSR_ini"          : 0,             # PSR (X-ray) detector time
+    "PULSARSdir_SC_mes_ini" : np.array([0]), # Measured pulsar direction from the SC
+    "SCdt_SSB_mes_ini"      : np.array([0]), # [s] Measured time delay between the TOA of a pulse on the SC relative to the SSB (TDB)
+    "covariance_ini"        : np.array([0]), # [s] Sensor time delay covariance
 }

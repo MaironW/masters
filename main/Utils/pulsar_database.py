@@ -16,6 +16,7 @@ class PulsarDatabase:
         self.Fx    = df["Fx"].values    # [photons/m^2/s] Pulsar raduation flux
         self.pf    = df["pf"].values    # Flux pulsed fraction
         self.d     = df["d"].values     # Pulse duty cycle
+        self.D0    = df["D0"].values    # [kpc] Pulsar distance from SSB
 
         self.Bx = 50 # [photon/m^2/s] X-ray background radiation flux
         self.n_pulsars = len(self.name)

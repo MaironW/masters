@@ -2,13 +2,14 @@
 
 CONSTANTS_par = {
     # Convertion factors
-    "sec2days_cst" : 1/(3600*24),  # Seconds to days
-    "deg2rad_cst"  :  0.017453293, # Degrees to radians
-    "rad2deg_cst"  : 57.295779513, # Radians to degrees
-    "day2sec_cst"  : 86400,        # Days to seconds
+    "sec2days_cst" : 1/(3600*24),       # Seconds to days
+    "deg2rad_cst"  :  0.017453293,      # Degrees to radians
+    "rad2deg_cst"  : 57.295779513,      # Radians to degrees
+    "day2sec_cst"  : 86400,             # Days to seconds
+    "pc2m_cst"     : 3.08567758128e+16, # Parsec to meters
     # Mass properties
     "SCmass_cst"    : 1000.0,    # [kg] Spacecraft mass
-    "SUNmass_cst"   : 1.9885e30, # [kg] Sun mmass
+    "SUNmass_cst"   : 1.9885e30, # [kg] Sun mass
     "EARTHmass_cst" : 5.9722e24, # [kg] Earth mass
     "MARSmass_cst"  : 6.4171e23, # [kg] Mars mass
     # Body sizes

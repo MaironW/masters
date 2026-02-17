@@ -159,7 +159,6 @@ class NAV_CEL(Level2Module):
         return at_least_two_valid_bodies
 
     # Select three out of valid stars to compute angles from
-    # TODO: Score by separation angle
     def score_stars(self, BODYdir_SC_mes, STARSdir_SC_mes):
         # Pick the farthest star from the body
         i = np.argmin(np.abs(STARSdir_SC_mes @ BODYdir_SC_mes))

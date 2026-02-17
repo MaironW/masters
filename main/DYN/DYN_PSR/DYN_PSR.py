@@ -21,6 +21,8 @@ class DYN_PSR(Level2Module):
             "PULSARSdir_SSB" : par["PULSARSdir_SSB_ini"],
             "phase_SSB"      : par["phase_SSB_ini"],
             "phase_SC"       : par["phase_SC_ini"],
+            "roemer_delay"   : par["roemer_delay_ini"],
+            "shapiro_delay"  : par["shapiro_delay_ini"],
             "SCdt_SSB"       : par["SCdt_SSB_ini"]
         }
         super().__init__("DYN_PSR", par)
@@ -33,12 +35,14 @@ class DYN_PSR(Level2Module):
         pulsar_data = PulsarDatabase(pulsar_data_file)
 
         # Pulsar parameters should not change over the simulation
-        self.par["name"]  = pulsar_data.name  #        Pulsar name
-        self.par["epoch"] = pulsar_data.epoch # [MJD]  Epoch for frequency
-        self.par["f"]     = pulsar_data.f     # [Hz]   Pulse frequency
-        self.par["df"]    = pulsar_data.df    # [Hz/s] First derivative of pulse frequency
-        self.par["ra"]    = pulsar_data.ra    # [deg]  Rigth Ascension
-        self.par["dec"]   = pulsar_data.dec   # [deg]  Declination
+        self.par["name"]      = pulsar_data.name       # Pulsar name
+        self.par["n_pulsars"] = pulsar_data.n_pulsars  # Number of pulsars
+        self.par["epoch"]     = pulsar_data.epoch      # [MJD]  Epoch for frequency
+        self.par["f"]         = pulsar_data.f          # [Hz]   Pulse frequency
+        self.par["df"]        = pulsar_data.df         # [Hz/s] First derivative of pulse frequency
+        self.par["ra"]        = pulsar_data.ra         # [deg]  Rigth Ascension
+        self.par["dec"]       = pulsar_data.dec        # [deg]  Declination
+        self.par["D0"]        = pulsar_data.D0*CONSTANTS_par["pc2m_cst"] # [km] Pulsar distance from SSB
 
         # Pulsar direction in SSB already computed by the database
         self.state["PULSARSdir_SSB"] = pulsar_data.PULSARdir_SSB # Direction of Pulsar from SSB
@@ -67,10 +71,30 @@ class DYN_PSR(Level2Module):
         phase_SSB = np.mod(phase_SSB, 1.0)
 
         # Compute the time as perceived by the spacecraft
-        PULSARSdir_SSB = self.state["PULSARSdir_SSB"]
+        PULSARSdir_SSB  = self.state["PULSARSdir_SSB"]
+        SUNpos_SSB      = states["DYN_SUN"]["SUNpos_SSB"] # [km]
+        SSBpos_SUN      = -SUNpos_SSB # [km]
+        mu_SUN_cst      = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
         light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]
-        roemer_delay = (PULSARSdir_SSB @ SCpos_SSB) / light_speed_cst # [s]
-        time_SC = time_TDB - roemer_delay # [s]
+        D0              = self.par["D0"]
+
+        n_dot_r = PULSARSdir_SSB @ SCpos_SSB
+        r_dot_r = SCpos_SSB @ SCpos_SSB
+        n_dot_b = PULSARSdir_SSB @ SSBpos_SUN
+        b_dot_r = SSBpos_SUN @ SCpos_SSB
+
+        doppler_delay = n_dot_r / light_speed_cst # [s]
+        annual_parallax_delay = 1/(2*light_speed_cst*D0) * (n_dot_r**2 - r_dot_r + 2*n_dot_b*n_dot_r - 2*b_dot_r) # [s]
+        roemer_delay = doppler_delay + annual_parallax_delay # [s]
+
+        # Shapiro delay considering only the effect of the Sun as the major source of spacetime curvature in the Solar System
+        SCpos_SSB_norm  = np.linalg.norm(SCpos_SSB)
+        SSBpos_SUN_norm = np.linalg.norm(SSBpos_SUN)
+        num = n_dot_r + SCpos_SSB_norm
+        den = n_dot_b + SSBpos_SUN_norm
+        shapiro_delay = 2*mu_SUN_cst/light_speed_cst**3 * np.log(np.abs(num/den + 1)) # [s]
+
+        time_SC = time_TDB - roemer_delay - shapiro_delay # [s]
 
         # Compute pulsar rotational phase at the SC
         dt_SC = time_SC - t0
@@ -80,7 +104,9 @@ class DYN_PSR(Level2Module):
         # Update parameters
         self.state["phase_SSB"] = phase_SSB
         self.state["phase_SC"]  = phase_SC
-        self.state["SCdt_SSB"]  = roemer_delay
+        self.state["roemer_delay"]  = roemer_delay
+        self.state["shapiro_delay"] = shapiro_delay
+        self.state["SCdt_SSB"]  = roemer_delay + shapiro_delay
 
         return self.state
 

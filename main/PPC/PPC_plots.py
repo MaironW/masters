@@ -280,8 +280,11 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PULSARSdir_SSB = timeline["DYN"]["DYN_PSR"]["PULSARSdir_SSB"][0] # [time, pulsar, direction]
     phase_SSB      = timeline["DYN"]["DYN_PSR"]["phase_SSB"]
     phase_SC       = timeline["DYN"]["DYN_PSR"]["phase_SC"]
+    roemer_delay   = timeline["DYN"]["DYN_PSR"]["roemer_delay"]
+    shapiro_delay  = timeline["DYN"]["DYN_PSR"]["shapiro_delay"]
     SCdt_SSB       = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
     PULSARname     = DYN_obj.DYN_PSR.par["name"]
+    n_pulsars      = DYN_obj.DYN_PSR.par["n_pulsars"]
 
     # Reshape stars into a big list of direction vectors
     STARSdir_SSB_reshaped = STARSdir_SSB.reshape(-1, 3) # [time * star, direction]
@@ -316,9 +319,14 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax = PPC.plot(time_SIM, phase_SSB[:,0], label=PULSARname[0], xlabel="time_SIM [s]", ylabel="phase_SSB", title="True Pulsar Phase on SSB")
     PPC.plot(time_SIM, phase_SSB[:,1], label=PULSARname[1], fig=fig, ax=ax)
 
-    # True delay for TOAs between SC and SSB
-    fig, ax = PPC.plot(time_SIM, SCdt_SSB[:,0], label=PULSARname[0], xlabel="time_SIM [s]", ylabel="SCdt_SSB [s]", title="True TOA delay on SC")
-    PPC.plot(time_SIM, SCdt_SSB[:,1], label=PULSARname[1], fig=fig, ax=ax)
+    # Delays for TOAs between SC and SSB
+    fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB [s]", title="True TOA delay on SC", subplot=(3,1,1))
+    fig, ax2 = PPC.plot([], [], ylabel="roemer_delay [s]", fig=fig, subplot=(3,1,2))
+    fig, ax3 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="shapiro_delay [s]", fig=fig, subplot=(3,1,3))
+    for i in range(n_pulsars):
+        PPC.plot(time_SIM, SCdt_SSB[:,i], label=PULSARname[i], xlabel="time_SIM [s]", ylabel="SCdt_SSB [s]", title="True TOA delay on SC", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, roemer_delay[:,i], label=PULSARname[i], ylabel="roemer_delay [s]", fig=fig, ax=ax2)
+        PPC.plot(time_SIM, shapiro_delay[:,i], label=PULSARname[i], ylabel="shapiro_delay [s]", fig=fig, ax=ax3)
 
 def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
@@ -336,7 +344,7 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
     # Measured vs True delay for TOAs between SC and SSB
     fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB_mes [s]", title="Measured vs True TOA delay on SC", subplot=(2,1,1))
-    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Noise [s]", title="Measured vs True TOA delay on SC", fig=fig, subplot=(2,1,2))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Noise [s]", fig=fig, subplot=(2,1,2))
     noise = SCdt_SSB - SCdt_SSB_mes
     for i in range(n_pulsars):
         PPC.plot(time_SIM, SCdt_SSB_mes[:,i], label=f"{PULSARname[i]} Meas", fig=fig, ax=ax1)

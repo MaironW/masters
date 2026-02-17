@@ -17,8 +17,6 @@ DYN_PSR_par = {
 
     # Output initial values
     "PULSARSdir_SSB_ini" : np.array([0,0,0]), # Initial direction of the pulsars in the SSB frame at the initial epoch
-    "phase_SSB_ini"      : np.array([0]), # Initial phase for the pulsars measured in the SSB
-    "phase_SC_ini"       : np.array([0]), # Initial phase for the pulsars measured in the SC
     "roemer_delay_ini"   : np.array([0]), # [s] Time delay due to Doppler and annual parallax effect
     "shapiro_delay_ini"  : np.array([0]), # [s] Time delay due to gravity distortion of light
     "SCdt_SSB_ini"       : np.array([0]), # [s] Time delay between the TOA of a pulse on the SC relative to the SSB (TDB)

@@ -7,18 +7,18 @@ class PulsarDatabase:
     def __init__(self, filename):
         df = pd.read_csv(filename)
 
-        self.name  = df["name"].values #  Pulsar name
+        self.name  = df["name"].values  #  Pulsar name
         self.ra    = df["ra"].values    # [deg] Right ascension from SSB
         self.dec   = df["dec"].values   # [deg] Declination from SSB
         self.epoch = df["epoch"].values # [MJD] Epoch for frequency
         self.f     = df["f"].values     # [Hz] Pulse frequency
         self.df    = df["df"].values    # [Hz/s] First derivative of pulse
-        self.Fx    = df["Fx"].values    # [photons/m^2/s] Pulsar raduation flux
+        self.Fx    = df["Fx"].values    # [erg/cm^2/s] Pulsar raduation flux
         self.pf    = df["pf"].values    # Flux pulsed fraction
-        self.d     = df["d"].values     # Pulse duty cycle
+        self.W     = df["W"].values     # [s] Pulse width
         self.D0    = df["D0"].values    # [kpc] Pulsar distance from SSB
 
-        self.Bx = 50 # [photon/m^2/s] X-ray background radiation flux
+        self.Bx = 3e-11 # [erg/cm^2/s] X-ray background radiation flux
         self.n_pulsars = len(self.name)
 
         self.PULSARdir_SSB = self.radec2dir(self.ra, self.dec)

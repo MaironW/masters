@@ -5,6 +5,7 @@
 import copy
 import numpy as np
 
+from Utils.constants import CONSTANTS_par
 from Utils.level2module import Level2Module
 from Utils.pulsar_database import PulsarDatabase
 from .SEN_PSR_par import SEN_PSR_par
@@ -40,7 +41,7 @@ class SEN_PSR(Level2Module):
         self.par["f"]         = pulsar_data.f
         self.par["Fx"]        = pulsar_data.Fx
         self.par["pf"]        = pulsar_data.pf
-        self.par["d"]         = pulsar_data.d
+        self.par["W"]         = pulsar_data.W
         self.par["Bx"]        = pulsar_data.Bx
 
         # Pulsar direction in SSB already computed by the database
@@ -48,7 +49,7 @@ class SEN_PSR(Level2Module):
 
         # Compute other parameters
         self.par["P"] = 1/self.par["f"] # [s] Pulse period
-        self.par["W"] = self.par["d"] * self.par["P"] # [s] Pulse width
+        self.par["d"] = self.par["W"] / self.par["P"] # [s] Pulse duty cycle
 
         # Allocate initial pulsars array
         n_pulsars = self.par["n_pulsars"]
@@ -83,7 +84,8 @@ class SEN_PSR(Level2Module):
             # Filter out objects outside the FOV
 
             # Sensor properties
-            A      = self.par["detector_area"]
+            A      = self.par["detector_area"] # [m^2]
+            A_cm2  = A*CONSTANTS_par["m2cm_cst"]**2
             T_obs  = self.par["dt"]
             t_bias = self.par["t_bias"]
 
@@ -95,11 +97,10 @@ class SEN_PSR(Level2Module):
             d  = self.par["d"]
 
             # Compute detector noise
-            Ns_total     = Fx*A*T_obs           # Total photon counts
-            Ns_pulsed    = Ns_total*pf          # Pulsed photon counts
-            Ns_nonpulsed = Ns_total - Ns_pulsed # Nonpulsed photon counts
-            Nb           = Bx*A*T_obs           # Background photon counts
-            SNR = Ns_pulsed / np.sqrt(Nb + Ns_nonpulsed + Ns_pulsed) # Signal to Noise Ratio # TODO: Discard pulsars with low SNR
+            Ns_pulsed    = Fx*A_cm2*T_obs*pf       # Pulsed photon counts
+            Ns_nonpulsed = Fx*A_cm2*T_obs*d*(1-pf) # Nonpulsed photon counts
+            Nb           = Bx*A_cm2*T_obs*d        # Background photon counts
+            SNR = Ns_pulsed / np.sqrt(Nb + Ns_nonpulsed + Ns_pulsed) # Signal to Noise Ratio
             sigma_TOA = 0.5*W / SNR
             n_pulsars = len(Fx)
             noise = np.random.randn(n_pulsars) * sigma_TOA

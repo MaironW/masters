@@ -7,6 +7,7 @@ CONSTANTS_par = {
     "rad2deg_cst"  : 57.295779513,      # Radians to degrees
     "day2sec_cst"  : 86400,             # Days to seconds
     "pc2m_cst"     : 3.08567758128e+16, # Parsec to meters
+    "m2cm_cst"     : 100,               # Meters to centimeters
     # Mass properties
     "SCmass_cst"    : 1000.0,    # [kg] Spacecraft mass
     "SUNmass_cst"   : 1.9885e30, # [kg] Sun mass

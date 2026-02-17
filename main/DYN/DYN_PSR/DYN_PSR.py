@@ -19,8 +19,6 @@ class DYN_PSR(Level2Module):
         # Dummy state
         self.state = {
             "PULSARSdir_SSB" : par["PULSARSdir_SSB_ini"],
-            "phase_SSB"      : par["phase_SSB_ini"],
-            "phase_SC"       : par["phase_SC_ini"],
             "roemer_delay"   : par["roemer_delay_ini"],
             "shapiro_delay"  : par["shapiro_delay_ini"],
             "SCdt_SSB"       : par["SCdt_SSB_ini"]
@@ -37,11 +35,6 @@ class DYN_PSR(Level2Module):
         # Pulsar parameters should not change over the simulation
         self.par["name"]      = pulsar_data.name       # Pulsar name
         self.par["n_pulsars"] = pulsar_data.n_pulsars  # Number of pulsars
-        self.par["epoch"]     = pulsar_data.epoch      # [MJD]  Epoch for frequency
-        self.par["f"]         = pulsar_data.f          # [Hz]   Pulse frequency
-        self.par["df"]        = pulsar_data.df         # [Hz/s] First derivative of pulse frequency
-        self.par["ra"]        = pulsar_data.ra         # [deg]  Rigth Ascension
-        self.par["dec"]       = pulsar_data.dec        # [deg]  Declination
         self.par["D0"]        = pulsar_data.D0*CONSTANTS_par["pc2m_cst"] # [km] Pulsar distance from SSB
 
         # Pulsar direction in SSB already computed by the database
@@ -54,30 +47,16 @@ class DYN_PSR(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, states, inputs=None):
-        # Load current TDB time and SC position
-        time_TDB  = states["DYN_TIME"]["time_TDB"]
-        SCpos_SSB = states["DYN_TRA"]["SCpos_SSB"]
-
-        epoch  = self.par["epoch"] # [MJD]  Epoch for frequency
-        f      = self.par["f"]     # [Hz]   Pulse frequency
-        df     = self.par["df"]    # [Hz/s] First derivative of pulse frequency
-
-        # Convert epoch from MJD to TDB
-        t0 = (epoch - CONSTANTS_par["MJD2000epoch_relMJD_TDB_days"]) * CONSTANTS_par["day2sec_cst"]
-
-        # Compute pulsar rotational phase at the SSB
-        dt_SSB = time_TDB - t0
-        phase_SSB = self.pulsar_phase(f, df, dt_SSB)
-        phase_SSB = np.mod(phase_SSB, 1.0)
-
-        # Compute the time as perceived by the spacecraft
+        # Load parameters and states
         PULSARSdir_SSB  = self.state["PULSARSdir_SSB"]
+        SCpos_SSB       = states["DYN_TRA"]["SCpos_SSB"]
         SUNpos_SSB      = states["DYN_SUN"]["SUNpos_SSB"] # [km]
         SSBpos_SUN      = -SUNpos_SSB # [km]
         mu_SUN_cst      = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
         light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]
         D0              = self.par["D0"]
 
+        # Compute the time of arrival as perceived by the spacecraft
         n_dot_r = PULSARSdir_SSB @ SCpos_SSB
         r_dot_r = SCpos_SSB @ SCpos_SSB
         n_dot_b = PULSARSdir_SSB @ SSBpos_SUN
@@ -94,25 +73,9 @@ class DYN_PSR(Level2Module):
         den = n_dot_b + SSBpos_SUN_norm
         shapiro_delay = 2*mu_SUN_cst/light_speed_cst**3 * np.log(np.abs(num/den + 1)) # [s]
 
-        time_SC = time_TDB - roemer_delay - shapiro_delay # [s]
-
-        # Compute pulsar rotational phase at the SC
-        dt_SC = time_SC - t0
-        phase_SC = self.pulsar_phase(f, df, dt_SC)
-        phase_SC = np.mod(phase_SC, 1.0)
-
         # Update parameters
-        self.state["phase_SSB"] = phase_SSB
-        self.state["phase_SC"]  = phase_SC
         self.state["roemer_delay"]  = roemer_delay
         self.state["shapiro_delay"] = shapiro_delay
-        self.state["SCdt_SSB"]  = roemer_delay + shapiro_delay
+        self.state["SCdt_SSB"]      = roemer_delay + shapiro_delay
 
         return self.state
-
-    # Return the phase of a pulsar with:
-    # f:  frequency
-    # df: frequency time derivative
-    # dt: time that passed since epoch t0
-    def pulsar_phase(self, f, df, dt):
-        return f*dt + 1/2*df*dt**2

@@ -128,15 +128,11 @@ DYN_obj.modules = [
     DYN_obj.DYN_GRV,
     DYN_obj.DYN_ATT,
     DYN_obj.DYN_STR,
+    DYN_obj.DYN_PSR,
 ]
 
 # Initialize SEN modules with parameter override
 SEN_obj = SEN(DYN_obj, par_override)
-
-# Set only modules needed for the test
-SEN_obj.modules = [
-    SEN_obj.SEN_STR,
-]
 
 # Normally initialize NAV modules
 NAV_obj = NAV(SEN_obj)

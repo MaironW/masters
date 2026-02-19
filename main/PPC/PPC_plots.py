@@ -98,6 +98,49 @@ def DYN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax = PPC.plot(STARSproj[0], STARSproj[1], style='.', label="Stars", xlabel="Right Ascension [deg]", ylabel="Declination [deg]", title="Star Field - Aitoff Projection", aspect="equal", color=colors["black"])
     PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)
 
+def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM       = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    STARSdir_SSB   = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0] # [time, star, direction]
+    PULSARSdir_SSB = timeline["DYN"]["DYN_PSR"]["PULSARSdir_SSB"][0] # [time, pulsar, direction]
+    roemer_delay   = timeline["DYN"]["DYN_PSR"]["roemer_delay"]
+    shapiro_delay  = timeline["DYN"]["DYN_PSR"]["shapiro_delay"]
+    SCdt_SSB       = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
+    PULSARname     = DYN_obj.DYN_PSR.par["name"]
+    n_pulsars      = DYN_obj.DYN_PSR.par["n_pulsars"]
+
+    # Reshape stars into a big list of direction vectors
+    STARSdir_SSB_reshaped = STARSdir_SSB.reshape(-1, 3) # [time * star, direction]
+    x_star = STARSdir_SSB_reshaped[:,0]
+    y_star = STARSdir_SSB_reshaped[:,1]
+    z_star = STARSdir_SSB_reshaped[:,2]
+
+    # Reshape pulsars into a big list of direction vectors
+    PULSARSdir_SSB_reshaped = PULSARSdir_SSB.reshape(-1, 3) # [time * star, direction]
+    x_pulsar = PULSARSdir_SSB_reshaped[:,0]
+    y_pulsar = PULSARSdir_SSB_reshaped[:,1]
+    z_pulsar = PULSARSdir_SSB_reshaped[:,2]
+
+    # 3D sky sphere
+    fig, ax = PPC.plot(x_star, y_star, z_star, style='.', label="Stars",   xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect="equal", color=colors["black"])
+    PPC.plot(x_pulsar, y_pulsar, z_pulsar, style='x', label="Pulsars", color=colors["purple"], fig=fig, ax=ax)
+
+    # 2D sky sphere
+    STARSproj   = PPC.aitoff_projection(STARSdir_SSB_reshaped)
+    PULSARSproj = PPC.aitoff_projection(PULSARSdir_SSB_reshaped)
+    boundary    = PPC.aitoff_boundary()
+    fig, ax = PPC.plot(STARSproj[0], STARSproj[1], style='.', label="Stars", xlabel="Right Ascension [deg]", ylabel="Declination [deg]", title="Star Field - Aitoff Projection", aspect="equal", color=colors["black"])
+    PPC.plot(PULSARSproj[0], PULSARSproj[1], style='x', label="Pulsars", color=colors["purple"], fig=fig, ax=ax)
+    PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)
+
+    # Delays for TOAs between SC and SSB
+    fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB [s]", title="True TOA delay on SC", subplot=(3,1,1))
+    fig, ax2 = PPC.plot([], [], ylabel="roemer_delay [s]", fig=fig, subplot=(3,1,2))
+    fig, ax3 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="shapiro_delay [s]", fig=fig, subplot=(3,1,3))
+    for i in range(n_pulsars):
+        PPC.plot(time_SIM, SCdt_SSB[:,i], label=PULSARname[i], xlabel="time_SIM [s]", ylabel="SCdt_SSB [s]", title="True TOA delay on SC", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, roemer_delay[:,i], label=PULSARname[i], ylabel="roemer_delay [s]", fig=fig, ax=ax2)
+        PPC.plot(time_SIM, shapiro_delay[:,i], label=PULSARname[i], ylabel="shapiro_delay [s]", fig=fig, ax=ax3)
+
 def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM     = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     BOFq_SSB     = timeline["DYN"]["DYN_ATT"]["BOFq_SSB"]
@@ -188,132 +231,6 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot([0, STRy[0]], [0, STRy[1]], [0, STRy[2]], fig=fig, ax=ax, color=colors["red"],   label="STRy")
     PPC.plot([0, STRz[0]], [0, STRz[1]], [0, STRz[2]], fig=fig, ax=ax, color=colors["green"], label="STRz")
 
-def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    time_SIM         = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-    STRoutflg        = timeline["SEN"]["SEN_STR"]["STRoutflg"]
-    SUNdir_SC_mes    = timeline["SEN"]["SEN_STR"]["SUNdir_SC_mes"]
-    EARTHdir_SC_mes  = timeline["SEN"]["SEN_STR"]["EARTHdir_SC_mes"]
-    MOONdir_SC_mes   = timeline["SEN"]["SEN_STR"]["MOONdir_SC_mes"]
-    MARSdir_SC_mes   = timeline["SEN"]["SEN_STR"]["MARSdir_SC_mes"]
-    DEIMOSdir_SC_mes = timeline["SEN"]["SEN_STR"]["DEIMOSdir_SC_mes"]
-    PHOBOSdir_SC_mes = timeline["SEN"]["SEN_STR"]["PHOBOSdir_SC_mes"]
-    STARSdir_SC_mes  = timeline["SEN"]["SEN_STR"]["STARSdir_SC_mes"]
-
-    NAV_CELoutflg = timeline["NAV"]["NAV_CEL"]["NAV_CELoutflg"]
-
-    z = timeline["NAV"]["NAV_CEL"]["z"]
-    R = timeline["NAV"]["NAV_CEL"]["R"]
-
-    SUNangle_mes_deg    = np.cos(z[0])*CONSTANTS_par["rad2deg_cst"]
-    EARTHangle_mes_deg  = np.cos(z[1])*CONSTANTS_par["rad2deg_cst"]
-    MOONangle_mes_deg   = np.cos(z[2])*CONSTANTS_par["rad2deg_cst"]
-    MARSangle_mes_deg   = np.cos(z[3])*CONSTANTS_par["rad2deg_cst"]
-    PHOBOSangle_mes_deg = np.cos(z[4])*CONSTANTS_par["rad2deg_cst"]
-    DEIMOSangle_mes_deg = np.cos(z[5])*CONSTANTS_par["rad2deg_cst"]
-
-    SUNsel_STARdir_SC_mes    = timeline["NAV"]["NAV_CEL"]["SUNsel_STARdir_SC_mes"]
-    EARTHsel_STARdir_SC_mes  = timeline["NAV"]["NAV_CEL"]["EARTHsel_STARdir_SC_mes"]
-    MOONsel_STARdir_SC_mes   = timeline["NAV"]["NAV_CEL"]["MOONsel_STARdir_SC_mes"]
-    MARSsel_STARdir_SC_mes   = timeline["NAV"]["NAV_CEL"]["MARSsel_STARdir_SC_mes"]
-    PHOBOSsel_STARdir_SC_mes = timeline["NAV"]["NAV_CEL"]["PHOBOSsel_STARdir_SC_mes"]
-    DEIMOSsel_STARdir_SC_mes = timeline["NAV"]["NAV_CEL"]["DEIMOSsel_STARdir_SC_mes"]
-
-    # Reshape vectors for plot
-    STARSdir_SC_mes_reshaped          = STARSdir_SC_mes.reshape(-1, 3)          # [time * star, direction]
-    SUNsel_STARdir_SC_mes_reshaped    = SUNsel_STARdir_SC_mes.reshape(-1, 3)    # [time * star, direction]
-    EARTHsel_STARdir_SC_mes_reshaped  = EARTHsel_STARdir_SC_mes.reshape(-1, 3)  # [time * star, direction]
-    MOONsel_STARdir_SC_mes_reshaped   = MOONsel_STARdir_SC_mes.reshape(-1, 3)   # [time * star, direction]
-    MARSsel_STARdir_SC_mes_reshaped   = MARSsel_STARdir_SC_mes.reshape(-1, 3)   # [time * star, direction]
-    PHOBOSsel_STARdir_SC_mes_reshaped = PHOBOSsel_STARdir_SC_mes.reshape(-1, 3) # [time * star, direction]
-    DEIMOSsel_STARdir_SC_mes_reshaped = DEIMOSsel_STARdir_SC_mes.reshape(-1, 3) # [time * star, direction]
-
-    # Plot status
-    fig, ax = PPC.plot(time_SIM, NAV_CELoutflg, xlabel="time_SIM [s]", ylabel="flag", label="NAV_CELoutflag", title="NAV_CEL output flag")
-    PPC.plot(time_SIM, STRoutflg, label="STRoutflag", style='--', fig=fig, ax=ax)
-
-    # Plot angles
-    if not PPC.is_nan(SUNangle_mes_deg):    PPC.plot(time_SIM, SUNangle_mes_deg,    xlabel="time_SIM [s]", ylabel="SUNangles_mes [deg]",    label="alpha", title="Line-of-Sight Angle from Sun to Star")
-    if not PPC.is_nan(MOONangle_mes_deg):   PPC.plot(time_SIM, MOONangle_mes_deg,   xlabel="time_SIM [s]", ylabel="MOONangles_mes [deg]",   label="alpha", title="Line-of-Sight Angle from Moon to Star")
-    if not PPC.is_nan(EARTHangle_mes_deg):  PPC.plot(time_SIM, EARTHangle_mes_deg,  xlabel="time_SIM [s]", ylabel="EARTHangles_mes [deg]",  label="alpha", title="Line-of-Sight Angle from Earth to Star")
-    if not PPC.is_nan(DEIMOSangle_mes_deg): PPC.plot(time_SIM, DEIMOSangle_mes_deg, xlabel="time_SIM [s]", ylabel="DEIMOSangles_mes [deg]", label="alpha", title="Line-of-Sight Angle from Deimos to Star")
-    if not PPC.is_nan(PHOBOSangle_mes_deg): PPC.plot(time_SIM, PHOBOSangle_mes_deg, xlabel="time_SIM [s]", ylabel="PHOBOSangles_mes [deg]", label="alpha", title="Line-of-Sight Angle from Phobos to Star")
-    if not PPC.is_nan(MARSangle_mes_deg):   PPC.plot(time_SIM, MARSangle_mes_deg,   xlabel="time_SIM [s]", ylabel="MARSangles_mes [deg]",   label="alpha", title="Line-of-Sight Angle from Mars to Star")
-
-    # Plot Selected stars for each body
-    fig, ax = PPC.plot(STARSdir_SC_mes_reshaped[:,0], STARSdir_SC_mes_reshaped[:,1], STARSdir_SC_mes_reshaped[:,2], style='.', label="Visible Stars", xlabel="X SC", ylabel="Y SC", zlabel="Z SC", title="Star Field Normalized in SC frame", aspect="equal", color=colors["green"])
-    if not PPC.is_nan(SUNangle_mes_deg):
-        PPC.plot(SUNsel_STARdir_SC_mes_reshaped[:,0], SUNsel_STARdir_SC_mes_reshaped[:,1], SUNsel_STARdir_SC_mes_reshaped[:,2], style='.', label="Sun selected star", fig=fig, ax=ax, color=colors["orange"])
-        PPC.plot(SUNdir_SC_mes[:,0],                   SUNdir_SC_mes[:,1],                   SUNdir_SC_mes[:,2],                   style='x', label="Sun",                fig=fig, ax=ax, color=colors["orange"])
-    if not PPC.is_nan(MOONangle_mes_deg):
-        PPC.plot(MOONsel_STARdir_SC_mes_reshaped[:,0], MOONsel_STARdir_SC_mes_reshaped[:,1], MOONsel_STARdir_SC_mes_reshaped[:,2], style='.', label="Moon selected star", fig=fig, ax=ax, color=colors["grey"])
-        PPC.plot(MOONdir_SC_mes[:,0],                   MOONdir_SC_mes[:,1],                   MOONdir_SC_mes[:,2],                   style='x', label="Moon",                fig=fig, ax=ax, color=colors["grey"])
-    if not PPC.is_nan(EARTHangle_mes_deg):
-        PPC.plot(EARTHsel_STARdir_SC_mes_reshaped[:,0], EARTHsel_STARdir_SC_mes_reshaped[:,1], EARTHsel_STARdir_SC_mes_reshaped[:,2], style='.', label="Earth selected star",  fig=fig, ax=ax, color=colors["blue"])
-        PPC.plot(EARTHdir_SC_mes[:,0],                   EARTHdir_SC_mes[:,1],                   EARTHdir_SC_mes[:,2],                   style='x', label="Earth",                 fig=fig, ax=ax, color=colors["blue"])
-    if not PPC.is_nan(DEIMOSangle_mes_deg):
-        PPC.plot(DEIMOSsel_STARdir_SC_mes_reshaped[:,0], DEIMOSsel_STARdir_SC_mes_reshaped[:,1], DEIMOSsel_STARdir_SC_mes_reshaped[:,2], style='.', label="Deimos selected star", fig=fig, ax=ax, color=colors["lightgrey"])
-        PPC.plot(DEIMOSdir_SC_mes[:,0],                   DEIMOSdir_SC_mes[:,1],                   DEIMOSdir_SC_mes[:,2],                   style='x', label="Deimos",                fig=fig, ax=ax, color=colors["lightgrey"])
-    if not PPC.is_nan(PHOBOSangle_mes_deg):
-        PPC.plot(PHOBOSsel_STARdir_SC_mes_reshaped[:,0], PHOBOSsel_STARdir_SC_mes_reshaped[:,1], PHOBOSsel_STARdir_SC_mes_reshaped[:,2], style='.', label="Phobos selected star", fig=fig, ax=ax, color=colors["darkgrey"])
-        PPC.plot(PHOBOSdir_SC_mes[:,0],                   PHOBOSdir_SC_mes[:,1],                   PHOBOSdir_SC_mes[:,2],                   style='x', label="Phobos",                fig=fig, ax=ax, color=colors["darkgrey"])
-    if not PPC.is_nan(MARSangle_mes_deg):
-        PPC.plot(MARSsel_STARdir_SC_mes_reshaped[:,0], MARSsel_STARdir_SC_mes_reshaped[:,1], MARSsel_STARdir_SC_mes_reshaped[:,2], style='.', label="Mars selected star", fig=fig, ax=ax, color=colors["red"])
-        PPC.plot(MARSdir_SC_mes[:,0],                   MARSdir_SC_mes[:,1],                   MARSdir_SC_mes[:,2],                   style='x', label="Mars",                fig=fig, ax=ax, color=colors["red"])
-    PPC.plot([0], [0], [0],  style='+', label="SC",  fig=fig, ax=ax, color=colors["magenta"])
-
-    # Plot selected stars direction over time
-    fig, ax1 = PPC.plot(time_SIM, STARSdir_SC_mes[:, :, 0], color=colors["green"], subplot=(3,1,1), xlabel="time_SIM [s]", ylabel="x", title="Direction of Visible Stars and Selected Stars for Mars CeleNav")
-    PPC.plot(time_SIM, MARSsel_STARdir_SC_mes[:, :, 0], color=colors["red"], fig=fig, ax=ax1)
-
-    fig, ax2 = PPC.plot(time_SIM, STARSdir_SC_mes[:, :, 1], color=colors["green"], subplot=(3,1,2), fig=fig, ylabel='y')
-    PPC.plot(time_SIM, MARSsel_STARdir_SC_mes[:, :, 1], color=colors["red"], fig=fig, ax=ax2)
-
-    fig, ax3 = PPC.plot(time_SIM, STARSdir_SC_mes[:, :, 2], color=colors["green"], subplot=(3,1,3), fig=fig, ylabel='z')
-    PPC.plot(time_SIM, MARSsel_STARdir_SC_mes[:, :, 2], color=colors["red"], fig=fig, ax=ax3)
-
-def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    time_SIM       = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-    STARSdir_SSB   = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0] # [time, star, direction]
-    PULSARSdir_SSB = timeline["DYN"]["DYN_PSR"]["PULSARSdir_SSB"][0] # [time, pulsar, direction]
-    roemer_delay   = timeline["DYN"]["DYN_PSR"]["roemer_delay"]
-    shapiro_delay  = timeline["DYN"]["DYN_PSR"]["shapiro_delay"]
-    SCdt_SSB       = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
-    PULSARname     = DYN_obj.DYN_PSR.par["name"]
-    n_pulsars      = DYN_obj.DYN_PSR.par["n_pulsars"]
-
-    # Reshape stars into a big list of direction vectors
-    STARSdir_SSB_reshaped = STARSdir_SSB.reshape(-1, 3) # [time * star, direction]
-    x_star = STARSdir_SSB_reshaped[:,0]
-    y_star = STARSdir_SSB_reshaped[:,1]
-    z_star = STARSdir_SSB_reshaped[:,2]
-
-    # Reshape pulsars into a big list of direction vectors
-    PULSARSdir_SSB_reshaped = PULSARSdir_SSB.reshape(-1, 3) # [time * star, direction]
-    x_pulsar = PULSARSdir_SSB_reshaped[:,0]
-    y_pulsar = PULSARSdir_SSB_reshaped[:,1]
-    z_pulsar = PULSARSdir_SSB_reshaped[:,2]
-
-    # 3D sky sphere
-    fig, ax = PPC.plot(x_star, y_star, z_star, style='.', label="Stars",   xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect="equal", color=colors["black"])
-    PPC.plot(x_pulsar, y_pulsar, z_pulsar, style='x', label="Pulsars", color=colors["purple"], fig=fig, ax=ax)
-
-    # 2D sky sphere
-    STARSproj   = PPC.aitoff_projection(STARSdir_SSB_reshaped)
-    PULSARSproj = PPC.aitoff_projection(PULSARSdir_SSB_reshaped)
-    boundary    = PPC.aitoff_boundary()
-    fig, ax = PPC.plot(STARSproj[0], STARSproj[1], style='.', label="Stars", xlabel="Right Ascension [deg]", ylabel="Declination [deg]", title="Star Field - Aitoff Projection", aspect="equal", color=colors["black"])
-    PPC.plot(PULSARSproj[0], PULSARSproj[1], style='x', label="Pulsars", color=colors["purple"], fig=fig, ax=ax)
-    PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)
-
-    # Delays for TOAs between SC and SSB
-    fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB [s]", title="True TOA delay on SC", subplot=(3,1,1))
-    fig, ax2 = PPC.plot([], [], ylabel="roemer_delay [s]", fig=fig, subplot=(3,1,2))
-    fig, ax3 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="shapiro_delay [s]", fig=fig, subplot=(3,1,3))
-    for i in range(n_pulsars):
-        PPC.plot(time_SIM, SCdt_SSB[:,i], label=PULSARname[i], xlabel="time_SIM [s]", ylabel="SCdt_SSB [s]", title="True TOA delay on SC", fig=fig, ax=ax1)
-        PPC.plot(time_SIM, roemer_delay[:,i], label=PULSARname[i], ylabel="roemer_delay [s]", fig=fig, ax=ax2)
-        PPC.plot(time_SIM, shapiro_delay[:,i], label=PULSARname[i], ylabel="shapiro_delay [s]", fig=fig, ax=ax3)
-
 def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     SCdt_SSB = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
@@ -341,6 +258,82 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, SCdt_SSB_mes[:,i], label=f"{PULSARname[i]} Meas",        fig=fig, ax=ax1)
         PPC.plot(time_SIM, time_noise[:,i],   label=f"{PULSARname[i]} time noise",  fig=fig, ax=ax2)
         PPC.plot(time_SIM, range_noise[:,i],  label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
+
+def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM         = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    STRoutflg        = timeline["SEN"]["SEN_STR"]["STRoutflg"]
+    STARSdir_SC_mes  = timeline["SEN"]["SEN_STR"]["STARSdir_SC_mes"]
+
+    NAV_CELoutflg = timeline["NAV"]["NAV_CEL"]["NAV_CELoutflg"]
+
+    z = timeline["NAV"]["NAV_CEL"]["z"]
+    R = timeline["NAV"]["NAV_CEL"]["R"]
+
+    bodies = [
+        dict(name="SUN",    idx=0, color=colors["orange"]),
+        dict(name="MOON",   idx=2, color=colors["grey"]),
+        dict(name="EARTH",  idx=1, color=colors["blue"]),
+        dict(name="DEIMOS", idx=4, color=colors["darkgrey"]),
+        dict(name="PHOBOS", idx=5, color=colors["lightgrey"]),
+        dict(name="MARS",   idx=3, color=colors["red"]),
+    ]
+
+    angles_deg = {}
+
+    for body in bodies:
+        idx = body["idx"]
+        angles_deg[body["name"]] = (np.cos(z[:, idx])*CONSTANTS_par["rad2deg_cst"])
+
+    active_bodies = [
+        body for body in bodies if not PPC.is_nan(angles_deg[body["name"]])
+    ]
+
+    # Reshape vectors for plot
+    STARSdir_SC_mes_reshaped = STARSdir_SC_mes.reshape(-1, 3) # [time * star, direction]
+
+    # Plot status
+    fig, ax = PPC.plot(time_SIM, NAV_CELoutflg, xlabel="time_SIM [s]", ylabel="flag", label="NAV_CELoutflag", title="NAV_CEL output flag")
+    PPC.plot(time_SIM, STRoutflg, label="STRoutflag", style='--', fig=fig, ax=ax)
+
+    # Plot angles (arccosine of measurement model)
+    fig = None
+    ax = None
+    for body in active_bodies:
+        name = body["name"]
+        angle = angles_deg[name]
+        fig, ax = PPC.plot(time_SIM, angle, xlabel="time_SIM [s]", ylabel=f"{name}angles_mes [deg]", label=f"Angle {name}", title=f"Line-of-Sight Angle from {name} to Star", color=body["color"], fig=fig, ax=ax)
+
+    # Plot covariance
+    R_diag  = np.diagonal(R, axis1=1, axis2=2)
+    sigma_z = np.sqrt(R_diag)
+    fig = None
+    for body in active_bodies:
+        idx  = body["idx"]
+        name = body["name"]
+        fig, ax = PPC.plot(time_SIM, sigma_z[:, idx], label=f"σ_z {name}", xlabel="time_SIM [s]", ylabel="σ", title="Measurement Standard Deviation", color=body["color"], fig=fig)
+
+    # Plot Selected stars for each body
+    fig, ax = PPC.plot(STARSdir_SC_mes_reshaped[:,0], STARSdir_SC_mes_reshaped[:,1], STARSdir_SC_mes_reshaped[:,2], style='.', label="Visible Stars", xlabel="X SC", ylabel="Y SC", zlabel="Z SC", title="Star Field Normalized in SC frame", aspect="equal", color=colors["green"])
+    PPC.plot([0], [0], [0],  style='+', label="SC",  fig=fig, ax=ax, color=colors["magenta"])
+    for body in active_bodies:
+        name = body["name"]
+        BODYsel_STARdir_SC_mes = timeline["NAV"]["NAV_CEL"][f"{name}sel_STARdir_SC_mes"] # [time, direction]
+        BODYdir_SC_mes         = timeline["SEN"]["SEN_STR"][f"{name}dir_SC_mes"]
+
+        PPC.plot(BODYsel_STARdir_SC_mes[:,0], BODYsel_STARdir_SC_mes[:,1], BODYsel_STARdir_SC_mes[:,2], style='.', label=f"{name} selected star", fig=fig, ax=ax, color=body["color"])
+        PPC.plot(BODYdir_SC_mes[:,0],         BODYdir_SC_mes[:,1],         BODYdir_SC_mes[:,2],         style='x', label=f"{name}",               fig=fig, ax=ax, color=body["color"])
+
+    # Plot selected stars direction over time
+    fig, ax1 = PPC.plot(time_SIM, STARSdir_SC_mes[:, :, 0], color=colors["green"], subplot=(3,1,1), ylabel="x", title=f"Direction of Visible Stars and Reference Selected Star")
+    fig, ax2 = PPC.plot(time_SIM, STARSdir_SC_mes[:, :, 1], color=colors["green"], subplot=(3,1,2), ylabel="y", fig=fig)
+    fig, ax3 = PPC.plot(time_SIM, STARSdir_SC_mes[:, :, 2], color=colors["green"], subplot=(3,1,3), xlabel="time_SIM [s]", ylabel="z", fig=fig)
+    for body in active_bodies:
+        name = body["name"]
+        BODYsel_STARdir_SC_mes = timeline["NAV"]["NAV_CEL"][f"{name}sel_STARdir_SC_mes"] # [time, direction]
+        PPC.plot(time_SIM, BODYsel_STARdir_SC_mes[:, 0], label=f"{name}", color=body["color"], fig=fig, ax=ax1)
+        PPC.plot(time_SIM, BODYsel_STARdir_SC_mes[:, 1], label=f"{name}", color=body["color"], fig=fig, ax=ax2)
+        PPC.plot(time_SIM, BODYsel_STARdir_SC_mes[:, 2], label=f"{name}", color=body["color"], fig=fig, ax=ax3)
+
 
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,

@@ -18,6 +18,12 @@ class NAV_CEL(Level2Module):
         # Set initial dummy state
         self.state = {
             "NAV_CELoutflg" : par["NAV_CELoutflg_ini"],
+            "SUNsel_STARdir_SC_mes"    : par["BODYsel_STARdir_mes_ini"],
+            "EARTHsel_STARdir_SC_mes"  : par["BODYsel_STARdir_mes_ini"],
+            "MOONsel_STARdir_SC_mes"   : par["BODYsel_STARdir_mes_ini"],
+            "MARSsel_STARdir_SC_mes"   : par["BODYsel_STARdir_mes_ini"],
+            "DEIMOSsel_STARdir_SC_mes" : par["BODYsel_STARdir_mes_ini"],
+            "PHOBOSsel_STARdir_SC_mes" : par["BODYsel_STARdir_mes_ini"],
         }
         super().__init__("NAV_CEL", par)
 
@@ -40,9 +46,15 @@ class NAV_CEL(Level2Module):
         # Only update outputs if STRoutflg is valid
         # Otherwise, return default values
         if STRoutflg == 0:
-            self.state["NAV_CELoutflg"] = self.par["NAV_CELoutflg_ini"]
-            self.state["z"] = self.par["z_ini"]
-            self.state["R"] = self.par["R_ini"]
+            self.state["NAV_CELoutflg"]    = self.par["NAV_CELoutflg_ini"]
+            self.state["z"]                = self.par["z_ini"]
+            self.state["R"]                = self.par["R_ini"]
+            self.state["SUNsel_STARdir_SC_mes"]    = self.par["BODYsel_STARdir_mes_ini"]
+            self.state["EARTHsel_STARdir_SC_mes"]  = self.par["BODYsel_STARdir_mes_ini"]
+            self.state["MOONsel_STARdir_SC_mes"]   = self.par["BODYsel_STARdir_mes_ini"]
+            self.state["MARSsel_STARdir_SC_mes"]   = self.par["BODYsel_STARdir_mes_ini"]
+            self.state["DEIMOSsel_STARdir_SC_mes"] = self.par["BODYsel_STARdir_mes_ini"]
+            self.state["PHOBOSsel_STARdir_SC_mes"] = self.par["BODYsel_STARdir_mes_ini"]
 
         # STR output is valid
         else:
@@ -76,8 +88,9 @@ class NAV_CEL(Level2Module):
             ]
 
             n_bodies = self.par["n_bodies"]
-            z = np.zeros(n_bodies)
-            R = np.zeros(n_bodies)
+            z = np.full(n_bodies, np.nan)
+            R = np.full(n_bodies, np.nan)
+            STARdir_SC_mes_list = np.zeros((n_bodies,3))
             sigma_angle = self.par["sigma_angle"] # [rad]
             count = 0
             for visibility, BODYdir_SC_mes in bodies:
@@ -88,7 +101,16 @@ class NAV_CEL(Level2Module):
                     z[count] = cos_angle_mes
                     # Variance propagation: sigma_z^2 = (1 - cos^2(angle)) * sigma_angle^2
                     R[count] = (1 - cos_angle_mes**2) * sigma_angle**2
-                    count += 1
+                    STARdir_SC_mes_list[count] = STARdir_SC_mes
+                count += 1
+
+            # Update BODYsel_STARdir_SC_mes just for PPC
+            SUNsel_STARdir_SC_mes    = STARdir_SC_mes_list[0]
+            EARTHsel_STARdir_SC_mes  = STARdir_SC_mes_list[1]
+            MOONsel_STARdir_SC_mes   = STARdir_SC_mes_list[2]
+            MARSsel_STARdir_SC_mes   = STARdir_SC_mes_list[3]
+            DEIMOSsel_STARdir_SC_mes = STARdir_SC_mes_list[4]
+            PHOBOSsel_STARdir_SC_mes = STARdir_SC_mes_list[5]
 
             if count >= 2:
                 z = z
@@ -103,6 +125,12 @@ class NAV_CEL(Level2Module):
             self.state["NAV_CELoutflg"] = NAV_CELoutflg
             self.state["z"]             = z
             self.state["R"]             = R
+            self.state["SUNsel_STARdir_SC_mes"]    = SUNsel_STARdir_SC_mes
+            self.state["EARTHsel_STARdir_SC_mes"]  = EARTHsel_STARdir_SC_mes
+            self.state["MOONsel_STARdir_SC_mes"]   = MOONsel_STARdir_SC_mes
+            self.state["MARSsel_STARdir_SC_mes"]   = MARSsel_STARdir_SC_mes
+            self.state["PHOBOSsel_STARdir_SC_mes"] = PHOBOSsel_STARdir_SC_mes
+            self.state["DEIMOSsel_STARdir_SC_mes"] = DEIMOSsel_STARdir_SC_mes
 
         return self.state
 
@@ -132,7 +160,7 @@ class NAV_CEL(Level2Module):
                 cos_angle = cos_angles[best_idx]
                 BODYsel_STARdir_SC_mes = BODYsel_STARdir_SC_mes[best_idx]
 
-                return cos_angle, BODYdir_SC_mes, True
+                return cos_angle, BODYsel_STARdir_SC_mes, True
 
         # If not valid
         return self.par["BODYangles_mes_ini"], self.par["BODYsel_STARdir_mes_ini"], False

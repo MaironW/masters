@@ -29,7 +29,7 @@ class SEN_PSR(Level2Module):
         super().__init__("SEN_PSR", par)
 
     # Initialization
-    def initialize(self, DYN_states):
+    def initialize(self, DYN_states, SEN_states):
         # Load Pulsar database
         kernel_dir = "Utils/kernels/"
         pulsar_data_file = kernel_dir + "pulsar.csv"
@@ -57,12 +57,12 @@ class SEN_PSR(Level2Module):
         self.state["SCdt_SSB_mes"] = self.par["SCdt_SSB_mes_ini"]
 
         # Update initial state
-        self.state = self.update_algebraic(0, DYN_states)
+        self.state = self.update_algebraic(0, DYN_states, SEN_states)
 
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, DYN_states, inputs=None):
+    def update_algebraic(self, t, DYN_states, SEN_states, inputs=None):
         # Output flag
         if inputs != None:
             PSRoutflg = inputs["SEN"]["SEN_PSR"]["PSRenableflg"]

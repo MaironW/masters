@@ -32,12 +32,12 @@ class NAV_EPH(Level2Module):
         super().__init__("NAV_EPH", par)
 
     # Initialization
-    def initialize(self, SEN_states):
-        self.state = self.update_algebraic(0, SEN_states)
+    def initialize(self, SEN_states, NAV_states):
+        self.state = self.update_algebraic(0, SEN_states, NAV_states)
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, SEN_states, inputs=None):
+    def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
         # Use time_STR as time reference, because it is the sensor used to detect the bodies
         # Assumes time_STR = time_TDB + bias + drift + noise
         # Because NAV_CEL will not work anyway when the STR is off, this is fine

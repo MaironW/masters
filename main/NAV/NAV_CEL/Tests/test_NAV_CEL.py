@@ -137,6 +137,7 @@ NAV_obj = NAV(SEN_obj)
 
 # Set only modules needed for the test
 NAV_obj.modules = [
+    NAV_obj.NAV_EPH,
     NAV_obj.NAV_CEL,
 ]
 
@@ -186,7 +187,7 @@ for step in range(1, n_steps):
     ###################
 
     # Update algebraic modules first
-    DYN_obj.update_algebraic(sim_time, inputs)
+    DYN_obj.update_algebraic(sim_time, None, inputs)
     # Integrate all dynamic states together
     integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
     # Update SEN

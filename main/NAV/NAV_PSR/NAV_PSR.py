@@ -25,7 +25,7 @@ class NAV_PSR(Level2Module):
         super().__init__("NAV_PSR", par)
 
     # Initialization
-    def initialize(self, SEN_states):
+    def initialize(self, SEN_states, NAV_states):
          # Load Pulsar database
         kernel_dir = "Utils/kernels/"
         pulsar_data_file = kernel_dir + "pulsar.csv"
@@ -44,12 +44,12 @@ class NAV_PSR(Level2Module):
         self.state["R"]     = self.par["R_ini"]
 
         # Update initial state
-        self.state = self.update_algebraic(0, SEN_states)
+        self.state = self.update_algebraic(0, SEN_states, NAV_states)
 
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, SEN_states, inputs=None):
+    def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
         PSRoutflg = SEN_states["SEN_PSR"]["PSRoutflg"]
 
         # Only update outputs if PSRoutflg is valid

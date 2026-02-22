@@ -62,7 +62,7 @@ for step in range(1, n_steps):
         DYN_out = PPC.load_module(timeline["DYN"], step)
     else:
         # Update algebraic modules first
-        DYN_obj.update_algebraic(sim_time, inputs)
+        DYN_obj.update_algebraic(sim_time, None, inputs)
         # Integrate all dynamic states together
         DYN_out = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
     

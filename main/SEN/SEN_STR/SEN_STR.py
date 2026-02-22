@@ -42,7 +42,7 @@ class SEN_STR(Level2Module):
         super().__init__("SEN_STR", par)
 
     # Initialization
-    def initialize(self, DYN_states):
+    def initialize(self, DYN_states, SEN_states):
         # Get total number of stars simulated in DYN
         STARSdir_SSB  = DYN_states["DYN_STR"]["STARSdir_SSB"]
         m, n = STARSdir_SSB.shape
@@ -52,11 +52,11 @@ class SEN_STR(Level2Module):
         self.state["STARSdir_SC_mes"]  = self.par["STARSdir_mes_ini"]
 
         # Initialize other variables
-        self.state = self.update_algebraic(0, DYN_states)
+        self.state = self.update_algebraic(0, DYN_states, SEN_states)
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, DYN_states, inputs=None):
+    def update_algebraic(self, t, DYN_states, SEN_states, inputs=None):
         # Output flag
         if inputs != None:
             STRoutflg = inputs["SEN"]["SEN_STR"]["STRenableflg"]

@@ -22,12 +22,12 @@ class DYN_GRV(Level2Module):
         super().__init__("DYN_GRV", par)
 
     # Initialization
-    def initialize(self, DYN_states):
-        self.state = self.update_algebraic(0, DYN_states)
+    def initialize(self, parent_states, DYN_states):
+        self.state = self.update_algebraic(0, parent_states, DYN_states)
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, DYN_states, inputs=None):
+    def update_algebraic(self, t, parent_states, DYN_states, inputs=None):
         # Get parameters and states to make code more readable
         SCpos_SCI = DYN_states["DYN_TRA"]["SCpos_SCI"] # [km]
         SCpos_ECI = DYN_states["DYN_TRA"]["SCpos_ECI"] # [km]

@@ -23,7 +23,7 @@ class DYN_TRA(Level2Module):
         super().__init__("DYN_TRA", par)
 
     # Initialization
-    def initialize(self, DYN_states):
+    def initialize(self, parent_states, DYN_states):
         # Let DYN_TRA be integrated
         self.is_dynamic = True
 
@@ -35,7 +35,7 @@ class DYN_TRA(Level2Module):
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, DYN_states, inputs=None):
+    def update_algebraic(self, t, parent_states, DYN_states, inputs=None):
         # Get parameters and states to make code more readable
         SCpos_SSB = DYN_states["DYN_TRA"]["SCpos_SSB"]  # [km]
         SCvel_SSB = DYN_states["DYN_TRA"]["SCvel_SSB"]  # [km/s]

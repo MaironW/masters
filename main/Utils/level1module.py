@@ -10,9 +10,9 @@ class Level1Module():
         return [m for m in self.modules if m.is_dynamic]
 
     # Update time-dependent, non-integrated Level-2 modules
-    def update_algebraic(self, t, inputs):
+    def update_algebraic(self, t, parent_states, inputs):
         for m in self.modules:
-            m.update_algebraic(t, self.snapshot(), inputs)
+            m.update_algebraic(t, parent_states.snapshot(), self.snapshot(), inputs)
 
     # Return a dict of modules that have dynamic (integrated) states
     def get_dynamic_modules(self):

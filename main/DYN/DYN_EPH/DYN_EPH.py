@@ -32,12 +32,12 @@ class DYN_EPH(Level2Module):
         super().__init__("DYN_EPH", par)
 
     # Initialization
-    def initialize(self, DYN_states):
-        self.state = self.update_algebraic(0, DYN_states)
+    def initialize(self, parent_states, DYN_states):
+        self.state = self.update_algebraic(0, parent_states, DYN_states)
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, DYN_states, inputs=None):
+    def update_algebraic(self, t, parent_states, DYN_states, inputs=None):
         time_STR = DYN_states["DYN_TIME"]["time_TDB"]
 
         SUNpos_SSB,    SUNvel_SSB    = spice.get_state("SUN",    time_STR)

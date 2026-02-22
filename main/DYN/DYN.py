@@ -38,6 +38,11 @@ class DYN(Level1Module):
 
         # Initialize all modules
         for m in self.modules:
-            m.initialize(self.snapshot())
+            m.initialize(None, self.snapshot())
 
         print("DYN Module Initialized.")
+
+    # Update time-dependent, non-integrated Level-2 modules
+    def update_algebraic(self, t, parent_states, inputs):
+        for m in self.modules:
+            m.update_algebraic(t, None, self.snapshot(), inputs)

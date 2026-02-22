@@ -281,13 +281,15 @@ def NAV_EPH_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         # Plot velocity from NAV_EPH
         PPC.plot(time_SIM, timeline["NAV"]["NAV_EPH"][f"{name}vel_SSB"], xlabel="time_SIM [s]", ylabel=f"{name}vel_SSB [km/s]", label=["NAV x","NAV y","NAV z"], title=f"{name}vel_SSB", fig=fig, ax=ax2)
 
-
 def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM        = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    SCpos_SSB       = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+    SCvel_SSB       = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
     STRoutflg       = timeline["SEN"]["SEN_STR"]["STRoutflg"]
     STARSdir_SC_mes = timeline["SEN"]["SEN_STR"]["STARSdir_SC_mes"]
 
-    NAV_CELoutflg = timeline["NAV"]["NAV_CEL"]["NAV_CELoutflg"]
+    NAV_CELoutflg               = timeline["NAV"]["NAV_CEL"]["NAV_CELoutflg"]
+    BODYsel_STARdir_SC_mes_list = timeline["NAV"]["NAV_CEL"]["BODYsel_STARdir_SC_mes_list"]
 
     z = timeline["NAV"]["NAV_CEL"]["z"]
     R = timeline["NAV"]["NAV_CEL"]["R"]
@@ -312,7 +314,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     ]
 
     # Reshape vectors for plot
-    STARSdir_SC_mes_reshaped = STARSdir_SC_mes.reshape(-1, 3) # [time * star, direction]
+    STARSdir_SC_mes_reshaped        = STARSdir_SC_mes.reshape(-1, 3) # [time * star, direction]
 
     # Plot status
     fig, ax = PPC.plot(time_SIM, NAV_CELoutflg, xlabel="time_SIM [s]", ylabel="flag", label="NAV_CELoutflag", title="NAV_CEL output flag")
@@ -320,7 +322,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
     # Plot angles (arccosine of measurement model)
     fig = None
-    ax = None
+    ax  = None
     for body in active_bodies:
         name = body["name"]
         angle = angles_deg[name]
@@ -335,12 +337,37 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         name = body["name"]
         fig, ax = PPC.plot(time_SIM, sigma_z[:, idx], label=f"σ_z {name}", xlabel="time_SIM [s]", ylabel="σ", title="Measurement Standard Deviation", color=body["color"], fig=fig)
 
+    # Plot predicted measurement, assuming the true spacecraft position as the state + innovation
+    x_true   = np.hstack((SCpos_SSB, SCvel_SSB))
+    n_iter   = len(x_true)
+    n_bodies = len(bodies)
+    h_hist   = np.zeros((n_iter, n_bodies))
+    H_hist   = np.zeros((n_iter, n_bodies, 6))
+    for k in range(n_iter):
+        # First update NAV_CEL state, otherwise h(x) will be computed for the last (already computed) state
+        NAV_obj.NAV_CEL.state["BODYpos_SSB_list"] = timeline["NAV"]["NAV_CEL"]["BODYpos_SSB_list"][k]
+        NAV_obj.NAV_CEL.state["BODYsel_STARdir_SC_mes_list"] = timeline["NAV"]["NAV_CEL"]["BODYsel_STARdir_SC_mes_list"][k]
+        h_hist[k] = NAV_obj.NAV_CEL.h(x_true[k])
+        H_hist[k] = NAV_obj.NAV_CEL.H(x_true[k])
+    fig = None
+    ax1 = None
+    ax2 = None
+    innov = z - h_hist
+    for body in active_bodies:
+        name = body["name"]
+        idx  = body["idx"]
+        fig, ax1 = PPC.plot(time_SIM, h_hist[:, idx], label=f"h(x) {name}", ylabel="h(x)", title="Predicted Measurement h(x)", color=body["color"], fig=fig, ax=ax1, subplot=(2,1,1))
+        PPC.plot(time_SIM, z[:, idx], label=f"z {name}", style='--', color=body["color"], fig=fig, ax=ax1)
+        fig, ax2 = PPC.plot(time_SIM, innov[:, idx], label=f"{name}", xlabel="time_SIM [s]", ylabel="z - h(x)", title="Innovation z - h(x)", color=body["color"], fig=fig, ax=ax2, subplot=(2,1,2))
+
     # Plot Selected stars for each body
     fig, ax = PPC.plot(STARSdir_SC_mes_reshaped[:,0], STARSdir_SC_mes_reshaped[:,1], STARSdir_SC_mes_reshaped[:,2], style='.', label="Visible Stars", xlabel="X SC", ylabel="Y SC", zlabel="Z SC", title="Star Field Normalized in SC frame", aspect="equal", color=colors["green"])
     PPC.plot([0], [0], [0],  style='+', label="SC",  fig=fig, ax=ax, color=colors["magenta"])
+
     for body in active_bodies:
         name = body["name"]
-        BODYsel_STARdir_SC_mes = timeline["NAV"]["NAV_CEL"][f"{name}sel_STARdir_SC_mes"] # [time, direction]
+        idx  = body["idx"]
+        BODYsel_STARdir_SC_mes = BODYsel_STARdir_SC_mes_list[:,idx,:] # [time, body, direction]
         BODYdir_SC_mes         = timeline["SEN"]["SEN_STR"][f"{name}dir_SC_mes"]
 
         PPC.plot(BODYsel_STARdir_SC_mes[:,0], BODYsel_STARdir_SC_mes[:,1], BODYsel_STARdir_SC_mes[:,2], style='.', label=f"{name} selected star", fig=fig, ax=ax, color=body["color"])
@@ -352,11 +379,11 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax3 = PPC.plot(time_SIM, STARSdir_SC_mes[:, :, 2], color=colors["green"], subplot=(3,1,3), xlabel="time_SIM [s]", ylabel="z", fig=fig)
     for body in active_bodies:
         name = body["name"]
-        BODYsel_STARdir_SC_mes = timeline["NAV"]["NAV_CEL"][f"{name}sel_STARdir_SC_mes"] # [time, direction]
+        idx  = body["idx"]
+        BODYsel_STARdir_SC_mes = BODYsel_STARdir_SC_mes_list[:,idx,:] # [time, body, direction]
         PPC.plot(time_SIM, BODYsel_STARdir_SC_mes[:, 0], label=f"{name}", color=body["color"], fig=fig, ax=ax1)
         PPC.plot(time_SIM, BODYsel_STARdir_SC_mes[:, 1], label=f"{name}", color=body["color"], fig=fig, ax=ax2)
         PPC.plot(time_SIM, BODYsel_STARdir_SC_mes[:, 2], label=f"{name}", color=body["color"], fig=fig, ax=ax3)
-
 
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,

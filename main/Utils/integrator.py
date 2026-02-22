@@ -31,7 +31,7 @@ def rk4_step(t, dt, state, inputs):
 
         # Inject dynamic state
         state_tmp.set_state(vecs)
-        state_tmp.update_algebraic(t_local, inputs)
+        state_tmp.update_algebraic(t_local, None, inputs)
 
         # Compute derivatives of dynamic models
         dy = state_tmp.derivatives(t_local)

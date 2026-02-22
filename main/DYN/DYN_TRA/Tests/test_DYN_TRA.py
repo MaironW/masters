@@ -131,7 +131,7 @@ for step in range(1, n_steps):
     inputs = events_table[sim_time]
 
     # Update algebraic modules first
-    DYN_obj.update_algebraic(sim_time, inputs)
+    DYN_obj.update_algebraic(sim_time, None, inputs)
     # Integrate all dynamic states together
     integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
 

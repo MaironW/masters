@@ -26,11 +26,14 @@ class NAV(Level1Module):
 
         # Initialize all modules
         for m in self.modules:
-            m.state = m.initialize(SEN_obj.snapshot())
+            NAV_snapshot = self.snapshot()
+            m.state = m.initialize(SEN_obj.snapshot(), NAV_snapshot)
 
         print("NAV Module Initialized.")
 
     # Update time-dependent, non-integrated Level-2 modules
     def update_algebraic(self, t, SEN_obj, inputs):
+        SEN_snapshot = SEN_obj.snapshot()
         for m in self.modules:
-            m.update_algebraic(t, SEN_obj.snapshot(), inputs)
+            NAV_snapshot = self.snapshot()
+            m.update_algebraic(t, SEN_snapshot, NAV_snapshot, inputs)

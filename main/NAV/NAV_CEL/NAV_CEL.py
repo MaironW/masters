@@ -112,7 +112,7 @@ class NAV_CEL(Level2Module):
             DEIMOSsel_STARdir_SC_mes = STARdir_SC_mes_list[4]
             PHOBOSsel_STARdir_SC_mes = STARdir_SC_mes_list[5]
 
-            if count >= 2:
+            if np.sum(~np.isnan(z)) >= 2:
                 z = z
                 R = np.diag(R)
                 NAV_CELoutflg = 1
@@ -133,6 +133,23 @@ class NAV_CEL(Level2Module):
             self.state["DEIMOSsel_STARdir_SC_mes"] = DEIMOSsel_STARdir_SC_mes
 
         return self.state
+
+    # Return the celestial navigation measurement model for Kalman filtering
+    def h(self, x):
+        # x = [SCpos_SSB, SCvel_SSB]
+        SCpos_SSB = x[0:3]
+
+        # Compute the direction of the BODY from the estimated SC position
+        BODYlos_SC      = BODYdir_SSB - SCpos_SSB
+        BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
+        BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
+
+        return STARdir_SC @ BODYdir_SC
+
+
+
+
+
 
     # Check if body is visible by the star tracker
     def body_visibility(self, BODYdir_SC_mes):

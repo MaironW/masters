@@ -22,13 +22,13 @@ class DYN_SUN(Level2Module):
         super().__init__("DYN_SUN", par)
 
     # Initialization
-    def initialize(self, states):
-        self.state = self.update_algebraic(0, states)
+    def initialize(self, DYN_states):
+        self.state = self.update_algebraic(0, DYN_states)
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, states, inputs=None):
-        time_TDB = states["DYN_TIME"]["time_TDB"]
+    def update_algebraic(self, t, DYN_states, inputs=None):
+        time_TDB = DYN_states["DYN_TIME"]["time_TDB"]
         SUNpos_SSB, SUNvel_SSB = spice.get_state("SUN", time_TDB)
         self.state["SUNpos_SSB"] = SUNpos_SSB
         self.state["SUNvel_SSB"] = SUNvel_SSB

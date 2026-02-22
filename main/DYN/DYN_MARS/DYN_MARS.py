@@ -26,13 +26,13 @@ class DYN_MARS(Level2Module):
         super().__init__("DYN_MARS", par)
 
     # Initialization
-    def initialize(self, states):
-        self.state = self.update_algebraic(0, states)
+    def initialize(self, DYN_states):
+        self.state = self.update_algebraic(0, DYN_states)
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, states, inputs=None):
-        time_TDB = states["DYN_TIME"]["time_TDB"]
+    def update_algebraic(self, t, DYN_states, inputs=None):
+        time_TDB = DYN_states["DYN_TIME"]["time_TDB"]
         MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   time_TDB)
         DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", time_TDB)
         PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", time_TDB)

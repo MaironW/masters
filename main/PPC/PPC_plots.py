@@ -143,6 +143,7 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
 def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM     = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    time_TDB     = timeline["DYN"]["DYN_TIME"]["time_TDB"]
     BOFq_SSB     = timeline["DYN"]["DYN_ATT"]["BOFq_SSB"]
     STARSdir_SSB = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0] # [time, star, direction]
 
@@ -175,8 +176,8 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Plot status
     fig, ax = PPC.plot(time_SIM, STRoutflg, xlabel="time_SIM [s]", ylabel="STRoutflg", label="STRoutflag", title="STR output flag")
 
-    # Compare STR and SIM times
-    fig, ax = PPC.plot(time_SIM, time_SIM, xlabel="time_SIM [s]", ylabel="time [s]", label="time_SIM", title="STR Time")
+    # Compare STR and TDB times
+    fig, ax = PPC.plot(time_SIM, time_TDB, xlabel="time_SIM [s]", ylabel="time [s]", label="time_TDB", title="STR Time")
     PPC.plot(time_SIM, time_STR, ylabel="time [s]", label="time_STR", fig=fig, ax=ax)
 
     # Plot STR Gnomonic lens projection
@@ -260,9 +261,9 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, range_noise[:,i],  label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
 
 def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    time_SIM         = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-    STRoutflg        = timeline["SEN"]["SEN_STR"]["STRoutflg"]
-    STARSdir_SC_mes  = timeline["SEN"]["SEN_STR"]["STARSdir_SC_mes"]
+    time_SIM        = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    STRoutflg       = timeline["SEN"]["SEN_STR"]["STRoutflg"]
+    STARSdir_SC_mes = timeline["SEN"]["SEN_STR"]["STARSdir_SC_mes"]
 
     NAV_CELoutflg = timeline["NAV"]["NAV_CEL"]["NAV_CELoutflg"]
 

@@ -24,7 +24,7 @@ class DYN_STR(Level2Module):
         super().__init__("DYN_STR", par)
 
     # Initialization
-    def initialize(self, states):
+    def initialize(self, DYN_states):
         kernel_dir = "Utils/kernels/"
         with load.open(kernel_dir + "hip_main.dat") as f:
             star_df = hipparcos.load_dataframe(f)

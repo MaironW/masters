@@ -65,7 +65,7 @@ class SEN_STR(Level2Module):
         # Make all outputs invalid if STRoutflg is zero
         # This simulates that the STR was turned OFF
         if self.state["STRoutflg"] == 0:
-            self.state["time_STR"]          = 0
+            self.state["time_STR"]          = self.par["time_STR_ini"]
             self.state["SUNdir_STR_mes"]    = self.par["BODYdir_mes_ini"]
             self.state["EARTHdir_STR_mes"]  = self.par["BODYdir_mes_ini"]
             self.state["MOONdir_STR_mes"]   = self.par["BODYdir_mes_ini"]
@@ -93,12 +93,12 @@ class SEN_STR(Level2Module):
 
             # Positions relative to SSB
             SCpos_SSB     = DYN_states["DYN_TRA"]["SCpos_SSB"]
-            SUNpos_SSB    = DYN_states["DYN_SUN"]["SUNpos_SSB"]
-            EARTHpos_SSB  = DYN_states["DYN_EARTH"]["EARTHpos_SSB"]
-            MOONpos_SSB   = DYN_states["DYN_EARTH"]["MOONpos_SSB"]
-            MARSpos_SSB   = DYN_states["DYN_MARS"]["MARSpos_SSB"]
-            DEIMOSpos_SSB = DYN_states["DYN_MARS"]["DEIMOSpos_SSB"]
-            PHOBOSpos_SSB = DYN_states["DYN_MARS"]["PHOBOSpos_SSB"]
+            SUNpos_SSB    = DYN_states["DYN_EPH"]["SUNpos_SSB"]
+            EARTHpos_SSB  = DYN_states["DYN_EPH"]["EARTHpos_SSB"]
+            MOONpos_SSB   = DYN_states["DYN_EPH"]["MOONpos_SSB"]
+            MARSpos_SSB   = DYN_states["DYN_EPH"]["MARSpos_SSB"]
+            DEIMOSpos_SSB = DYN_states["DYN_EPH"]["DEIMOSpos_SSB"]
+            PHOBOSpos_SSB = DYN_states["DYN_EPH"]["PHOBOSpos_SSB"]
 
             # Get positions relative to the Spacecraft, expressed in SSB
             SUNpos_SC    = SUNpos_SSB    - SCpos_SSB

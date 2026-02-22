@@ -47,9 +47,7 @@ SIM_par = {
     # List of default plots
     "PPC_plot_list" : [
         "DYN_TIME",
-        "DYN_SUN",
-        "DYN_EARTH",
-        "DYN_MARS",
+        "DYN_EPH",
         "DYN_TRA",
         "DYN_GRV",
     ],
@@ -103,9 +101,9 @@ DYN_obj = DYN(par_override)
 # Set only modules needed for the test
 DYN_obj.modules = [
     DYN_obj.DYN_TIME,
-    DYN_obj.DYN_SUN,
-    DYN_obj.DYN_EARTH,
-    DYN_obj.DYN_MARS,
+    DYN_obj.DYN_EPH,
+    DYN_obj.DYN_EPH,
+    DYN_obj.DYN_EPH,
     DYN_obj.DYN_TRA,
     DYN_obj.DYN_GRV,
 ]
@@ -202,12 +200,12 @@ PPC.plot(time_days, vel_error, xlabel="Time SIM [days]", ylabel="vel error [km/s
 # Trajectoy in the orbital plane
 fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], xlabel="x SSB [km]", ylabel="y SSB [km]", title="SC vs MRO trajectory", aspect='equal', color=colors["magenta"], style=':', zorder=4)
 PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,1], label='SC', style='x', fig=fig, ax=ax, color=colors["magenta"], zorder=4)
-PPC.plot(timeline["MRO"]["MROpos_SSB"][:,0], timeline["MRO"]["MROpos_SSB"][:,1], fig=fig, ax=ax, color=colors["grey"])
+PPC.plot(timeline["MRO"]["MROpos_SSB"][:,0],  timeline["MRO"]["MROpos_SSB"][:,1], fig=fig, ax=ax, color=colors["grey"])
 PPC.plot(timeline["MRO"]["MROpos_SSB"][-1,0], timeline["MRO"]["MROpos_SSB"][-1,1], label="MRO", style='X', fig=fig, ax=ax, color=colors["grey"])
-PPC.plot(timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,0], timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,1], fig=fig, ax=ax, color=colors["blue"])
-PPC.plot(timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][-1,0], timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][-1,1], label="Earth", style='o', fig=fig, ax=ax, color=colors["blue"])
-PPC.plot(timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,0], timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,1], fig=fig, ax=ax, color=colors["red"])
-PPC.plot(timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][-1,0], timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][-1,1], label="Mars", style='o', fig=fig, ax=ax, color=colors["red"])
-PPC.plot(timeline["DYN"]["DYN_SUN"]["SUNpos_SSB"][0,0], timeline["DYN"]["DYN_SUN"]["SUNpos_SSB"][0,1], label="Sun", style='o', fig=fig, ax=ax, color=colors["orange"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][:,0],  timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][:,1],  fig=fig, ax=ax, color=colors["blue"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][-1,0], timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][-1,1], label="Earth", style='o', fig=fig, ax=ax, color=colors["blue"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][:,0],   timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][:,1],   fig=fig, ax=ax, color=colors["red"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][-1,0],  timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][-1,1],  label="Mars", style='o', fig=fig, ax=ax, color=colors["red"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"][0,0],    timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"][0,1],    label="Sun", style='o', fig=fig, ax=ax, color=colors["orange"])
 
 PPC.show_plot()

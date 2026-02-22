@@ -41,12 +41,12 @@ class DYN_TRA(Level2Module):
         SCvel_SSB = DYN_states["DYN_TRA"]["SCvel_SSB"]  # [km/s]
 
         # Convert SSB states into other inertial refernces
-        SCpos_SCI = SCpos_SSB - DYN_states["DYN_SUN"]["SUNpos_SSB"]
-        SCvel_SCI = SCvel_SSB - DYN_states["DYN_SUN"]["SUNvel_SSB"]
-        SCpos_ECI = SCpos_SSB - DYN_states["DYN_EARTH"]["EARTHpos_SSB"]
-        SCvel_ECI = SCvel_SSB - DYN_states["DYN_EARTH"]["EARTHvel_SSB"]
-        SCpos_MCI = SCpos_SSB - DYN_states["DYN_MARS"]["MARSpos_SSB"]
-        SCvel_MCI = SCvel_SSB - DYN_states["DYN_MARS"]["MARSvel_SSB"]
+        SCpos_SCI = SCpos_SSB - DYN_states["DYN_EPH"]["SUNpos_SSB"]
+        SCvel_SCI = SCvel_SSB - DYN_states["DYN_EPH"]["SUNvel_SSB"]
+        SCpos_ECI = SCpos_SSB - DYN_states["DYN_EPH"]["EARTHpos_SSB"]
+        SCvel_ECI = SCvel_SSB - DYN_states["DYN_EPH"]["EARTHvel_SSB"]
+        SCpos_MCI = SCpos_SSB - DYN_states["DYN_EPH"]["MARSpos_SSB"]
+        SCvel_MCI = SCvel_SSB - DYN_states["DYN_EPH"]["MARSvel_SSB"]
 
         self.state["SCpos_SSB"] = SCpos_SSB
         self.state["SCvel_SSB"] = SCvel_SSB
@@ -96,36 +96,36 @@ class DYN_TRA(Level2Module):
             # Get position and velocity in the respective body centered inertial frame
             SCpos_ECI_ini, SCvel_ECI_ini = self.kep2rvi(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
             # Convert inertial states into other inertial refernces
-            SCpos_SSB_ini = SCpos_ECI_ini + DYN_states["DYN_EARTH"]["EARTHpos_SSB"]
-            SCvel_SSB_ini = SCvel_ECI_ini + DYN_states["DYN_EARTH"]["EARTHvel_SSB"]
-            SCpos_MCI_ini = SCpos_SSB_ini - DYN_states["DYN_MARS"]["MARSpos_SSB"]
-            SCvel_MCI_ini = SCvel_SSB_ini - DYN_states["DYN_MARS"]["MARSvel_SSB"]
-            SCpos_SCI_ini = SCpos_SSB_ini - DYN_states["DYN_SUN"]["SUNpos_SSB"]
-            SCvel_SCI_ini = SCvel_SSB_ini - DYN_states["DYN_SUN"]["SUNvel_SSB"]
+            SCpos_SSB_ini = SCpos_ECI_ini + DYN_states["DYN_EPH"]["EARTHpos_SSB"]
+            SCvel_SSB_ini = SCvel_ECI_ini + DYN_states["DYN_EPH"]["EARTHvel_SSB"]
+            SCpos_MCI_ini = SCpos_SSB_ini - DYN_states["DYN_EPH"]["MARSpos_SSB"]
+            SCvel_MCI_ini = SCvel_SSB_ini - DYN_states["DYN_EPH"]["MARSvel_SSB"]
+            SCpos_SCI_ini = SCpos_SSB_ini - DYN_states["DYN_EPH"]["SUNpos_SSB"]
+            SCvel_SCI_ini = SCvel_SSB_ini - DYN_states["DYN_EPH"]["SUNvel_SSB"]
         elif BODY_ini == "MARS":
             # Get respective gravitational parameter
             mu = CONSTANTS_par["mu_MARS_cst"] # [km^3/s^2]
             # Get position and velocity in the respective body centered inertial frame
             SCpos_MCI_ini, SCvel_MCI_ini = self.kep2rvi(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
             # Convert inertial states into other inertial refernces
-            SCpos_SSB_ini = SCpos_MCI_ini + DYN_states["DYN_MARS"]["MARSpos_SSB"]
-            SCvel_SSB_ini = SCvel_MCI_ini + DYN_states["DYN_MARS"]["MARSvel_SSB"]
-            SCpos_ECI_ini = SCpos_SSB_ini - DYN_states["DYN_EARTH"]["EARTHpos_SSB"]
-            SCvel_ECI_ini = SCvel_SSB_ini - DYN_states["DYN_EARTH"]["EARTHvel_SSB"]
-            SCpos_SCI_ini = SCpos_SSB_ini - DYN_states["DYN_SUN"]["SUNpos_SSB"]
-            SCvel_SCI_ini = SCvel_SSB_ini - DYN_states["DYN_SUN"]["SUNvel_SSB"]
+            SCpos_SSB_ini = SCpos_MCI_ini + DYN_states["DYN_EPH"]["MARSpos_SSB"]
+            SCvel_SSB_ini = SCvel_MCI_ini + DYN_states["DYN_EPH"]["MARSvel_SSB"]
+            SCpos_ECI_ini = SCpos_SSB_ini - DYN_states["DYN_EPH"]["EARTHpos_SSB"]
+            SCvel_ECI_ini = SCvel_SSB_ini - DYN_states["DYN_EPH"]["EARTHvel_SSB"]
+            SCpos_SCI_ini = SCpos_SSB_ini - DYN_states["DYN_EPH"]["SUNpos_SSB"]
+            SCvel_SCI_ini = SCvel_SSB_ini - DYN_states["DYN_EPH"]["SUNvel_SSB"]
         elif BODY_ini == "SUN":
             # Get respective gravitational parameter
             mu = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
             # Get position and velocity in the respective body centered inertial frame
             SCpos_SCI_ini, SCvel_SCI_ini = self.kep2rvi(sma_ini, ecc_ini, incl_ini, raan_ini, argp_ini, tano_ini, mu)
             # Convert inertial states into other inertial refernces
-            SCpos_SSB_ini = SCpos_SCI_ini + DYN_states["DYN_SUN"]["SUNpos_SSB"]
-            SCvel_SSB_ini = SCvel_SCI_ini + DYN_states["DYN_SUN"]["SUNvel_SSB"]
-            SCpos_ECI_ini = SCpos_SSB_ini - DYN_states["DYN_EARTH"]["EARTHpos_SSB"]
-            SCvel_ECI_ini = SCvel_SSB_ini - DYN_states["DYN_EARTH"]["EARTHvel_SSB"]
-            SCpos_MCI_ini = SCpos_SSB_ini - DYN_states["DYN_MARS"]["MARSpos_SSB"]
-            SCvel_MCI_ini = SCvel_SSB_ini - DYN_states["DYN_MARS"]["MARSvel_SSB"]
+            SCpos_SSB_ini = SCpos_SCI_ini + DYN_states["DYN_EPH"]["SUNpos_SSB"]
+            SCvel_SSB_ini = SCvel_SCI_ini + DYN_states["DYN_EPH"]["SUNvel_SSB"]
+            SCpos_ECI_ini = SCpos_SSB_ini - DYN_states["DYN_EPH"]["EARTHpos_SSB"]
+            SCvel_ECI_ini = SCvel_SSB_ini - DYN_states["DYN_EPH"]["EARTHvel_SSB"]
+            SCpos_MCI_ini = SCpos_SSB_ini - DYN_states["DYN_EPH"]["MARSpos_SSB"]
+            SCvel_MCI_ini = SCvel_SSB_ini - DYN_states["DYN_EPH"]["MARSvel_SSB"]
 
         # Update output
         self.state = {
@@ -145,12 +145,12 @@ class DYN_TRA(Level2Module):
     def initialize_rvi(self, DYN_states):
         SCpos_SSB_ini = self.par["SCpos_SSB_ini"]
         SCvel_SSB_ini = self.par["SCvel_SSB_ini"]
-        SCpos_ECI_ini = SCpos_SSB_ini - DYN_states["DYN_EARTH"]["EARTHpos_SSB"]
-        SCvel_ECI_ini = SCvel_SSB_ini - DYN_states["DYN_EARTH"]["EARTHvel_SSB"]
-        SCpos_MCI_ini = SCpos_SSB_ini - DYN_states["DYN_MARS"]["MARSpos_SSB"]
-        SCvel_MCI_ini = SCvel_SSB_ini - DYN_states["DYN_MARS"]["MARSvel_SSB"]
-        SCpos_SCI_ini = SCpos_SSB_ini - DYN_states["DYN_SUN"]["SUNpos_SSB"]
-        SCvel_SCI_ini = SCvel_SSB_ini - DYN_states["DYN_SUN"]["SUNvel_SSB"]
+        SCpos_ECI_ini = SCpos_SSB_ini - DYN_states["DYN_EPH"]["EARTHpos_SSB"]
+        SCvel_ECI_ini = SCvel_SSB_ini - DYN_states["DYN_EPH"]["EARTHvel_SSB"]
+        SCpos_MCI_ini = SCpos_SSB_ini - DYN_states["DYN_EPH"]["MARSpos_SSB"]
+        SCvel_MCI_ini = SCvel_SSB_ini - DYN_states["DYN_EPH"]["MARSvel_SSB"]
+        SCpos_SCI_ini = SCpos_SSB_ini - DYN_states["DYN_EPH"]["SUNpos_SSB"]
+        SCvel_SCI_ini = SCvel_SSB_ini - DYN_states["DYN_EPH"]["SUNvel_SSB"]
 
         # Update output
         self.state = {

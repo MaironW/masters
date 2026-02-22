@@ -71,9 +71,7 @@ DYN_obj = DYN()
 # Set only modules needed for the test
 DYN_obj.modules = [
     DYN_obj.DYN_TIME,
-    DYN_obj.DYN_SUN,
-    DYN_obj.DYN_EARTH,
-    DYN_obj.DYN_MARS,
+    DYN_obj.DYN_EPH,
     DYN_obj.DYN_TRA,
     DYN_obj.DYN_GRV,
     DYN_obj.DYN_ATT,
@@ -110,7 +108,7 @@ for step in range(1, n_steps):
 
     # Spacecraft is aways pointing +STRz to Mars
     DYN_last_state = DYN_obj.snapshot()
-    MARSpos_SSB = DYN_last_state["DYN_MARS"]["MARSpos_SSB"]
+    MARSpos_SSB = DYN_last_state["DYN_EPH"]["MARSpos_SSB"]
     SCpos_SSB   = DYN_last_state["DYN_TRA"]["SCpos_SSB"]
     STRy_STR    = np.array([0,1,0])
     STRz_STR    = np.array([0,0,1])
@@ -163,15 +161,15 @@ spice.clear_kernels()
 field_of_view = SEN_obj.SEN_STR.par["field_of_view"]
 STRq_BOF      = SEN_obj.SEN_STR.par["STRq_BOF"]
 
-time_SIM          = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-time_STR          = timeline["SEN"]["SEN_STR"]["time_STR"]
+time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+time_STR = timeline["SEN"]["SEN_STR"]["time_STR"]
 
-MARSdir_SC_mes    = timeline["SEN"]["SEN_STR"]["MARSdir_SC_mes"]
-BOFq_SSB_mes      = timeline["SEN"]["SEN_STR"]["BOFq_SSB_mes"]
+MARSdir_SC_mes = timeline["SEN"]["SEN_STR"]["MARSdir_SC_mes"]
+BOFq_SSB_mes   = timeline["SEN"]["SEN_STR"]["BOFq_SSB_mes"]
 
 SCpos_SSB    = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
 STARSdir_SSB = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"]
-MARSpos_SSB  = timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"]
+MARSpos_SSB  = timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"]
 
 BOFq_SSB = timeline["DYN"]["DYN_ATT"]["BOFq_SSB"]
 

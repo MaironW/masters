@@ -24,32 +24,24 @@ PPC.setup_plot(colors.values())
 def DYN_TIME_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TIME"]["time_TDB"], xlabel="time_SIM [s]", ylabel="time_TDB [s]", title="Time")
 
-def DYN_SUN_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    # Sun state
-    fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_SUN"]["SUNpos_SSB"], ylabel="SUNpos_SSB [km]", label=["x","y","z"], title="SUNpos_SSB", subplot=(2,1,1))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_SUN"]["SUNvel_SSB"], xlabel="time_SIM [s]", ylabel="SUNvel_SSB [km]", label=["x","y","z"], title="SUNvel_SSB", fig=fig, subplot=(2,1,2))
+def DYN_EPH_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
 
-def DYN_EARTH_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    # Earth state
-    fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"], ylabel="EARTHpos_SSB [km]", label=["x","y","z"], title="EARTHpos_SSB", subplot=(2,1,1))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_EARTH"]["EARTHvel_SSB"], xlabel="time_SIM [s]", ylabel="EARTHvel_SSB [km]", label=["x","y","z"], title="EARTHvel_SSB", fig=fig, subplot=(2,1,2))
+    bodies = [
+        dict(name="SUN",    idx=0, color=colors["orange"]),
+        dict(name="MOON",   idx=2, color=colors["grey"]),
+        dict(name="EARTH",  idx=1, color=colors["blue"]),
+        dict(name="DEIMOS", idx=4, color=colors["darkgrey"]),
+        dict(name="PHOBOS", idx=5, color=colors["lightgrey"]),
+        dict(name="MARS",   idx=3, color=colors["red"]),
+    ]
 
-    # Moon state
-    fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"], ylabel="MOONpos_SSB [km]", label=["x","y","z"], title="MOONpos_SSB", subplot=(2,1,1))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_EARTH"]["MOONvel_SSB"], xlabel="time_SIM [s]", ylabel="MOONvel_SSB [km]", label=["x","y","z"], title="MOONvel_SSB", fig=fig, subplot=(2,1,2))
-
-def DYN_MARS_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    # Mars state
-    fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"], ylabel="MARSpos_SSB [km]", label=["x","y","z"], title="MARSpos_SSB", subplot=(2,1,1))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_MARS"]["MARSvel_SSB"], xlabel="time_SIM [s]", ylabel="MARSvel_SSB [km]", label=["x","y","z"], title="MARSvel_SSB", fig=fig, subplot=(2,1,2))
-
-    # Deimos state
-    fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_MARS"]["DEIMOSpos_SSB"], ylabel="DEIMOSpos_SSB [km]", label=["x","y","z"], title="DEIMOSpos_SSB", subplot=(2,1,1))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_MARS"]["DEIMOSvel_SSB"], xlabel="time_SIM [s]", ylabel="DEIMOSvel_SSB [km]", label=["x","y","z"], title="DEIMOSvel_SSB", fig=fig, subplot=(2,1,2))
-
-    # Phobos state
-    fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"], ylabel="PHOBOSpos_SSB [km]", label=["x","y","z"], title="PHOBOSpos_SSB", subplot=(2,1,1))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_MARS"]["PHOBOSvel_SSB"], xlabel="time_SIM [s]", ylabel="PHOBOSvel_SSB [km]", label=["x","y","z"], title="PHOBOSvel_SSB", fig=fig, subplot=(2,1,2))
+    for body in bodies:
+        name = body["name"]
+        # Plot reference position from DYN
+        fig, ax1 = PPC.plot(time_SIM, timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"], ylabel=f"{name}pos_SSB [km]", label=["x","y","z"], title=f"{name}pos_SSB", subplot=(2,1,1))
+        # Plot reference velocity from DYN
+        fig, ax2 = PPC.plot(time_SIM, timeline["DYN"]["DYN_EPH"][f"{name}vel_SSB"], ylabel=f"{name}vel_SSB [km]", label=["x","y","z"], title=f"{name}vel_SSB", fig=fig, subplot=(2,1,2))
 
 def DYN_GRV_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Gravity acceleration on SSB frame
@@ -57,24 +49,30 @@ def DYN_GRV_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
 def DYN_TRA_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # 3D trajectories
-    fig, ax = PPC.plot([0], [0], [0], style='+', label="SSB", xlabel="X SSB [km]", ylabel="Y SSB [km]", zlabel="Z SSB [km]", title="Simulation Trajectories", aspect="equal",                        color=colors["black"])
-    PPC.plot(timeline["DYN"]["DYN_SUN"]["SUNpos_SSB"][:,0],     timeline["DYN"]["DYN_SUN"]["SUNpos_SSB"][:,1],     timeline["DYN"]["DYN_SUN"]["SUNpos_SSB"][:,2],     label="Sun",   fig=fig, ax=ax, color=colors["orange"])
-    PPC.plot(timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"][:,0],  timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"][:,1],  timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"][:,2],  label="Moon",  fig=fig, ax=ax, color=colors["grey"])
-    PPC.plot(timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,0], timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,1], timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"][:,2], label="Earth", fig=fig, ax=ax, color=colors["blue"])
-    PPC.plot(timeline["DYN"]["DYN_MARS"]["DEIMOSpos_SSB"][:,0], timeline["DYN"]["DYN_MARS"]["DEIMOSpos_SSB"][:,1], timeline["DYN"]["DYN_MARS"]["DEIMOSpos_SSB"][:,2], label="Deimos",fig=fig, ax=ax, color=colors["lightgrey"])
-    PPC.plot(timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,0], timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,1], timeline["DYN"]["DYN_MARS"]["PHOBOSpos_SSB"][:,2], label="Phobos",fig=fig, ax=ax, color=colors["darkgrey"])
-    PPC.plot(timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,0],   timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,1],   timeline["DYN"]["DYN_MARS"]["MARSpos_SSB"][:,2],   label="Mars",  fig=fig, ax=ax, color=colors["red"])
-    PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1],      timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2],      label="SC",    fig=fig, ax=ax, color=colors["magenta"])
+    fig, ax = PPC.plot([0], [0], [0], style='+', label="SSB", xlabel="X SSB [km]", ylabel="Y SSB [km]", zlabel="Z SSB [km]", title="Simulation Trajectories", aspect="equal",                      color=colors["black"])
+    bodies = [
+        dict(name="SUN",    idx=0, color=colors["orange"]),
+        dict(name="MOON",   idx=2, color=colors["grey"]),
+        dict(name="EARTH",  idx=1, color=colors["blue"]),
+        dict(name="DEIMOS", idx=4, color=colors["darkgrey"]),
+        dict(name="PHOBOS", idx=5, color=colors["lightgrey"]),
+        dict(name="MARS",   idx=3, color=colors["red"]),
+    ]
+    for body in bodies:
+        name = body["name"]
+        PPC.plot(timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"][:,0], timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"][:,1], timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"][:,2], label=name, fig=fig, ax=ax, color=body["color"])
+    # Plot Spacecraft
+    PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2], label="SC", fig=fig, ax=ax, color=colors["magenta"])
 
     # 2D SC and Moon trajectories around Earth
-    MOONpos_ECI = timeline["DYN"]["DYN_EARTH"]["EARTHpos_SSB"] - timeline["DYN"]["DYN_EARTH"]["MOONpos_SSB"]
+    MOONpos_ECI = timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"] - timeline["DYN"]["DYN_EPH"]["MOONpos_SSB"]
     fig, ax = PPC.plot([0], [0], style='o', label="Earth", xlabel="X ECI [km]", ylabel="Y ECI [km]", title="Trajectories around Earth", aspect="equal", color=colors["blue"])
     PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_ECI"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_ECI"][:,1], label="SC",   fig=fig, ax=ax, color=colors["magenta"])
     PPC.plot(MOONpos_ECI[:,0],                             MOONpos_ECI[:,1],                             label="Moon", fig=fig, ax=ax, color=colors["grey"])
 
     # Spacecraft state
     fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"], ylabel="SCpos_SSB [km]", label=["x","y","z"], title="SCpos_SSB", subplot=(2,1,1))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"], ylabel="SCvel_SSB [km]", label=["x","y","z"], title="SCvel_SSB", fig=fig, subplot=(2,1,2))
+    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"], ylabel="SCvel_SSB [km/s]", label=["x","y","z"], title="SCvel_SSB", fig=fig, subplot=(2,1,2))
 
 def DYN_ATT_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Spacecraft attitude
@@ -260,6 +258,30 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, time_noise[:,i],   label=f"{PULSARname[i]} time noise",  fig=fig, ax=ax2)
         PPC.plot(time_SIM, range_noise[:,i],  label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
 
+def NAV_EPH_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+
+    bodies = [
+        dict(name="SUN",    idx=0, color=colors["orange"]),
+        dict(name="MOON",   idx=2, color=colors["grey"]),
+        dict(name="EARTH",  idx=1, color=colors["blue"]),
+        dict(name="DEIMOS", idx=4, color=colors["darkgrey"]),
+        dict(name="PHOBOS", idx=5, color=colors["lightgrey"]),
+        dict(name="MARS",   idx=3, color=colors["red"]),
+    ]
+
+    for body in bodies:
+        name = body["name"]
+        # Plot reference position from DYN
+        fig, ax1 = PPC.plot(time_SIM, timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"], ylabel=f"{name}pos_SSB [km]", label=["DYN x","DYN y","DYN z"], title=f"{name}pos_SSB", style='.', subplot=(2,1,1))
+        # Plot position from NAV_EPH
+        PPC.plot(time_SIM, timeline["NAV"]["NAV_EPH"][f"{name}pos_SSB"], xlabel="time_SIM [s]", ylabel=f"{name}pos_SSB [km]", label=["NAV x","NAV y","NAV z"], title=f"{name}pos_SSB", fig=fig, ax=ax1)
+        # Plot reference velocity from DYN
+        fig, ax2 = PPC.plot(time_SIM, timeline["DYN"]["DYN_EPH"][f"{name}vel_SSB"], ylabel=f"{name}vel_SSB [km]", label=["DYN Vx","DYN vy","DYN vz"], title=f"{name}vel_SSB", style='.', fig=fig, subplot=(2,1,2))
+        # Plot velocity from NAV_EPH
+        PPC.plot(time_SIM, timeline["NAV"]["NAV_EPH"][f"{name}vel_SSB"], xlabel="time_SIM [s]", ylabel=f"{name}vel_SSB [km/s]", label=["NAV x","NAV y","NAV z"], title=f"{name}vel_SSB", fig=fig, ax=ax2)
+
+
 def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM        = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     STRoutflg       = timeline["SEN"]["SEN_STR"]["STRoutflg"]
@@ -338,9 +360,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
 PPC_plots = {
     "DYN_TIME"  : DYN_TIME_plot,
-    "DYN_SUN"   : DYN_SUN_plot,
-    "DYN_EARTH" : DYN_EARTH_plot,
-    "DYN_MARS"  : DYN_MARS_plot,
+    "DYN_EPH"   : DYN_EPH_plot,
     "DYN_GRV"   : DYN_GRV_plot,
     "DYN_TRA"   : DYN_TRA_plot,
     "DYN_ATT"   : DYN_ATT_plot,
@@ -348,5 +368,6 @@ PPC_plots = {
     "DYN_PSR"   : DYN_PSR_plot,
     "SEN_STR"   : SEN_STR_plot,
     "SEN_PSR"   : SEN_PSR_plot,
+    "NAV_EPH"   : NAV_EPH_plot,
     "NAV_CEL"   : NAV_CEL_plot,
 }

@@ -14,16 +14,15 @@ SIM_par = {
     # List of default plots
     "PPC_plot_list" : [
         # "DYN_TIME",
-        # "DYN_SUN",
-        # "DYN_EARTH",
-        # "DYN_MARS",
+        # "DYN_EPH",
         # "DYN_TRA",
         # "DYN_GRV",
         # "DYN_ATT",
-        "DYN_STR",
+        # "DYN_STR",
         # "DYN_PSR",
-        "SEN_STR",
+        # "SEN_STR",
         # "SEN_PSR",
-        "NAV_CEL",
+        # "NAV_EPH",
+        # "NAV_CEL",
     ],
 }

@@ -50,7 +50,7 @@ class DYN_PSR(Level2Module):
         # Load parameters and states
         PULSARSdir_SSB  = self.state["PULSARSdir_SSB"]
         SCpos_SSB       = DYN_states["DYN_TRA"]["SCpos_SSB"]
-        SUNpos_SSB      = DYN_states["DYN_SUN"]["SUNpos_SSB"] # [km]
+        SUNpos_SSB      = DYN_states["DYN_EPH"]["SUNpos_SSB"] # [km]
         SSBpos_SUN      = -SUNpos_SSB # [km]
         mu_SUN_cst      = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
         light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]

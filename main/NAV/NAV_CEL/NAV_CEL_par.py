@@ -18,4 +18,5 @@ NAV_CEL_par = {
     "sigma_angle"             : 1e-3,                   # [rad] STR noise std in [X,Y,Z] directions
     "BODYangles_mes_ini"      : np.full(1, np.nan),     # [rad] LOS angle between the body and one star
     "BODYsel_STARdir_mes_ini" : np.full(3, np.nan),     # LOS direction between the SC and one star
+    "BODYsel_STARdir_ref_ini" : np.full(3, np.nan),     # LOS direction between the SC and one star
 }

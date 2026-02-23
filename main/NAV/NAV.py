@@ -4,6 +4,7 @@
 
 from Utils.level1module import Level1Module
 from .NAV_EPH.NAV_EPH   import NAV_EPH
+from .NAV_STR.NAV_STR   import NAV_STR
 from .NAV_CEL.NAV_CEL   import NAV_CEL
 from .NAV_PSR.NAV_PSR   import NAV_PSR
 
@@ -14,12 +15,14 @@ class NAV(Level1Module):
 
         # Instantiate modules
         self.NAV_EPH = NAV_EPH(par_override.get("NAV_EPH"))
+        self.NAV_STR = NAV_STR(par_override.get("NAV_STR"))
         self.NAV_CEL = NAV_CEL(par_override.get("NAV_CEL"))
         self.NAV_PSR = NAV_PSR(par_override.get("NAV_PSR"))
 
         # Register modules
         self.modules = [
             self.NAV_EPH,
+            self.NAV_STR,
             self.NAV_CEL,
             self.NAV_PSR,
         ]

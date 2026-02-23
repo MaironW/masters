@@ -23,5 +23,6 @@ SEN_STR_par = {
     "time_STR_ini"     : 0,                  # [s] Star Tracker time
     "BOFq_SSB_mes_ini" : np.full(4, np.nan), # [rad] Spacecraft orientation measured relative to the SSB frame
     "BODYdir_mes_ini"  : np.full(3, np.nan), # Generic unitary vector for a body direction
-    "STARSdir_mes_ini" : np.nan              # Dummy, to be filled at initialization
+    "STARSdir_mes_ini" : np.nan,             # Dummy, to be filled at initialization
+    "STARSid_mes_ini"  : np.array([np.nan])  # Dummy, to be filled at initialization
 }

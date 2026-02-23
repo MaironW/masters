@@ -25,14 +25,15 @@ class NAV_CEL(Level2Module):
     def initialize(self, SEN_states, NAV_states):
         # Allocate initial arrays
         n_bodies = self.par["n_bodies"]
-        self.par["z_ini"]              = np.full(n_bodies, np.nan)
-        self.par["R_ini"]              = np.full((n_bodies, n_bodies), np.nan)
-        self.par["STARdir_SC_mes_ini"] = np.full((n_bodies, 3), np.nan)
-        self.par["BODYpos_SSB_ini"]    = np.full((n_bodies, 3), np.nan)
+        self.par["z_ini"]           = np.full(n_bodies, np.nan)
+        self.par["R_ini"]           = np.full((n_bodies, n_bodies), np.nan)
+        self.par["STARdir_SC_ini"]  = np.full((n_bodies, 3), np.nan)
+        self.par["BODYpos_SSB_ini"] = np.full((n_bodies, 3), np.nan)
 
         self.state["z"] = self.par["z_ini"]
         self.state["R"] = self.par["R_ini"]
-        self.state["BODYsel_STARdir_SC_mes_list"] = self.par["STARdir_SC_mes_ini"]
+        self.state["BODYsel_STARdir_SC_mes_list"] = self.par["STARdir_SC_ini"]
+        self.state["BODYsel_STARdir_SC_ref_list"] = self.par["STARdir_SC_ini"]
         self.state["BODYpos_SSB_list"]            = self.par["BODYpos_SSB_ini"]
 
         self.state = self.update_algebraic(0, SEN_states, NAV_states)
@@ -48,11 +49,13 @@ class NAV_CEL(Level2Module):
             self.state["NAV_CELoutflg"] = self.par["NAV_CELoutflg_ini"]
             self.state["z"]             = self.par["z_ini"]
             self.state["R"]             = self.par["R_ini"]
-            self.state["BODYsel_STARdir_SC_mes_list"] = self.par["STARdir_SC_mes_ini"]
+            self.state["BODYsel_STARdir_SC_mes_list"] = self.par["STARdir_SC_ini"]
+            self.state["BODYsel_STARdir_SC_ref_list"] = self.par["STARdir_SC_ini"]
             self.state["BODYpos_SSB_list"]            = self.par["BODYpos_SSB_ini"]
 
         # STR output is valid
         else:
+            # Load sensor output
             SUNdir_SC_mes    = SEN_states["SEN_STR"]["SUNdir_SC_mes"]
             EARTHdir_SC_mes  = SEN_states["SEN_STR"]["EARTHdir_SC_mes"]
             MOONdir_SC_mes   = SEN_states["SEN_STR"]["MOONdir_SC_mes"]
@@ -60,9 +63,16 @@ class NAV_CEL(Level2Module):
             PHOBOSdir_SC_mes = SEN_states["SEN_STR"]["PHOBOSdir_SC_mes"]
             DEIMOSdir_SC_mes = SEN_states["SEN_STR"]["DEIMOSdir_SC_mes"]
             STARSdir_SC_mes  = SEN_states["SEN_STR"]["STARSdir_SC_mes"]
+            STARSid_mes      = SEN_states["SEN_STR"]["STARSid_mes"]
+
+            # Load catalog stars (assumes SSB == SC frame)
+            STARSid_ref     = NAV_states["NAV_STR"]["STARSid"]
+            STARSdir_SC_ref = NAV_states["NAV_STR"]["STARSdir_SSB"]
 
             # Filter out non-visible stars
-            STARSdir_SC_mes = STARSdir_SC_mes[~np.isnan(STARSdir_SC_mes).any(axis=1)]
+            idx = ~np.isnan(STARSdir_SC_mes).any(axis=1)
+            STARSid_mes     = STARSid_mes[idx]
+            STARSdir_SC_mes = STARSdir_SC_mes[idx]
 
             # Check each body visibility
             SUNvisibility    = self.body_visibility(SUNdir_SC_mes)
@@ -94,18 +104,22 @@ class NAV_CEL(Level2Module):
             z = np.full(n_bodies, np.nan)
             R = np.full(n_bodies, np.nan)
             BODYsel_STARdir_SC_mes_list = np.zeros((n_bodies, 3))
+            BODYsel_STARdir_SC_ref_list = np.zeros((n_bodies, 3))
             BODYpos_SSB_list            = np.zeros((n_bodies, 3))
             sigma_angle = self.par["sigma_angle"] # [rad]
             count = 0
             for visibility, BODYdir_SC_mes, BODYpos_SSB in bodies:
                 # Compute angles if body is visible
-                cos_angle_mes, STARdir_SC_mes, valid = self.cos_los_angle(visibility, BODYdir_SC_mes, STARSdir_SC_mes)
+                cos_angle_mes, STARdir_SC_mes, STARid_mes, valid = self.cos_los_angle(visibility, BODYdir_SC_mes, STARSdir_SC_mes, STARSid_mes)
                 # Compute the measurement model and covariance matrix
                 if valid:
+                    # Find matching reference star
+                    ref_idx = np.where(STARSid_ref == STARid_mes)[0]
                     z[count] = cos_angle_mes
                     # Variance propagation: sigma_z^2 = (1 - cos^2(angle)) * sigma_angle^2
                     R[count] = (1 - cos_angle_mes**2) * sigma_angle**2
                     BODYsel_STARdir_SC_mes_list[count] = STARdir_SC_mes
+                    BODYsel_STARdir_SC_ref_list[count] = STARSdir_SC_ref[ref_idx]
                     BODYpos_SSB_list[count]            = BODYpos_SSB
                 count += 1
 
@@ -123,6 +137,7 @@ class NAV_CEL(Level2Module):
             self.state["z"]             = z
             self.state["R"]             = R
             self.state["BODYsel_STARdir_SC_mes_list"] = BODYsel_STARdir_SC_mes_list
+            self.state["BODYsel_STARdir_SC_ref_list"] = BODYsel_STARdir_SC_ref_list
             self.state["BODYpos_SSB_list"]            = BODYpos_SSB_list
 
         return self.state
@@ -133,14 +148,14 @@ class NAV_CEL(Level2Module):
         SCpos_SSB = x[0:3]
 
         BODYpos_SSB_list            = self.state["BODYpos_SSB_list"]
-        BODYsel_STARdir_SC_mes_list = self.state["BODYsel_STARdir_SC_mes_list"]
+        BODYsel_STARdir_SC_ref_list = self.state["BODYsel_STARdir_SC_ref_list"]
         h_vec = np.zeros(self.par["n_bodies"])
 
         for i in range(self.par["n_bodies"]):
             # Get star direction
             # For now, do it with measurement
             # In the future, consider using ephemerides also
-            STARdir_SC = BODYsel_STARdir_SC_mes_list[i]
+            STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
 
             # Compute the direction of the BODY from the estimated SC position
             BODYpos_SSB     = BODYpos_SSB_list[i]
@@ -158,7 +173,7 @@ class NAV_CEL(Level2Module):
         SCpos_SSB = x[0:3]
 
         BODYpos_SSB_list            = self.state["BODYpos_SSB_list"]
-        BODYsel_STARdir_SC_mes_list = self.state["BODYsel_STARdir_SC_mes_list"]
+        BODYsel_STARdir_SC_ref_list = self.state["BODYsel_STARdir_SC_ref_list"]
 
         n_bodies = self.par["n_bodies"]
         n_states = len(x)
@@ -169,7 +184,7 @@ class NAV_CEL(Level2Module):
             # Get star direction
             # For now, do it with measurement
             # In the future, consider using ephemerides also
-            STARdir_SC = BODYsel_STARdir_SC_mes_list[i]
+            STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
 
             # Compute the direction of the BODY from the estimated SC position
             BODYpos_SSB     = BODYpos_SSB_list[i]
@@ -193,7 +208,7 @@ class NAV_CEL(Level2Module):
 
     # Compute the cosine of one line-of-sight angle between the body and the best available star
     # Return the direction vectors for the selected star
-    def cos_los_angle(self, BODYvisibility, BODYdir_SC_mes, STARSdir_SC_mes):
+    def cos_los_angle(self, BODYvisibility, BODYdir_SC_mes, STARSdir_SC_mes, STARSid_mes):
         # If body is visible
         if BODYvisibility == True:
             cos_angles = STARSdir_SC_mes @ BODYdir_SC_mes
@@ -201,21 +216,22 @@ class NAV_CEL(Level2Module):
 
             # Filter-out angles smaller than los_angle_min and larger than los_angle_max
             valid_angles = (cos_angles >= self.par["cos_los_angle_min"]) & (cos_angles <= self.par["cos_los_angle_max"])
-
             # Check if there is still one valid angle
             if np.any(valid_angles):
                 # Select valid stars
                 cos_angles = cos_angles[valid_angles]
                 BODYsel_STARdir_SC_mes = STARSdir_SC_mes[valid_angles]
+                BODYsel_STARid_mes     = STARSid_mes[valid_angles]
                 # Select the best angle
                 best_idx = self.score_stars(BODYdir_SC_mes, BODYsel_STARdir_SC_mes)
                 cos_angle = cos_angles[best_idx]
                 BODYsel_STARdir_SC_mes = BODYsel_STARdir_SC_mes[best_idx]
+                BODYsel_STARid_mes     = BODYsel_STARid_mes[best_idx]
 
-                return cos_angle, BODYsel_STARdir_SC_mes, True
+                return cos_angle, BODYsel_STARdir_SC_mes, BODYsel_STARid_mes, True
 
         # If not valid
-        return self.par["BODYangles_mes_ini"], self.par["BODYsel_STARdir_mes_ini"], False
+        return self.par["BODYangles_mes_ini"], self.par["BODYsel_STARdir_mes_ini"], None, False
 
     # Select the single most informative star relative to a body
     # Maximize angular separation from body direction

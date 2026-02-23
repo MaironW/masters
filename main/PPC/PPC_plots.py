@@ -281,6 +281,32 @@ def NAV_EPH_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         # Plot velocity from NAV_EPH
         PPC.plot(time_SIM, timeline["NAV"]["NAV_EPH"][f"{name}vel_SSB"], xlabel="time_SIM [s]", ylabel=f"{name}vel_SSB [km/s]", label=["NAV x","NAV y","NAV z"], title=f"{name}vel_SSB", fig=fig, ax=ax2)
 
+def NAV_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    DYN_STARSdir_SSB = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0] # [time, star, direction]
+    NAV_STARSdir_SSB = timeline["NAV"]["NAV_STR"]["STARSdir_SSB"][0] # [time, star, direction]
+
+    # Reshape stars into a big list of direction vectors
+    DYN_STARSdir_SSB_reshaped = DYN_STARSdir_SSB.reshape(-1, 3) # [time * star, direction]
+    NAV_STARSdir_SSB_reshaped = NAV_STARSdir_SSB.reshape(-1, 3) # [time * star, direction]
+    DYN_x = DYN_STARSdir_SSB_reshaped[:,0]
+    DYN_y = DYN_STARSdir_SSB_reshaped[:,1]
+    DYN_z = DYN_STARSdir_SSB_reshaped[:,2]
+    NAV_x = NAV_STARSdir_SSB_reshaped[:,0]
+    NAV_y = NAV_STARSdir_SSB_reshaped[:,1]
+    NAV_z = NAV_STARSdir_SSB_reshaped[:,2]
+
+    # 3D sky sphere
+    fig, ax = PPC.plot(DYN_x, DYN_y, DYN_z, style='.', label="Stars DYN", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect="equal", color=colors["black"])
+    PPC.plot(NAV_x, NAV_y, NAV_z, style='.', label="Stars NAV", color=colors["blue"], fig=fig, ax=ax)
+
+    # 2D sky sphere
+    DYN_STARSproj = PPC.aitoff_projection(DYN_STARSdir_SSB_reshaped)
+    NAV_STARSproj = PPC.aitoff_projection(NAV_STARSdir_SSB_reshaped)
+    boundary  = PPC.aitoff_boundary()
+    fig, ax = PPC.plot(DYN_STARSproj[0], DYN_STARSproj[1], style='.', label="DYN Stars", xlabel="Right Ascension [deg]", ylabel="Declination [deg]", title="Star Field - Aitoff Projection", aspect="equal", color=colors["black"])
+    fig, ax = PPC.plot(NAV_STARSproj[0], NAV_STARSproj[1], style='.', label="NAV Stars", color=colors["blue"], fig=fig, ax=ax)
+    PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)
+
 def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM        = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     SCpos_SSB       = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
@@ -346,7 +372,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     for k in range(n_iter):
         # First update NAV_CEL state, otherwise h(x) will be computed for the last (already computed) state
         NAV_obj.NAV_CEL.state["BODYpos_SSB_list"] = timeline["NAV"]["NAV_CEL"]["BODYpos_SSB_list"][k]
-        NAV_obj.NAV_CEL.state["BODYsel_STARdir_SC_mes_list"] = timeline["NAV"]["NAV_CEL"]["BODYsel_STARdir_SC_mes_list"][k]
+        NAV_obj.NAV_CEL.state["BODYsel_STARdir_SC_ref_list"] = timeline["NAV"]["NAV_CEL"]["BODYsel_STARdir_SC_ref_list"][k]
         h_hist[k] = NAV_obj.NAV_CEL.h(x_true[k])
         H_hist[k] = NAV_obj.NAV_CEL.H(x_true[k])
     fig = None
@@ -396,5 +422,6 @@ PPC_plots = {
     "SEN_STR"   : SEN_STR_plot,
     "SEN_PSR"   : SEN_PSR_plot,
     "NAV_EPH"   : NAV_EPH_plot,
+    "NAV_STR"   : NAV_STR_plot,
     "NAV_CEL"   : NAV_CEL_plot,
 }

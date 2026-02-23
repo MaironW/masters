@@ -1,4 +1,4 @@
-# Level 2 Module DYN_STR
+# Level 2 Module NAV_STR
 # Simulates the propagation of the Star position relative to the SSB frame
 
 import copy
@@ -8,12 +8,12 @@ from skyfield.api import load, Star
 from skyfield.data import hipparcos
 
 from Utils.level2module import Level2Module
-from .DYN_STR_par import DYN_STR_par
+from .NAV_STR_par import NAV_STR_par
 
-class DYN_STR(Level2Module):
+class NAV_STR(Level2Module):
     def __init__(self, par_override=None):
         # Start with default parameters
-        par = copy.deepcopy(DYN_STR_par)
+        par = copy.deepcopy(NAV_STR_par)
         # Apply user overrides
         if par_override is not None:
             par.update(par_override)
@@ -22,10 +22,10 @@ class DYN_STR(Level2Module):
             "STARSdir_SSB" : par["STARSdir_SSB_ini"],
             "STARSid"      : par["STARSid_ini"]
         }
-        super().__init__("DYN_STR", par)
+        super().__init__("NAV_STR", par)
 
     # Initialization
-    def initialize(self, parent_states, DYN_states):
+    def initialize(self, parent_states, NAV_states):
         kernel_dir = "Utils/kernels/"
         with load.open(kernel_dir + "hip_main.dat") as f:
             star_df = hipparcos.load_dataframe(f)

@@ -34,6 +34,7 @@ SIM_par = {
     # List of default plots
     "PPC_plot_list" : [
         "SEN_STR",
+        "NAV_STR",
         "NAV_CEL",
     ],
 }
@@ -138,6 +139,7 @@ NAV_obj = NAV(SEN_obj)
 # Set only modules needed for the test
 NAV_obj.modules = [
     NAV_obj.NAV_EPH,
+    NAV_obj.NAV_STR,
     NAV_obj.NAV_CEL,
 ]
 

@@ -35,6 +35,8 @@ class SEN_STR(Level2Module):
             "MARSdir_SC_mes"    : par["BODYdir_mes_ini"],
             "DEIMOSdir_SC_mes"  : par["BODYdir_mes_ini"],
             "PHOBOSdir_SC_mes"  : par["BODYdir_mes_ini"],
+
+            "STARSid_mes"       : par["STARSid_mes_ini"],
         }
         # Last time update for quantization
         self._last_update_time = -par["dt"]
@@ -47,7 +49,9 @@ class SEN_STR(Level2Module):
         STARSdir_SSB  = DYN_states["DYN_STR"]["STARSdir_SSB"]
         m, n = STARSdir_SSB.shape
         # Allocate initial stars array
+        self.par["STARSid_mes_ini"]    = np.full(m, np.nan)
         self.par["STARSdir_mes_ini"]   = np.full((m,n), np.nan)
+        self.state["STARSid_mes"]      = self.par["STARSid_mes_ini"]
         self.state["STARSdir_STR_mes"] = self.par["STARSdir_mes_ini"]
         self.state["STARSdir_SC_mes"]  = self.par["STARSdir_mes_ini"]
 
@@ -66,6 +70,7 @@ class SEN_STR(Level2Module):
         # This simulates that the STR was turned OFF
         if self.state["STRoutflg"] == 0:
             self.state["time_STR"]          = self.par["time_STR_ini"]
+            self.state["STARSid_mes"]       = self.par["STARSid_mes_ini"]
             self.state["SUNdir_STR_mes"]    = self.par["BODYdir_mes_ini"]
             self.state["EARTHdir_STR_mes"]  = self.par["BODYdir_mes_ini"]
             self.state["MOONdir_STR_mes"]   = self.par["BODYdir_mes_ini"]
@@ -116,8 +121,9 @@ class SEN_STR(Level2Module):
             DEIMOSdir_SC = self.dir_from_pos(DEIMOSpos_SC)
             PHOBOSdir_SC = self.dir_from_pos(PHOBOSpos_SC)
 
-            # Stars direction relative to the SSB
+            # Stars direction relative to the SSB and IDs
             STARSdir_SSB = DYN_states["DYN_STR"]["STARSdir_SSB"]
+            STARSid      = DYN_states["DYN_STR"]["STARSid"]
 
             # Stars directions relative to the Spacecraft
             STARSdir_SC = STARSdir_SSB.copy()
@@ -139,6 +145,10 @@ class SEN_STR(Level2Module):
             DEIMOSdir_STR = self.mask_visible_objects(DEIMOSdir_STR)
             PHOBOSdir_STR = self.mask_visible_objects(PHOBOSdir_STR)
             STARSdir_STR  = self.mask_visible_objects(STARSdir_STR)
+
+            # Filter out STARSid outside the FOV
+            is_nan_mask = np.isnan(STARSdir_STR).any(-1)
+            STARSid_mes = np.where(is_nan_mask, np.nan, STARSid)
 
             # Compute noise quaternion (the same for all objects)
             noise_mean = self.par["noise_mean"]
@@ -175,6 +185,7 @@ class SEN_STR(Level2Module):
             time_TDB = DYN_states["DYN_TIME"]["time_TDB"]
             if time_TDB - self._last_update_time >= self.par["dt"]:
                 self.state["time_STR"]          = time_TDB
+                self.state["STARSid_mes"]       = STARSid_mes
                 self.state["SUNdir_STR_mes"]    = SUNdir_STR_mes
                 self.state["EARTHdir_STR_mes"]  = EARTHdir_STR_mes
                 self.state["MOONdir_STR_mes"]   = MOONdir_STR_mes

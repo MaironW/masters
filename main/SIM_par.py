@@ -23,6 +23,7 @@ SIM_par = {
         # "SEN_STR",
         # "SEN_PSR",
         # "NAV_EPH",
+        # "NAV_STR",
         # "NAV_CEL",
     ],
 }

@@ -21,7 +21,7 @@ class DYN_TIME(Level2Module):
         super().__init__("DYN_TIME", par)
 
     # Initialization
-    def initialize(self, states):
+    def initialize(self, parent_states, DYN_states):
         self.state = {
             "time_SIM" : self.par["time_SIM_ini"],
             "time_TDB" : self.par["time_TDB_ini"],
@@ -29,7 +29,7 @@ class DYN_TIME(Level2Module):
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, states, inputs=None):
+    def update_algebraic(self, t, parent_states, DYN_states, inputs=None):
         # Update time according to the integrator time
         self.state["time_SIM"] = self.par["time_SIM_ini"] + t
         self.state["time_TDB"] = self.par["time_TDB_ini"] + t

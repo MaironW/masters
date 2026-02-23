@@ -26,7 +26,7 @@ class DYN_PSR(Level2Module):
         super().__init__("DYN_PSR", par)
 
     # Initialization
-    def initialize(self, states):
+    def initialize(self, parent_states, DYN_states):
         # Load Pulsar database
         kernel_dir = "Utils/kernels/"
         pulsar_data_file = kernel_dir + "pulsar.csv"
@@ -41,16 +41,16 @@ class DYN_PSR(Level2Module):
         self.state["PULSARSdir_SSB"] = pulsar_data.PULSARdir_SSB # Direction of Pulsar from SSB
 
         # Update initial state
-        self.state = self.update_algebraic(0, states)
+        self.state = self.update_algebraic(0, parent_states, DYN_states)
 
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, states, inputs=None):
+    def update_algebraic(self, t, parent_states, DYN_states, inputs=None):
         # Load parameters and states
         PULSARSdir_SSB  = self.state["PULSARSdir_SSB"]
-        SCpos_SSB       = states["DYN_TRA"]["SCpos_SSB"]
-        SUNpos_SSB      = states["DYN_SUN"]["SUNpos_SSB"] # [km]
+        SCpos_SSB       = DYN_states["DYN_TRA"]["SCpos_SSB"]
+        SUNpos_SSB      = DYN_states["DYN_EPH"]["SUNpos_SSB"] # [km]
         SSBpos_SUN      = -SUNpos_SSB # [km]
         mu_SUN_cst      = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
         light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]

@@ -21,10 +21,10 @@ class DYN_ATT(Level2Module):
         super().__init__("DYN_ATT", par)
 
     # Initalization
-    def initialize(self, states):
+    def initialize(self, parent_states, DYN_states):
         return self.state
 
     # Module main function
-    def update_algebraic(self, t, states, inputs):
+    def update_algebraic(self, t, parent_states, DYN_states, inputs):
         self.state["BOFq_SSB"] = inputs["DYN"]["DYN_ATT"]["BOFq_SSB"]
         return self.state

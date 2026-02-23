@@ -34,6 +34,7 @@ SIM_par = {
     # List of default plots
     "PPC_plot_list" : [
         "SEN_STR",
+        "NAV_STR",
         "NAV_CEL",
     ],
 }
@@ -121,28 +122,24 @@ DYN_obj = DYN(par_override)
 # Set only modules needed for the test
 DYN_obj.modules = [
     DYN_obj.DYN_TIME,
-    DYN_obj.DYN_SUN,
-    DYN_obj.DYN_EARTH,
-    DYN_obj.DYN_MARS,
+    DYN_obj.DYN_EPH,
     DYN_obj.DYN_TRA,
     DYN_obj.DYN_GRV,
     DYN_obj.DYN_ATT,
     DYN_obj.DYN_STR,
+    DYN_obj.DYN_PSR,
 ]
 
 # Initialize SEN modules with parameter override
 SEN_obj = SEN(DYN_obj, par_override)
-
-# Set only modules needed for the test
-SEN_obj.modules = [
-    SEN_obj.SEN_STR,
-]
 
 # Normally initialize NAV modules
 NAV_obj = NAV(SEN_obj)
 
 # Set only modules needed for the test
 NAV_obj.modules = [
+    NAV_obj.NAV_EPH,
+    NAV_obj.NAV_STR,
     NAV_obj.NAV_CEL,
 ]
 
@@ -169,7 +166,7 @@ for step in range(1, n_steps):
 
     # Spacecraft is aways pointing +STRz to Mars
     DYN_last_state = DYN_obj.snapshot()
-    MARSpos_SSB = DYN_last_state["DYN_MARS"]["MARSpos_SSB"]
+    MARSpos_SSB = DYN_last_state["DYN_EPH"]["MARSpos_SSB"]
     SCpos_SSB   = DYN_last_state["DYN_TRA"]["SCpos_SSB"]
     STRy_STR    = np.array([0,1,0])
     STRz_STR    = np.array([0,0,1])
@@ -192,7 +189,7 @@ for step in range(1, n_steps):
     ###################
 
     # Update algebraic modules first
-    DYN_obj.update_algebraic(sim_time, inputs)
+    DYN_obj.update_algebraic(sim_time, None, inputs)
     # Integrate all dynamic states together
     integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
     # Update SEN

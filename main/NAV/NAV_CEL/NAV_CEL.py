@@ -41,11 +41,11 @@ class NAV_CEL(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
-        STRoutflg = SEN_states["SEN_STR"]["STRoutflg"]
+        SEN_STRoutflg = SEN_states["SEN_STR"]["SEN_STRoutflg"]
 
-        # Only update outputs if STRoutflg is valid
+        # Only update outputs if SEN_STRoutflg is valid
         # Otherwise, return default values
-        if STRoutflg == 0:
+        if SEN_STRoutflg == 0:
             self.state["NAV_CELoutflg"] = self.par["NAV_CELoutflg_ini"]
             self.state["z"]             = self.par["z_ini"]
             self.state["R"]             = self.par["R_ini"]
@@ -129,7 +129,7 @@ class NAV_CEL(Level2Module):
                 NAV_CELoutflg = 1
             else:
                 z = self.par["z_ini"]
-                R = self.par["R_ini"]
+                R = np.diag(self.par["R_ini"])
                 NAV_CELoutflg = 0
 
             # Update states
@@ -149,9 +149,11 @@ class NAV_CEL(Level2Module):
 
         BODYpos_SSB_list            = self.state["BODYpos_SSB_list"]
         BODYsel_STARdir_SC_ref_list = self.state["BODYsel_STARdir_SC_ref_list"]
-        h_vec = np.zeros(self.par["n_bodies"])
+        n_bodies                    = self.par["n_bodies"]
 
-        for i in range(self.par["n_bodies"]):
+        h_vec = np.zeros(n_bodies)
+
+        for i in range(n_bodies):
             # Get star direction
             # For now, do it with measurement
             # In the future, consider using ephemerides also

@@ -19,10 +19,10 @@ SEN_STR_par = {
     "field_of_view"     : field_of_view,     # [rad] STR field of view half-angle
     "cos_field_of_view" : cos_field_of_view, # Cosine of the field of view to avoid recomputations later
     # Outputs initial values
-    "STRoutflg_ini"    : 0,                  # STR output flag
-    "time_STR_ini"     : 0,                  # [s] Star Tracker time
-    "BOFq_SSB_mes_ini" : np.full(4, np.nan), # [rad] Spacecraft orientation measured relative to the SSB frame
-    "BODYdir_mes_ini"  : np.full(3, np.nan), # Generic unitary vector for a body direction
-    "STARSdir_mes_ini" : np.nan,             # Dummy, to be filled at initialization
-    "STARSid_mes_ini"  : np.array([np.nan])  # Dummy, to be filled at initialization
+    "SEN_STRoutflg_ini" : 0,                  # STR output flag
+    "time_STR_ini"      : 0,                  # [s] Star Tracker time
+    "BOFq_SSB_mes_ini"  : np.full(4, np.nan), # [rad] Spacecraft orientation measured relative to the SSB frame
+    "BODYdir_mes_ini"   : np.full(3, np.nan), # Generic unitary vector for a body direction
+    "STARSdir_mes_ini"  : np.nan,             # Dummy, to be filled at initialization
+    "STARSid_mes_ini"   : np.array([np.nan])  # Dummy, to be filled at initialization
 }

@@ -57,7 +57,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM        = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     SCpos_SSB       = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
     SCvel_SSB       = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
-    STRoutflg       = timeline["SEN"]["SEN_STR"]["STRoutflg"]
+    SEN_STRoutflg   = timeline["SEN"]["SEN_STR"]["SEN_STRoutflg"]
     STARSdir_SC_mes = timeline["SEN"]["SEN_STR"]["STARSdir_SC_mes"]
 
     NAV_CELoutflg               = timeline["NAV"]["NAV_CEL"]["NAV_CELoutflg"]
@@ -90,7 +90,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
     # Plot status
     fig, ax = PPC.plot(time_SIM, NAV_CELoutflg, xlabel="time_SIM [s]", ylabel="flag", label="NAV_CELoutflag", title="NAV_CEL output flag")
-    PPC.plot(time_SIM, STRoutflg, label="STRoutflag", style='--', fig=fig, ax=ax)
+    PPC.plot(time_SIM, SEN_STRoutflg, label="STRoutflag", style='--', fig=fig, ax=ax)
 
     # Plot angles (arccosine of measurement model)
     fig = None

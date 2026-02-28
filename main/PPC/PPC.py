@@ -30,9 +30,16 @@ def init_timeline(sample, n_steps):
     def recurse(node):
         if isinstance(node, dict):
             return {k: recurse(v) for k, v in node.items()}
-        else:
-            arr = np.array(node)
+        arr = np.array(node)
+        # Case numeric
+        if np.issubdtype(arr.dtype, np.number):
             out = np.full((n_steps, *arr.shape), np.nan)
+            out[0] = arr
+            return out
+        # Case non-numeric (strings, objects, etc.)
+        else:
+            out = np.empty((n_steps, *arr.shape), dtype=object)
+            out[:] = None
             out[0] = arr
             return out
     return recurse(sample)

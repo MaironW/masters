@@ -19,11 +19,12 @@ SIM_par = {
         # "DYN_GRV",
         # "DYN_ATT",
         # "DYN_STR",
-        # "DYN_PSR",
+        "DYN_PSR",
         # "SEN_STR",
-        # "SEN_PSR",
+        "SEN_PSR",
         # "NAV_EPH",
         # "NAV_STR",
         # "NAV_CEL",
+        "NAV_PSR"
     ],
 }

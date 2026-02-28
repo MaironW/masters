@@ -54,7 +54,7 @@ class DYN_PSR(Level2Module):
         SSBpos_SUN      = -SUNpos_SSB # [km]
         mu_SUN_cst      = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
         light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]
-        D0              = self.par["D0"]
+        D0              = self.par["D0"] # [km]
 
         # Compute the time of arrival as perceived by the spacecraft
         n_dot_r = PULSARSdir_SSB @ SCpos_SSB

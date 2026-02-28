@@ -7,6 +7,21 @@ import os
 
 from Utils.constants import CONSTANTS_par
 
+# Define color cycle
+colors = {
+    "blue"      : "#0066FF",
+    "red"       : "#CC0000",
+    "green"     : "#33CC00",
+    "magenta"   : "#FF00FF",
+    "orange"    : "#FE9920",
+    "purple"    : "#8052CF",
+    "yellow"    : "#F5F22B",
+    "grey"      : "#505050",
+    "lightgrey" : "#707070",
+    "darkgrey"  : "#303030",
+    "black"     : "#111111",
+}
+
 # Initialize timeline to store data for post processing
 # Scalars  -> (n_steps,)
 # Vectors  -> (n_steps, dim)

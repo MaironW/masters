@@ -6,6 +6,5 @@ NAV_PSR_par = {
 
     # Output initial values
     "NAV_PSRoutflg_ini" : 0, # NAV_CEL Module output flag
-    "z_ini" : np.array([0]), # Measurement vector
-    "R_ini" : np.array([0]), # Measurement covariance
+    "SSBpos_SUN_ref_ini" : np.array([0,0,0])
 }

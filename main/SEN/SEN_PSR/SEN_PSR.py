@@ -19,9 +19,10 @@ class SEN_PSR(Level2Module):
             par.update(par_override)
         # Dummy state
         self.state = {
-            "PSRoutflg"    : par["PSRoutflg_ini"],
-            "time_PSR"     : par["time_PSR_ini"],
-            "SCdt_SSB_mes" : par["SCdt_SSB_mes_ini"]
+            "SEN_PSRoutflg" : par["SEN_PSRoutflg_ini"],
+            "time_PSR"      : par["time_PSR_ini"],
+            "SCdt_SSB_mes"  : par["SCdt_SSB_mes_ini"],
+            "PULSARSid_mes" : par["PULSARSid_mes_ini"]
         }
         # Last time update for quantization
         self._last_update_time = -par["dt"]
@@ -53,30 +54,33 @@ class SEN_PSR(Level2Module):
 
         # Allocate initial pulsars array
         n_pulsars = self.par["n_pulsars"]
-        self.par["SCdt_SSB_mes_ini"] = np.full((n_pulsars), np.nan)
-        self.state["SCdt_SSB_mes"] = self.par["SCdt_SSB_mes_ini"]
+        self.par["SCdt_SSB_mes_ini"]  = np.full(n_pulsars, np.nan)
+        self.par["PULSARSid_mes_ini"] = np.full(n_pulsars, None)
+        self.state["SCdt_SSB_mes"]    = self.par["SCdt_SSB_mes_ini"]
+        self.state["PULSARSid_mes"]   = self.par["PULSARSid_mes_ini"]
 
         # Update initial state
         self.state = self.update_algebraic(0, DYN_states, SEN_states)
-
         return self.state
 
     # Module main function
     def update_algebraic(self, t, DYN_states, SEN_states, inputs=None):
         # Output flag
         if inputs != None:
-            PSRoutflg = inputs["SEN"]["SEN_PSR"]["PSRenableflg"]
-            self.state["PSRoutflg"] = PSRoutflg
+            SEN_PSRoutflg = inputs["SEN"]["SEN_PSR"]["PSRenableflg"]
+            self.state["SEN_PSRoutflg"] = SEN_PSRoutflg
 
-        # Make all outputs invalid if PSRoutflg is zero
+        # Make all outputs invalid if SEN_PSRoutflg is zero
         # This simulates that the PSR detector was turned OFF
-        if self.state["PSRoutflg"] == 0:
-            self.state["time_PSR"]     = 0
-            self.state["SCdt_SSB_mes"] = self.par["SCdt_SSB_mes_ini"]
+        if self.state["SEN_PSRoutflg"] == 0:
+            self.state["time_PSR"]      = 0
+            self.state["SCdt_SSB_mes"]  = self.par["SCdt_SSB_mes_ini"]
+            self.state["PULSARSid_mes"] = self.par["PULSARSid_mes_ini"]
 
         # PSR output is valid
         else:
             # TODO: Filter out objects outside the sensor FOV
+            PULSARSid_mes = self.par["name"]
 
             # Sensor properties
             A      = self.par["detector_area"] # [m^2]
@@ -106,8 +110,9 @@ class SEN_PSR(Level2Module):
             # Apply time quantization to all states (maybe not needed for PSR)
             time_SIM = DYN_states["DYN_TIME"]["time_SIM"]
             if time_SIM - self._last_update_time >= self.par["dt"]:
-                self.state["time_PSR"]     = time_SIM
-                self.state["SCdt_SSB_mes"] = SCdt_SSB_mes
+                self.state["time_PSR"]      = time_SIM
+                self.state["SCdt_SSB_mes"]  = SCdt_SSB_mes
+                self.state["PULSARSid_mes"] = PULSARSid_mes
 
                 self._last_update_time = time_SIM
                 self._last_state = copy.deepcopy(self.state)

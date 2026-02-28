@@ -11,7 +11,7 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     STARSdir_SSB = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0] # [time, star, direction]
 
     time_STR      = timeline["SEN"]["SEN_STR"]["time_STR"]
-    STRoutflg     = timeline["SEN"]["SEN_STR"]["STRoutflg"]
+    SEN_STRoutflg = timeline["SEN"]["SEN_STR"]["SEN_STRoutflg"]
     field_of_view = SEN_obj.SEN_STR.par["field_of_view"]
     STRq_BOF      = SEN_obj.SEN_STR.par["STRq_BOF"]
 
@@ -37,7 +37,7 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     STARSdir_SSB     = STARSdir_SSB.reshape(-1, 3)     # [time * star, direction]
 
     # Plot status
-    fig, ax = PPC.plot(time_SIM, STRoutflg, xlabel="time_SIM [s]", ylabel="STRoutflg", label="STRoutflag", title="STR output flag")
+    fig, ax = PPC.plot(time_SIM, SEN_STRoutflg, xlabel="time_SIM [s]", ylabel="SEN_STRoutflg", label="STRoutflag", title="STR output flag")
 
     # Compare STR and TDB times
     fig, ax = PPC.plot(time_SIM, time_TDB, xlabel="time_SIM [s]", ylabel="time [s]", label="time_TDB", title="STR Time")
@@ -100,17 +100,15 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     SCdt_SSB = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
 
     # TODO: Plot the other SEN_PSR outputs
-    time_PSR     = timeline["SEN"]["SEN_PSR"]["time_PSR"]
-    PSRoutflg    = timeline["SEN"]["SEN_PSR"]["PSRoutflg"]
-    SCdt_SSB_mes = timeline["SEN"]["SEN_PSR"]["SCdt_SSB_mes"]
+    time_PSR      = timeline["SEN"]["SEN_PSR"]["time_PSR"]
+    SEN_PSRoutflg = timeline["SEN"]["SEN_PSR"]["SEN_PSRoutflg"]
+    SCdt_SSB_mes  = timeline["SEN"]["SEN_PSR"]["SCdt_SSB_mes"]
 
+    # Pulsar signals on the SC
     PULSARname = DYN_obj.DYN_PSR.par["name"]
     n_pulsars  = SEN_obj.SEN_PSR.par["n_pulsars"]
 
     light_speed_cst = CONSTANTS_par["light_speed_cst"]
-
-    # Pulsar signals on the SC
-    PULSARname = DYN_obj.DYN_PSR.par["name"]
 
     # Measured vs True delay for TOAs between SC and SSB
     fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB_mes [s]", title="Measured vs True TOA delay on SC", subplot=(3,1,1))
@@ -119,11 +117,11 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_noise = SCdt_SSB - SCdt_SSB_mes
     range_noise = light_speed_cst*time_noise
     for i in range(n_pulsars):
-        PPC.plot(time_SIM, SCdt_SSB_mes[:,i], label=f"{PULSARname[i]} Meas",        fig=fig, ax=ax1)
+        PPC.plot(time_SIM, SCdt_SSB_mes[:,i], label=f"{PULSARname[i]} meas.",        fig=fig, ax=ax1)
         PPC.plot(time_SIM, time_noise[:,i],   label=f"{PULSARname[i]} time noise",  fig=fig, ax=ax2)
         PPC.plot(time_SIM, range_noise[:,i],  label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
 
 SEN_plots = {
-    "SEN_STR"   : SEN_STR_plot,
-    "SEN_PSR"   : SEN_PSR_plot,
+    "SEN_STR" : SEN_STR_plot,
+    "SEN_PSR" : SEN_PSR_plot,
 }

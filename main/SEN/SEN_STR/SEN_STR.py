@@ -18,7 +18,7 @@ class SEN_STR(Level2Module):
             par.update(par_override)
         # Set initial dummy state
         self.state = {
-            "STRoutflg"         : par["STRoutflg_ini"],
+            "SEN_STRoutflg"     : par["SEN_STRoutflg_ini"],
             "time_STR"          : par["time_STR_ini"],
             "BOFq_SSB_mes"      : par["BOFq_SSB_mes_ini"],
 
@@ -63,12 +63,12 @@ class SEN_STR(Level2Module):
     def update_algebraic(self, t, DYN_states, SEN_states, inputs=None):
         # Output flag
         if inputs != None:
-            STRoutflg = inputs["SEN"]["SEN_STR"]["STRenableflg"]
-            self.state["STRoutflg"] = STRoutflg
+            SEN_STRoutflg = inputs["SEN"]["SEN_STR"]["STRenableflg"]
+            self.state["SEN_STRoutflg"] = SEN_STRoutflg
 
         # Make all outputs invalid if STRoutflg is zero
         # This simulates that the STR was turned OFF
-        if self.state["STRoutflg"] == 0:
+        if self.state["SEN_STRoutflg"] == 0:
             self.state["time_STR"]          = self.par["time_STR_ini"]
             self.state["STARSid_mes"]       = self.par["STARSid_mes_ini"]
             self.state["SUNdir_STR_mes"]    = self.par["BODYdir_mes_ini"]

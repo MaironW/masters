@@ -30,9 +30,16 @@ def init_timeline(sample, n_steps):
     def recurse(node):
         if isinstance(node, dict):
             return {k: recurse(v) for k, v in node.items()}
-        else:
-            arr = np.array(node)
+        arr = np.array(node)
+        # Case numeric
+        if np.issubdtype(arr.dtype, np.number):
             out = np.full((n_steps, *arr.shape), np.nan)
+            out[0] = arr
+            return out
+        # Case non-numeric (strings, objects, etc.)
+        else:
+            out = np.empty((n_steps, *arr.shape), dtype=object)
+            out[:] = None
             out[0] = arr
             return out
     return recurse(sample)
@@ -97,13 +104,25 @@ def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=No
     if ax is None:
         if subplot is not None:
             nrows, ncols, index = subplot
+
+            # Initialize shared axis reference if not present
+            if not hasattr(fig, "_shared_x_axis"):
+                fig._shared_x_axis = None
             if z is None:
-                ax = fig.add_subplot(nrows, ncols, index)
+                if fig._shared_x_axis is None:
+                    ax = fig.add_subplot(nrows, ncols, index)
+                    fig._shared_x_axis = ax  # first subplot becomes reference
+                else:
+                    ax = fig.add_subplot(nrows, ncols, index, sharex=fig._shared_x_axis)
             else:
-                ax = fig.add_subplot(nrows, ncols, index, projection='3d')
+                if fig._shared_x_axis is None:
+                    ax = fig.add_subplot(nrows, ncols, index, projection='3d')
+                    fig._shared_x_axis = ax
+                else:
+                    ax = fig.add_subplot(nrows, ncols, index, projection='3d', sharex=fig._shared_x_axis)
         else:
             if z is None:
-                ax = fig.gca() # get current axes (2D)
+                ax = fig.gca()
             else:
                 ax = fig.add_subplot(111, projection='3d')
 

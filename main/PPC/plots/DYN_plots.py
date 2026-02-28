@@ -122,11 +122,11 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, shapiro_delay[:,i], label=PULSARname[i], ylabel="shapiro_delay [s]", fig=fig, ax=ax3)
 
 DYN_plots = {
-    "DYN_TIME"  : DYN_TIME_plot,
-    "DYN_EPH"   : DYN_EPH_plot,
-    "DYN_GRV"   : DYN_GRV_plot,
-    "DYN_TRA"   : DYN_TRA_plot,
-    "DYN_ATT"   : DYN_ATT_plot,
-    "DYN_STR"   : DYN_STR_plot,
-    "DYN_PSR"   : DYN_PSR_plot,
+    "DYN_TIME" : DYN_TIME_plot,
+    "DYN_EPH"  : DYN_EPH_plot,
+    "DYN_GRV"  : DYN_GRV_plot,
+    "DYN_TRA"  : DYN_TRA_plot,
+    "DYN_ATT"  : DYN_ATT_plot,
+    "DYN_STR"  : DYN_STR_plot,
+    "DYN_PSR"  : DYN_PSR_plot,
 }

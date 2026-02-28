@@ -54,7 +54,7 @@ class DYN_PSR(Level2Module):
         SSBpos_SUN      = -SUNpos_SSB # [km]
         mu_SUN_cst      = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
         light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]
-        D0              = self.par["D0"]
+        D0              = self.par["D0"] # [km]
 
         # Compute the time of arrival as perceived by the spacecraft
         n_dot_r = PULSARSdir_SSB @ SCpos_SSB
@@ -62,6 +62,7 @@ class DYN_PSR(Level2Module):
         n_dot_b = PULSARSdir_SSB @ SSBpos_SUN
         b_dot_r = SSBpos_SUN @ SCpos_SSB
 
+        # Roemer delay
         doppler_delay = n_dot_r / light_speed_cst # [s]
         annual_parallax_delay = 1/(2*light_speed_cst*D0) * (n_dot_r**2 - r_dot_r + 2*n_dot_b*n_dot_r - 2*b_dot_r) # [s]
         roemer_delay = doppler_delay + annual_parallax_delay # [s]

@@ -71,31 +71,16 @@ class NAV_PSR(Level2Module):
             SSBpos_SUN_ref = -SUNpos_SSB_ref
 
             # Load sensor outputs
-            PULSARSid_mes = SEN_states["SEN_PSR"]["PULSARSid_mes"]
             SCdt_SSB_mes  = SEN_states["SEN_PSR"]["SCdt_SSB_mes"]
-
-            # Load catalog pulsars (assumes SSB == SC frame)
-            PULSARSid_ref     = self.par["name"]
-            PULSARSdir_SC_ref = self.par["PULSARSdir_SSB"]
-
-            # Filter out non-visible pulsars
-            idx = ~np.isnan(SCdt_SSB_mes)
-            PULSARSid_mes = PULSARSid_mes[idx]
-            SCdt_SSB_mes  = SCdt_SSB_mes[idx]
 
             n_pulsars = self.par["n_pulsars"]
             z = np.full(n_pulsars, np.nan)
             R = np.full(n_pulsars, np.nan)
 
             # Compute dt if pulsars are visible
-            sigma_TOA = self.par["sigma_TOA"]
-            count = 0
-            for PULSARid_mes in PULSARSid_mes:
-                # Find matching reference pulsar
-                ref_idx = np.where(PULSARid_mes == PULSARSid_ref)[0][0]
-                z[count] = SCdt_SSB_mes[ref_idx]
-                R[count] = sigma_TOA[ref_idx]
-                count += 1
+            sigma_TOA = np.asarray(self.par["sigma_TOA"])
+            z = SCdt_SSB_mes
+            R = sigma_TOA**2
 
             if np.sum(~np.isnan(z)) >= 3:
                 z = z
@@ -124,7 +109,6 @@ class NAV_PSR(Level2Module):
         light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]
         SSBpos_SUN      = self.state["SSBpos_SUN_ref"] # [km]
         PULSARSdir_SSB  = self.par["PULSARSdir_SSB"]
-        n_pulsars       = self.par["n_pulsars"]
         D0              = self.par["D0"] # [km]
 
         # Compute the time of arrival as perceived by the spacecraft
@@ -133,6 +117,7 @@ class NAV_PSR(Level2Module):
         n_dot_b = PULSARSdir_SSB @ SSBpos_SUN
         b_dot_r = SSBpos_SUN @ SCpos_SSB
 
+        # Roemer delay
         doppler_delay = n_dot_r / light_speed_cst # [s]
         annual_parallax_delay = 1/(2*light_speed_cst*D0) * (n_dot_r**2 - r_dot_r + 2*n_dot_b*n_dot_r - 2*b_dot_r) # [s]
         roemer_delay = doppler_delay + annual_parallax_delay # [s]
@@ -147,3 +132,43 @@ class NAV_PSR(Level2Module):
         h_vec = roemer_delay + shapiro_delay
 
         return h_vec
+
+    # Return the Jacobian of the measurment model for EKF
+    def H(self, x):
+        # x = [SCpos_SSB, SCvel_SSB]
+        SCpos_SSB = x[0:3]
+
+        # Load parameters and states
+        mu_SUN_cst      = CONSTANTS_par["mu_SUN_cst"] # [km^3/s^2]
+        light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]
+        SSBpos_SUN      = self.state["SSBpos_SUN_ref"] # [km]
+        PULSARSdir_SSB  = self.par["PULSARSdir_SSB"]
+        D0              = self.par["D0"] # [km]
+        n_pulsars       = self.par["n_pulsars"]
+        n_states        = len(x)
+
+        H_matrix = np.zeros((n_pulsars, n_states))
+
+        # Compute scalars
+        SCpos_SSB_norm  = np.linalg.norm(SCpos_SSB)
+        SSBpos_SUN_norm = np.linalg.norm(SSBpos_SUN)
+
+        # Compute the time of arrival as perceived by the spacecraft
+        n_dot_r = PULSARSdir_SSB @ SCpos_SSB
+        n_dot_b = PULSARSdir_SSB @ SSBpos_SUN
+
+        for i in range(n_pulsars):
+
+            # Doppler delay
+            dh1dr = PULSARSdir_SSB[i]/light_speed_cst
+
+            # Annual parallax delay
+            dh2dr = 1/(light_speed_cst*D0[i]) * (n_dot_r[i]*PULSARSdir_SSB[i] - SCpos_SSB + n_dot_b[i]*PULSARSdir_SSB[i] - SSBpos_SUN)
+
+            # Shappiro delay
+            dh3dr = 2*mu_SUN_cst/light_speed_cst**3 / (n_dot_r[i] + SCpos_SSB_norm + n_dot_b[i] + SSBpos_SUN_norm) * (PULSARSdir_SSB[i] + SCpos_SSB/SCpos_SSB_norm)
+
+            # Fill matrix
+            H_matrix[i, 0:3] = dh1dr + dh2dr + dh3dr
+
+        return H_matrix

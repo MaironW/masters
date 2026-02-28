@@ -104,13 +104,25 @@ def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=No
     if ax is None:
         if subplot is not None:
             nrows, ncols, index = subplot
+
+            # Initialize shared axis reference if not present
+            if not hasattr(fig, "_shared_x_axis"):
+                fig._shared_x_axis = None
             if z is None:
-                ax = fig.add_subplot(nrows, ncols, index)
+                if fig._shared_x_axis is None:
+                    ax = fig.add_subplot(nrows, ncols, index)
+                    fig._shared_x_axis = ax  # first subplot becomes reference
+                else:
+                    ax = fig.add_subplot(nrows, ncols, index, sharex=fig._shared_x_axis)
             else:
-                ax = fig.add_subplot(nrows, ncols, index, projection='3d')
+                if fig._shared_x_axis is None:
+                    ax = fig.add_subplot(nrows, ncols, index, projection='3d')
+                    fig._shared_x_axis = ax
+                else:
+                    ax = fig.add_subplot(nrows, ncols, index, projection='3d', sharex=fig._shared_x_axis)
         else:
             if z is None:
-                ax = fig.gca() # get current axes (2D)
+                ax = fig.gca()
             else:
                 ax = fig.add_subplot(111, projection='3d')
 

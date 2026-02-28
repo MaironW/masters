@@ -5,12 +5,11 @@
 #   python3 -m DYN.DYN_TRA.Tests.test_DYN_TRA
 
 import numpy as np
-from DYN.DYN       import DYN
-from PPC           import PPC
-from PPC.PPC_plots import colors
-from Utils         import spice
-from Utils         import events
-from Utils         import integrator
+from DYN.DYN import DYN
+from PPC     import PPC
+from Utils   import spice
+from Utils   import events
+from Utils   import integrator
 
 ##################
 # MRO PARAMETERS #
@@ -130,10 +129,10 @@ for step in range(1, n_steps):
     # Load external inputs
     inputs = events_table[sim_time]
 
-    # Update algebraic modules first
-    DYN_obj.update_algebraic(sim_time, None, inputs)
     # Integrate all dynamic states together
-    integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
+    DYN_obj = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
+    # Update algebraic modules
+    DYN_obj.update_algebraic(sim_time, None, inputs)
 
     # Update MRO state
     time_TDB = DYN_obj.snapshot()["DYN_TIME"]["time_TDB"]
@@ -180,10 +179,10 @@ pos_error_x = np.sqrt((SCpos_SSB[:,0] - MROpos_SSB[:,0])**2)
 pos_error_y = np.sqrt((SCpos_SSB[:,1] - MROpos_SSB[:,1])**2)
 pos_error_z = np.sqrt((SCpos_SSB[:,2] - MROpos_SSB[:,2])**2)
 pos_error = np.sqrt(pos_error_x**2 + pos_error_y**2 + pos_error_z**2)
-fig, ax_r = PPC.plot(time_days, pos_error_x, ylabel="pos error [km]", label="|$r_{SC,x} - r_{MRO,x}$|", title="Error pos SC vs MRO", subplot=(2,1,1), color=colors['blue'])
-PPC.plot(time_days, pos_error_y, label="|$r_{SC,y} - r_{MRO,y}$|", fig=fig, ax=ax_r, color=colors['red'])
-PPC.plot(time_days, pos_error_z, label="|$r_{SC,z} - r_{MRO,z}$|", fig=fig, ax=ax_r, color=colors['green'])
-PPC.plot(time_days, pos_error, label="|$r_{SC} - r_{MRO}$|", fig=fig, ax=ax_r, color=colors['magenta'])
+fig, ax_r = PPC.plot(time_days, pos_error_x, ylabel="pos error [km]", label="|$r_{SC,x} - r_{MRO,x}$|", title="Error pos SC vs MRO", subplot=(2,1,1), color=PPC.colors['blue'])
+PPC.plot(time_days, pos_error_y, label="|$r_{SC,y} - r_{MRO,y}$|", fig=fig, ax=ax_r, color=PPC.colors['red'])
+PPC.plot(time_days, pos_error_z, label="|$r_{SC,z} - r_{MRO,z}$|", fig=fig, ax=ax_r, color=PPC.colors['green'])
+PPC.plot(time_days, pos_error, label="|$r_{SC} - r_{MRO}$|", fig=fig, ax=ax_r, color=PPC.colors['magenta'])
 
 # Plot error on velocity comparing SC and MRO
 SCvel_SSB  = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
@@ -192,20 +191,20 @@ vel_error_x = np.sqrt((SCvel_SSB[:,0] - MROvel_SSB[:,0])**2)
 vel_error_y = np.sqrt((SCvel_SSB[:,1] - MROvel_SSB[:,1])**2)
 vel_error_z = np.sqrt((SCvel_SSB[:,2] - MROvel_SSB[:,2])**2)
 vel_error = np.sqrt(vel_error_x**2 + vel_error_y**2 + vel_error_z**2)
-fig, ax_v = PPC.plot(time_days, vel_error_x, ylabel="vel error [km/s]", label="|$v_{SC,x} - v_{MRO,x}$|", title="Error vel SC vs MRO", subplot=(2,1,2), color=colors['blue'], fig=fig)
-PPC.plot(time_days, vel_error_y, label="|$v_{SC,y} - v_{MRO,y}$|", subplot=(4,1,2), fig=fig, ax=ax_v, color=colors['red'])
-PPC.plot(time_days, vel_error_z, label="|$v_{SC,z} - v_{MRO,z}$|", subplot=(4,1,3), fig=fig, ax=ax_v, color=colors['green'])
-PPC.plot(time_days, vel_error, xlabel="Time SIM [days]", ylabel="vel error [km/s]", label="|$v_{SC} - v_{MRO}$|", fig=fig, ax=ax_v, color=colors['magenta'])
+fig, ax_v = PPC.plot(time_days, vel_error_x, ylabel="vel error [km/s]", label="|$v_{SC,x} - v_{MRO,x}$|", title="Error vel SC vs MRO", subplot=(2,1,2), color=PPC.colors['blue'], fig=fig)
+PPC.plot(time_days, vel_error_y, label="|$v_{SC,y} - v_{MRO,y}$|", subplot=(4,1,2), fig=fig, ax=ax_v, color=PPC.colors['red'])
+PPC.plot(time_days, vel_error_z, label="|$v_{SC,z} - v_{MRO,z}$|", subplot=(4,1,3), fig=fig, ax=ax_v, color=PPC.colors['green'])
+PPC.plot(time_days, vel_error, xlabel="Time SIM [days]", ylabel="vel error [km/s]", label="|$v_{SC} - v_{MRO}$|", fig=fig, ax=ax_v, color=PPC.colors['magenta'])
 
 # Trajectoy in the orbital plane
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], xlabel="x SSB [km]", ylabel="y SSB [km]", title="SC vs MRO trajectory", aspect='equal', color=colors["magenta"], style=':', zorder=4)
-PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,1], label='SC', style='x', fig=fig, ax=ax, color=colors["magenta"], zorder=4)
-PPC.plot(timeline["MRO"]["MROpos_SSB"][:,0],  timeline["MRO"]["MROpos_SSB"][:,1], fig=fig, ax=ax, color=colors["grey"])
-PPC.plot(timeline["MRO"]["MROpos_SSB"][-1,0], timeline["MRO"]["MROpos_SSB"][-1,1], label="MRO", style='X', fig=fig, ax=ax, color=colors["grey"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][:,0],  timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][:,1],  fig=fig, ax=ax, color=colors["blue"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][-1,0], timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][-1,1], label="Earth", style='o', fig=fig, ax=ax, color=colors["blue"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][:,0],   timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][:,1],   fig=fig, ax=ax, color=colors["red"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][-1,0],  timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][-1,1],  label="Mars", style='o', fig=fig, ax=ax, color=colors["red"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"][0,0],    timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"][0,1],    label="Sun", style='o', fig=fig, ax=ax, color=colors["orange"])
+fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], xlabel="x SSB [km]", ylabel="y SSB [km]", title="SC vs MRO trajectory", aspect='equal', color=PPC.colors["magenta"], style=':', zorder=4)
+PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,1], label='SC', style='x', fig=fig, ax=ax, color=PPC.colors["magenta"], zorder=4)
+PPC.plot(timeline["MRO"]["MROpos_SSB"][:,0],  timeline["MRO"]["MROpos_SSB"][:,1], fig=fig, ax=ax, color=PPC.colors["grey"])
+PPC.plot(timeline["MRO"]["MROpos_SSB"][-1,0], timeline["MRO"]["MROpos_SSB"][-1,1], label="MRO", style='X', fig=fig, ax=ax, color=PPC.colors["grey"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][:,0],  timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][:,1],  fig=fig, ax=ax, color=PPC.colors["blue"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][-1,0], timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][-1,1], label="Earth", style='o', fig=fig, ax=ax, color=PPC.colors["blue"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][:,0],   timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][:,1],   fig=fig, ax=ax, color=PPC.colors["red"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][-1,0],  timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][-1,1],  label="Mars", style='o', fig=fig, ax=ax, color=PPC.colors["red"])
+PPC.plot(timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"][0,0],    timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"][0,1],    label="Sun", style='o', fig=fig, ax=ax, color=PPC.colors["orange"])
 
 PPC.show_plot()

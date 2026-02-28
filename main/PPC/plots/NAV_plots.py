@@ -157,8 +157,57 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, BODYsel_STARdir_SC_mes[:, 1], label=f"{name}", color=body["color"], fig=fig, ax=ax2)
         PPC.plot(time_SIM, BODYsel_STARdir_SC_mes[:, 2], label=f"{name}", color=body["color"], fig=fig, ax=ax3)
 
+def NAV_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM      = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    SCpos_SSB     = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+    SCvel_SSB     = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+    SEN_PSRoutflg = timeline["SEN"]["SEN_PSR"]["SEN_PSRoutflg"]
+    NAV_PSRoutflg = timeline["NAV"]["NAV_PSR"]["NAV_PSRoutflg"]
+
+    n_pulsars  = NAV_obj.NAV_PSR.par["n_pulsars"]
+    PULSARname = NAV_obj.NAV_PSR.par["name"]
+
+    z = timeline["NAV"]["NAV_PSR"]["z"]
+    R = timeline["NAV"]["NAV_PSR"]["R"]
+
+    # Plot status
+    fig, ax = PPC.plot(time_SIM, NAV_PSRoutflg, xlabel="time_SIM [s]", ylabel="flag", label="NAV_PSRoutflag", title="NAV_PSR output flag")
+    PPC.plot(time_SIM, SEN_PSRoutflg, label="PSRoutflag", style='--', fig=fig, ax=ax)
+
+    # Plot times and covariance
+    R_diag  = np.diagonal(R, axis1=1, axis2=2)
+    sigma_z = np.sqrt(R_diag)
+
+    fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB_mes [s]", title="TOA delay on SC", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", title="Standard deviation", ylabel="Covariance [s]", fig=fig, subplot=(2,1,2))
+    for i in range(n_pulsars):
+        PPC.plot(time_SIM, z[:, i],       label=f"{PULSARname[i]} meas.", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, sigma_z[:, i], label=f"{PULSARname[i]} σ",     fig=fig, ax=ax2)
+
+    # Plot predicted measurement, assuming the true spacecraft position as the state + innovation
+    x_true   = np.hstack((SCpos_SSB, SCvel_SSB))
+    n_iter   = len(x_true)
+    h_hist   = np.full((n_iter, n_pulsars), np.nan)
+    H_hist   = np.zeros((n_iter, n_pulsars, 6))
+    # Iterate from idx=1 onwards, because we need to use x_true[k-1] to compute h(x)
+    for k in range(n_iter):
+        if NAV_PSRoutflg[k] == 1:
+            # First update NAV_PSR state, otherwise h(x) will be computed for the last (already computed) state
+            NAV_obj.NAV_PSR.state["SSBpos_SUN_ref"] = timeline["NAV"]["NAV_PSR"]["SSBpos_SUN_ref"][k]
+            h_hist[k] = NAV_obj.NAV_PSR.h(x_true[k])
+            H_hist[k] = NAV_obj.NAV_PSR.H(x_true[k])
+    fig, ax1 = PPC.plot([], [], ylabel="h(x)", title="Predicted Measurement h(x)", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="z - h(x)", title="Innovation z - h(x)", fig=fig, subplot=(2,1,2))
+    innov = z - h_hist
+    for i in range(n_pulsars):
+        name = PULSARname[i]
+        PPC.plot(time_SIM, h_hist[:, i], label=f"h(x) {name}", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, z[:, i], label=f"z {name}", style='--', fig=fig, ax=ax1)
+        PPC.plot(time_SIM, innov[:, i], label=f"{name}", xlabel="time_SIM [s]", fig=fig, ax=ax2)
+
 NAV_plots = {
-    "NAV_EPH"   : NAV_EPH_plot,
-    "NAV_STR"   : NAV_STR_plot,
-    "NAV_CEL"   : NAV_CEL_plot,
+    "NAV_EPH" : NAV_EPH_plot,
+    "NAV_STR" : NAV_STR_plot,
+    "NAV_CEL" : NAV_CEL_plot,
+    "NAV_PSR" : NAV_PSR_plot,
 }

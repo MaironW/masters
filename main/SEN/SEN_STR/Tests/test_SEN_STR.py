@@ -9,7 +9,6 @@ from DYN.DYN       import DYN
 from SEN.SEN       import SEN
 from PPC           import PPC
 from PPC.PPC_plots import PPC_plots
-from PPC.PPC_plots import colors
 from Utils         import spice
 from Utils         import events
 from Utils         import integrator
@@ -130,10 +129,10 @@ for step in range(1, n_steps):
 
     ###################
 
-    # Update algebraic modules first
-    DYN_obj.update_algebraic(sim_time, None, inputs)
     # Integrate all dynamic states together
-    integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
+    DYN_obj = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
+    # Update algebraic modules
+    DYN_obj.update_algebraic(sim_time, None, inputs)
     # Update SEN
     SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
 

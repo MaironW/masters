@@ -180,7 +180,7 @@ class NAV_CEL(Level2Module):
         n_bodies = self.par["n_bodies"]
         n_states = len(x)
 
-        H = np.zeros((n_bodies, n_states))
+        H_matrix = np.zeros((n_bodies, n_states))
 
         for i in range(n_bodies):
             # Get star direction
@@ -199,9 +199,9 @@ class NAV_CEL(Level2Module):
             dhdr = -1 / BODYlos_SC_norm * (STARdir_SC - h * BODYdir_SC)
 
             # Fill matrix
-            H[i, 0:3] = dhdr
+            H_matrix[i, 0:3] = dhdr
 
-        return H
+        return H_matrix
 
     # Check if body is visible by the star tracker
     def body_visibility(self, BODYdir_SC_mes):

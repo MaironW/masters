@@ -177,7 +177,7 @@ class SEN_STR(Level2Module):
 
             # Compute BOFq_SSB_mes
             BOFq_STR     = quaternions.qtrans(STRq_BOF)
-            SSBq_STR_mes = quaternions.qprod(SSBq_STR, noiseq_STR)
+            SSBq_STR_mes = quaternions.qprod(noiseq_STR, SSBq_STR)
             STRq_SSB_mes = quaternions.qtrans(SSBq_STR_mes)
             BOFq_SSB_mes = quaternions.qprod(BOFq_STR, STRq_SSB_mes)
 

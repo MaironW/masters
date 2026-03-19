@@ -83,10 +83,11 @@ class SEN_PSR(Level2Module):
             PULSARSid_mes = self.par["name"]
 
             # Sensor properties
-            A      = self.par["detector_area"] # [m^2]
-            A_cm2  = A*CONSTANTS_par["m2cm_cst"]**2
-            T_obs  = self.par["dt"]
-            t_bias = self.par["t_bias"]
+            A       = self.par["detector_area"] # [m^2]
+            A_cm2   = A*CONSTANTS_par["m2cm_cst"]**2
+            T_obs   = self.par["dt"]
+            t_bias  = self.par["t_bias"]
+            SNR_max = self.par["SNR_max"]
 
             # X-ray properties
             n_pulsars = self.par["n_pulsars"]
@@ -103,6 +104,9 @@ class SEN_PSR(Level2Module):
             SNR = Ns_pulsed / np.sqrt(Nb + Ns_nonpulsed + Ns_pulsed) # Signal to Noise Ratio
             sigma_TOA = 0.5*W / SNR
             noise = np.random.randn(n_pulsars) * sigma_TOA
+
+            # Limit SNR
+            SNR = SNR_max*SNR/(SNR_max+SNR)
 
             # Apply noise to true SCdt_SSB for visible pulsars
             SCdt_SSB_mes = DYN_states["DYN_PSR"]["SCdt_SSB"] + t_bias + noise

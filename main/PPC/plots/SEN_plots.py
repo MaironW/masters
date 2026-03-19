@@ -117,7 +117,7 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_noise = SCdt_SSB - SCdt_SSB_mes
     range_noise = light_speed_cst*time_noise
     for i in range(n_pulsars):
-        PPC.plot(time_SIM, SCdt_SSB_mes[:,i], label=f"{PULSARname[i]} meas.",        fig=fig, ax=ax1)
+        PPC.plot(time_SIM, SCdt_SSB_mes[:,i], label=f"{PULSARname[i]} meas.",       fig=fig, ax=ax1)
         PPC.plot(time_SIM, time_noise[:,i],   label=f"{PULSARname[i]} time noise",  fig=fig, ax=ax2)
         PPC.plot(time_SIM, range_noise[:,i],  label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
 

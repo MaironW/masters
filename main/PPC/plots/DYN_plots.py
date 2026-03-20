@@ -84,7 +84,7 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PULSARSdir_SSB = timeline["DYN"]["DYN_PSR"]["PULSARSdir_SSB"][0] # [time, pulsar, direction]
     roemer_delay   = timeline["DYN"]["DYN_PSR"]["roemer_delay"]
     shapiro_delay  = timeline["DYN"]["DYN_PSR"]["shapiro_delay"]
-    SCdt_SSB       = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
+    OBTdt_TDB      = timeline["DYN"]["DYN_PSR"]["OBTdt_TDB"]
     PULSARname     = DYN_obj.DYN_PSR.par["name"]
     n_pulsars      = DYN_obj.DYN_PSR.par["n_pulsars"]
 
@@ -113,11 +113,11 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)
 
     # Delays for TOAs between SC and SSB
-    fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB [s]", title="True TOA delay on SC", subplot=(3,1,1))
+    fig, ax1 = PPC.plot([], [], ylabel="OBTdt_TDB [s]", title="True TOA delay on SC", subplot=(3,1,1))
     fig, ax2 = PPC.plot([], [], ylabel="roemer_delay [s]", fig=fig, subplot=(3,1,2))
     fig, ax3 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="shapiro_delay [s]", fig=fig, subplot=(3,1,3))
     for i in range(n_pulsars):
-        PPC.plot(time_SIM, SCdt_SSB[:,i], label=PULSARname[i], xlabel="time_SIM [s]", ylabel="SCdt_SSB [s]", title="True TOA delay on SC", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, OBTdt_TDB[:,i], label=PULSARname[i], xlabel="time_SIM [s]", ylabel="OBTdt_TDB [s]", title="True TOA delay on SC", fig=fig, ax=ax1)
         PPC.plot(time_SIM, roemer_delay[:,i], label=PULSARname[i], ylabel="roemer_delay [s]", fig=fig, ax=ax2)
         PPC.plot(time_SIM, shapiro_delay[:,i], label=PULSARname[i], ylabel="shapiro_delay [s]", fig=fig, ax=ax3)
 

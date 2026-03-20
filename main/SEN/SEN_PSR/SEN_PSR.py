@@ -21,7 +21,7 @@ class SEN_PSR(Level2Module):
         self.state = {
             "SEN_PSRoutflg" : par["SEN_PSRoutflg_ini"],
             "time_PSR"      : par["time_PSR_ini"],
-            "SCdt_SSB_mes"  : par["SCdt_SSB_mes_ini"],
+            "OBTdt_TDB_mes" : par["OBTdt_TDB_mes_ini"],
             "PULSARSid_mes" : par["PULSARSid_mes_ini"]
         }
         # Last time update for quantization
@@ -54,9 +54,9 @@ class SEN_PSR(Level2Module):
 
         # Allocate initial pulsars array
         n_pulsars = self.par["n_pulsars"]
-        self.par["SCdt_SSB_mes_ini"]  = np.full(n_pulsars, np.nan)
+        self.par["OBTdt_TDB_mes_ini"] = np.full(n_pulsars, np.nan)
         self.par["PULSARSid_mes_ini"] = np.full(n_pulsars, None)
-        self.state["SCdt_SSB_mes"]    = self.par["SCdt_SSB_mes_ini"]
+        self.state["OBTdt_TDB_mes"]   = self.par["OBTdt_TDB_mes_ini"]
         self.state["PULSARSid_mes"]   = self.par["PULSARSid_mes_ini"]
 
         # Update initial state
@@ -74,7 +74,7 @@ class SEN_PSR(Level2Module):
         # This simulates that the PSR detector was turned OFF
         if self.state["SEN_PSRoutflg"] == 0:
             self.state["time_PSR"]      = 0
-            self.state["SCdt_SSB_mes"]  = self.par["SCdt_SSB_mes_ini"]
+            self.state["OBTdt_TDB_mes"] = self.par["OBTdt_TDB_mes_ini"]
             self.state["PULSARSid_mes"] = self.par["PULSARSid_mes_ini"]
 
         # PSR output is valid
@@ -108,14 +108,14 @@ class SEN_PSR(Level2Module):
             # Limit SNR
             SNR = SNR_max*SNR/(SNR_max+SNR)
 
-            # Apply noise to true SCdt_SSB for visible pulsars
-            SCdt_SSB_mes = DYN_states["DYN_PSR"]["SCdt_SSB"] + t_bias + noise
+            # Apply noise to true OBTdt_TDB for visible pulsars
+            OBTdt_TDB_mes = DYN_states["DYN_PSR"]["OBTdt_TDB"] + t_bias + noise
 
             # Apply time quantization to all states (maybe not needed for PSR)
             time_SIM = DYN_states["DYN_TIME"]["time_SIM"]
             if time_SIM - self._last_update_time >= self.par["dt"]:
                 self.state["time_PSR"]      = time_SIM
-                self.state["SCdt_SSB_mes"]  = SCdt_SSB_mes
+                self.state["OBTdt_TDB_mes"] = OBTdt_TDB_mes
                 self.state["PULSARSid_mes"] = PULSARSid_mes
 
                 self._last_update_time = time_SIM

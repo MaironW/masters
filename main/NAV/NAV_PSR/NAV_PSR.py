@@ -71,7 +71,7 @@ class NAV_PSR(Level2Module):
             SSBpos_SUN_ref = -SUNpos_SSB_ref
 
             # Load sensor outputs
-            SCdt_SSB_mes  = SEN_states["SEN_PSR"]["SCdt_SSB_mes"]
+            OBTdt_TDB_mes  = SEN_states["SEN_PSR"]["OBTdt_TDB_mes"]
 
             n_pulsars = self.par["n_pulsars"]
             z = np.full(n_pulsars, np.nan)
@@ -79,7 +79,7 @@ class NAV_PSR(Level2Module):
 
             # Compute dt if pulsars are visible
             sigma_TOA = np.asarray(self.par["sigma_TOA"])
-            z = SCdt_SSB_mes
+            z = OBTdt_TDB_mes
             R = sigma_TOA**2
 
             if np.sum(~np.isnan(z)) >= 3:

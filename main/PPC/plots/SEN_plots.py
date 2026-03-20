@@ -96,13 +96,13 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot([0, STRz[0]], [0, STRz[1]], [0, STRz[2]], fig=fig, ax=ax, color=PPC.colors["green"], label="STRz")
 
 def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-    SCdt_SSB = timeline["DYN"]["DYN_PSR"]["SCdt_SSB"]
+    time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    OBTdt_TDB = timeline["DYN"]["DYN_PSR"]["OBTdt_TDB"]
 
     # TODO: Plot the other SEN_PSR outputs
     time_PSR      = timeline["SEN"]["SEN_PSR"]["time_PSR"]
     SEN_PSRoutflg = timeline["SEN"]["SEN_PSR"]["SEN_PSRoutflg"]
-    SCdt_SSB_mes  = timeline["SEN"]["SEN_PSR"]["SCdt_SSB_mes"]
+    OBTdt_TDB_mes = timeline["SEN"]["SEN_PSR"]["OBTdt_TDB_mes"]
 
     # Pulsar signals on the SC
     PULSARname = DYN_obj.DYN_PSR.par["name"]
@@ -111,15 +111,15 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     light_speed_cst = CONSTANTS_par["light_speed_cst"]
 
     # Measured vs True delay for TOAs between SC and SSB
-    fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB_mes [s]", title="Measured vs True TOA delay on SC", subplot=(3,1,1))
+    fig, ax1 = PPC.plot([], [], ylabel="OBTdt_TDB_mes [s]", title="Measured vs True TOA delay on SC", subplot=(3,1,1))
     fig, ax2 = PPC.plot([], [], ylabel="Time noise [s]", fig=fig, subplot=(3,1,2))
     fig, ax3 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Range noise [km]", fig=fig, subplot=(3,1,3))
-    time_noise = SCdt_SSB - SCdt_SSB_mes
+    time_noise = OBTdt_TDB - OBTdt_TDB_mes
     range_noise = light_speed_cst*time_noise
     for i in range(n_pulsars):
-        PPC.plot(time_SIM, SCdt_SSB_mes[:,i], label=f"{PULSARname[i]} meas.",       fig=fig, ax=ax1)
-        PPC.plot(time_SIM, time_noise[:,i],   label=f"{PULSARname[i]} time noise",  fig=fig, ax=ax2)
-        PPC.plot(time_SIM, range_noise[:,i],  label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
+        PPC.plot(time_SIM, OBTdt_TDB_mes[:,i], label=f"{PULSARname[i]} meas.",       fig=fig, ax=ax1)
+        PPC.plot(time_SIM, time_noise[:,i],    label=f"{PULSARname[i]} time noise",  fig=fig, ax=ax2)
+        PPC.plot(time_SIM, range_noise[:,i],   label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
 
 SEN_plots = {
     "SEN_STR" : SEN_STR_plot,

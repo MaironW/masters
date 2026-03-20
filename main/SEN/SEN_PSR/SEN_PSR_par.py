@@ -11,7 +11,7 @@ SEN_PSR_par = {
     # Output initial values
     "SEN_PSRoutflg_ini"     : 0,                # PSR (X-ray) detector output flag
     "time_PSR_ini"          : 0,                # PSR (X-ray) detector time
-    "SCdt_SSB_mes_ini"      : np.array([0]),    # [s] Measured time delay between the TOA of a pulse on the SC relative to the SSB (TDB)
+    "OBTdt_TDB_mes_ini"     : np.array([0]),    # [s] Measured time delay between the TOA of a pulse on the SC (OBT) relative to the SSB (TDB)
     "covariance_ini"        : np.array([0]),    # [s] Sensor time delay covariance
     "PULSARSdir_SC_mes_ini" : np.array([0]),    # Measured pulsar direction from the SC
     "PULSARSid_mes_ini"     : np.array([None]), # Dummy, to be filled at initialization

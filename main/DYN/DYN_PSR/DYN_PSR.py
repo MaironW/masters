@@ -21,7 +21,7 @@ class DYN_PSR(Level2Module):
             "PULSARSdir_SSB" : par["PULSARSdir_SSB_ini"],
             "roemer_delay"   : par["roemer_delay_ini"],
             "shapiro_delay"  : par["shapiro_delay_ini"],
-            "SCdt_SSB"       : par["SCdt_SSB_ini"]
+            "OBTdt_TDB"      : par["OBTdt_TDB_ini"]
         }
         super().__init__("DYN_PSR", par)
 
@@ -77,6 +77,6 @@ class DYN_PSR(Level2Module):
         # Update parameters
         self.state["roemer_delay"]  = roemer_delay
         self.state["shapiro_delay"] = shapiro_delay
-        self.state["SCdt_SSB"]      = roemer_delay + shapiro_delay
+        self.state["OBTdt_TDB"]      = roemer_delay + shapiro_delay
 
         return self.state

@@ -178,7 +178,7 @@ def NAV_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     R_diag  = np.diagonal(R, axis1=1, axis2=2)
     sigma_z = np.sqrt(R_diag)
 
-    fig, ax1 = PPC.plot([], [], ylabel="SCdt_SSB_mes [s]", title="TOA delay on SC", subplot=(2,1,1))
+    fig, ax1 = PPC.plot([], [], ylabel="OBTdt_TDB_mes [s]", title="TOA delay on SC", subplot=(2,1,1))
     fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", title="Standard deviation", ylabel="Covariance [s]", fig=fig, subplot=(2,1,2))
     for i in range(n_pulsars):
         PPC.plot(time_SIM, z[:, i],       label=f"{PULSARname[i]} meas.", fig=fig, ax=ax1)

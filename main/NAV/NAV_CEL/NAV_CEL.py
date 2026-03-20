@@ -123,7 +123,7 @@ class NAV_CEL(Level2Module):
                     BODYpos_SSB_list[count]            = BODYpos_SSB
                 count += 1
 
-            if np.sum(~np.isnan(z)) >= 2:
+            if np.sum(~np.isnan(z)) >= 3:
                 z = z
                 R = np.diag(R)
                 NAV_CELoutflg = 1

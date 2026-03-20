@@ -2,8 +2,8 @@ import numpy as np
 from Utils.constants import CONSTANTS_par
 
 # Pre-computations
-los_angle_min = 10*CONSTANTS_par["deg2rad_cst"]  # [rad] Minimum angle between body and star to be considered valid
-los_angle_max = 120*CONSTANTS_par["deg2rad_cst"] # [rad] Maximum angle between body and star to be considered valid
+los_angle_min = 10*CONSTANTS_par["deg2rad_cst"] # [rad] Minimum angle between body and star to be considered valid
+los_angle_max = 35*CONSTANTS_par["deg2rad_cst"] # [rad] Maximum angle between body and star to be considered valid
 cos_los_angle_min = np.cos(los_angle_max)
 cos_los_angle_max = np.cos(los_angle_min)
 

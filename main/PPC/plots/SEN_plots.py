@@ -4,6 +4,13 @@ from PPC import PPC
 from Utils import quaternions
 from Utils.constants import CONSTANTS_par
 
+def SEN_TIME_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    time_TDB = timeline["DYN"]["DYN_TIME"]["time_TDB"]
+    time_OBT = timeline["SEN"]["SEN_TIME"]["time_OBT"]
+    fig, ax = PPC.plot(time_SIM, time_TDB, xlabel="time_SIM [s]", ylabel="[s]", label="time_TDB", title="SEN_TIME")
+    PPC.plot(time_SIM, time_OBT, label="time_OBT", fig=fig, ax=ax)
+
 def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM     = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     time_TDB     = timeline["DYN"]["DYN_TIME"]["time_TDB"]
@@ -122,6 +129,7 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, range_noise[:,i],   label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
 
 SEN_plots = {
-    "SEN_STR" : SEN_STR_plot,
-    "SEN_PSR" : SEN_PSR_plot,
+    "SEN_TIME" : SEN_TIME_plot,
+    "SEN_STR"  : SEN_STR_plot,
+    "SEN_PSR"  : SEN_PSR_plot,
 }

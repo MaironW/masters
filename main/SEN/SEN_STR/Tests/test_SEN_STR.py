@@ -82,6 +82,7 @@ SEN_obj = SEN(DYN_obj)
 
 # Set only modules needed for the test
 SEN_obj.modules = [
+    SEN_obj.SEN_TIME,
     SEN_obj.SEN_STR,
 ]
 

@@ -102,23 +102,23 @@ class SEN_PSR(Level2Module):
             Ns_nonpulsed = Fx*A_cm2*T_obs*d*(1-pf) # Nonpulsed photon counts
             Nb           = Bx*A_cm2*T_obs*d        # Background photon counts
             SNR = Ns_pulsed / np.sqrt(Nb + Ns_nonpulsed + Ns_pulsed) # Signal to Noise Ratio
-            sigma_TOA = 0.5*W / SNR
-            noise = np.random.randn(n_pulsars) * sigma_TOA
 
             # Limit SNR
             SNR = SNR_max*SNR/(SNR_max+SNR)
+            sigma_TOA = 0.5*W / SNR
+            noise = np.random.randn(n_pulsars) * sigma_TOA
 
             # Apply noise to true OBTdt_TDB for visible pulsars
             OBTdt_TDB_mes = DYN_states["DYN_PSR"]["OBTdt_TDB"] + t_bias + noise
 
             # Apply time quantization to all states (maybe not needed for PSR)
-            time_SIM = DYN_states["DYN_TIME"]["time_SIM"]
-            if time_SIM - self._last_update_time >= self.par["dt"]:
-                self.state["time_PSR"]      = time_SIM
+            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+            if time_OBT - self._last_update_time >= self.par["dt"]:
+                self.state["time_PSR"]      = time_OBT
                 self.state["OBTdt_TDB_mes"] = OBTdt_TDB_mes
                 self.state["PULSARSid_mes"] = PULSARSid_mes
 
-                self._last_update_time = time_SIM
+                self._last_update_time = time_OBT
                 self._last_state = copy.deepcopy(self.state)
             else:
                 self.state = copy.deepcopy(self._last_state)

@@ -38,18 +38,15 @@ class NAV_EPH(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
-        # Use time_STR as time reference, because it is the sensor used to detect the bodies
-        # Assumes time_STR = time_TDB + bias + drift + noise
-        # Because NAV_CEL will not work anyway when the STR is off, this is fine
-        # However, the creation of a SEN_TIME module, exclusive to handle time_OBT is a better idea
-        time_STR = SEN_states["SEN_STR"]["time_STR"]
+        # Use time_OBT as time reference
+        time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
 
-        SUNpos_SSB,    SUNvel_SSB    = spice.get_state("SUN",    time_STR)
-        EARTHpos_SSB,  EARTHvel_SSB  = spice.get_state("EARTH",  time_STR)
-        MOONpos_SSB,   MOONvel_SSB   = spice.get_state("MOON",   time_STR)
-        MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   time_STR)
-        DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", time_STR)
-        PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", time_STR)
+        SUNpos_SSB,    SUNvel_SSB    = spice.get_state("SUN",    time_OBT)
+        EARTHpos_SSB,  EARTHvel_SSB  = spice.get_state("EARTH",  time_OBT)
+        MOONpos_SSB,   MOONvel_SSB   = spice.get_state("MOON",   time_OBT)
+        MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   time_OBT)
+        DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", time_OBT)
+        PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", time_OBT)
 
         self.state["SUNpos_SSB"]    = SUNpos_SSB
         self.state["SUNvel_SSB"]    = SUNvel_SSB

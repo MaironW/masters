@@ -182,9 +182,9 @@ class SEN_STR(Level2Module):
             BOFq_SSB_mes = quaternions.qprod(BOFq_STR, STRq_SSB_mes)
 
             # Apply time quantization to all states
-            time_TDB = DYN_states["DYN_TIME"]["time_TDB"]
-            if time_TDB - self._last_update_time >= self.par["dt"]:
-                self.state["time_STR"]          = time_TDB
+            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+            if time_OBT - self._last_update_time >= self.par["dt"]:
+                self.state["time_STR"]          = time_OBT
                 self.state["STARSid_mes"]       = STARSid_mes
                 self.state["SUNdir_STR_mes"]    = SUNdir_STR_mes
                 self.state["EARTHdir_STR_mes"]  = EARTHdir_STR_mes
@@ -202,7 +202,7 @@ class SEN_STR(Level2Module):
                 self.state["STARSdir_SC_mes"]   = STARSdir_SC_mes
                 self.state["BOFq_SSB_mes"]      = BOFq_SSB_mes
 
-                self._last_update_time = time_TDB
+                self._last_update_time = time_OBT
                 self._last_state = copy.deepcopy(self.state)
             else:
                 self.state = copy.deepcopy(self._last_state)

@@ -112,13 +112,13 @@ class SEN_PSR(Level2Module):
             OBTdt_TDB_mes = DYN_states["DYN_PSR"]["OBTdt_TDB"] + t_bias + noise
 
             # Apply time quantization to all states (maybe not needed for PSR)
-            time_SIM = DYN_states["DYN_TIME"]["time_SIM"]
-            if time_SIM - self._last_update_time >= self.par["dt"]:
-                self.state["time_PSR"]      = time_SIM
+            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+            if time_OBT - self._last_update_time >= self.par["dt"]:
+                self.state["time_PSR"]      = time_OBT
                 self.state["OBTdt_TDB_mes"] = OBTdt_TDB_mes
                 self.state["PULSARSid_mes"] = PULSARSid_mes
 
-                self._last_update_time = time_SIM
+                self._last_update_time = time_OBT
                 self._last_state = copy.deepcopy(self.state)
             else:
                 self.state = copy.deepcopy(self._last_state)

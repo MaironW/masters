@@ -77,6 +77,6 @@ class DYN_PSR(Level2Module):
         # Update parameters
         self.state["roemer_delay"]  = roemer_delay
         self.state["shapiro_delay"] = shapiro_delay
-        self.state["OBTdt_TDB"]      = roemer_delay + shapiro_delay
+        self.state["OBTdt_TDB"]     = roemer_delay + shapiro_delay
 
         return self.state

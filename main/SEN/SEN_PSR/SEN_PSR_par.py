@@ -4,7 +4,7 @@ import numpy as np
 SEN_PSR_par = {
     # X-ray detector parameters
     "dt"            : 600,  # [s]   Discretization of the sensor time - Also observation time
-    "detector_area" : 1,    # [m^2] Detector area
+    "detector_area" : 0.19, # [m^2] Detector area
     "t_bias"        : 0,    # [s]   Detector (spacecraft) clock bias
     "SNR_max"       : 1000, # Maximuim SNR value
 

@@ -102,11 +102,11 @@ class SEN_PSR(Level2Module):
             Ns_nonpulsed = Fx*A_cm2*T_obs*d*(1-pf) # Nonpulsed photon counts
             Nb           = Bx*A_cm2*T_obs*d        # Background photon counts
             SNR = Ns_pulsed / np.sqrt(Nb + Ns_nonpulsed + Ns_pulsed) # Signal to Noise Ratio
-            sigma_TOA = 0.5*W / SNR
-            noise = np.random.randn(n_pulsars) * sigma_TOA
 
             # Limit SNR
             SNR = SNR_max*SNR/(SNR_max+SNR)
+            sigma_TOA = 0.5*W / SNR
+            noise = np.random.randn(n_pulsars) * sigma_TOA
 
             # Apply noise to true OBTdt_TDB for visible pulsars
             OBTdt_TDB_mes = DYN_states["DYN_PSR"]["OBTdt_TDB"] + t_bias + noise

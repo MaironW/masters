@@ -62,14 +62,14 @@ n_hat = np.vstack([
 ]).T
 
 # 1) ANISOTROPIES ONLY
-anisotropy_map = cmb_map  # already delta T
+anisotropy_map = cmb_map # Already delta T
 
 # 2) DIPOLE ONLY (relativistic)
 gamma      = np.sqrt(1 - beta2)
 beta_dot_n = n_hat @ beta
 dipole_map = T0 * gamma / (1 - beta_dot_n)
 
-# Optional: remove monopole to visualize dipole clearly
+# Remove monopole to visualize dipole clearly
 dipole_map = dipole_map - np.mean(dipole_map)
 
 # 3) FULL MAP (anisotropy + dipole)
@@ -109,4 +109,64 @@ hp.mollview(
 )
 
 hp.graticule()
+
+##########################
+# TIME SERIES SIMULATION #
+##########################
+
+# Spin parameters
+spin_rate = 2 * np.pi / 60.0   # [rad/s] → 1 rotation per 60 s
+t = np.linspace(0, 300, 2000)  # 5 minutes
+
+# Sensor boresight in spacecraft frame (e.g. X-axis)
+bore_sc = np.array([1.0, 0.0, 0.0])
+
+T_time = []
+
+for ti in t:
+    # Rotation angle
+    theta_spin = spin_rate * ti
+
+    # Tilt spacecraft axis
+    tilt_angle = np.deg2rad(30)
+    Ry = np.array([
+        [ np.cos(tilt_angle), 0, np.sin(tilt_angle)],
+        [ 0,                 1, 0],
+        [-np.sin(tilt_angle), 0, np.cos(tilt_angle)]
+    ])
+
+    # Rotation matrix around Z-axis
+    Rz = np.array([
+        [ np.cos(theta_spin), -np.sin(theta_spin), 0],
+        [ np.sin(theta_spin),  np.cos(theta_spin), 0],
+        [ 0,                  0,                 1]
+    ])
+
+    # Rotate boresight into inertial (Galactic) frame
+    n_t = Ry @ (Rz @ bore_sc)
+
+    # Convert to healpy angles
+    theta_t = np.arccos(n_t[2])           # colatitude
+    phi_t   = np.arctan2(n_t[1], n_t[0])  # longitude
+
+    if phi_t < 0:
+        phi_t += 2*np.pi
+
+    # Sample map
+    T_sample = hp.get_interp_val(full_map, theta_t, phi_t)
+
+    T_time.append(T_sample)
+
+T_time = np.array(T_time)
+T_detrended = T_time - np.mean(T_time)
+
+fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
+plt.title("CMB Temperature vs Time (Spinning Spacecraft)")
+ax1.plot(t, T_time)
+ax2.plot(t, T_detrended)
+ax2.set_xlabel("Time [s]")
+ax1.set_ylabel("Temperature [K]")
+ax2.set_ylabel("Temperature [K]")
+ax1.grid()
+ax2.grid()
 plt.show()

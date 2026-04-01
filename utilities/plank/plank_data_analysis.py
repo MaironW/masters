@@ -160,13 +160,57 @@ for ti in t:
 T_time = np.array(T_time)
 T_detrended = T_time - np.mean(T_time)
 
-fig, (ax1, ax2) = plt.subplots(2, 1, sharex=True)
-plt.title("CMB Temperature vs Time (Spinning Spacecraft)")
+###########################
+# DIPOLE EXTRACTION (FIT) #
+###########################
+
+# Known frequency
+omega = spin_rate
+
+# Design matrix for linear least squares
+X = np.vstack([
+    np.cos(omega * t),
+    np.sin(omega * t),
+    np.ones_like(t)
+]).T
+
+# Solve least squares
+coeffs, _, _, _ = np.linalg.lstsq(X, T_time, rcond=None)
+
+A_cos, A_sin, offset = coeffs
+
+# Reconstruct amplitude and phase
+A_est = np.sqrt(A_cos**2 + A_sin**2)
+phi_est = np.arctan2(-A_sin, A_cos)
+
+print("Estimated dipole amplitude:", A_est)
+print("Estimated phase:", phi_est)
+
+# Reconstruct fitted dipole signal
+T_dipole_fit = A_cos * np.cos(omega * t) + A_sin * np.sin(omega * t)
+
+# PLOTS
+
+fig, (ax1, ax2, ax3) = plt.subplots(3, 1, sharex=True)
+
+fig.suptitle("CMB Temperature vs Time (Spinning Spacecraft)")
+
+# Raw signal
 ax1.plot(t, T_time)
-ax2.plot(t, T_detrended)
-ax2.set_xlabel("Time [s]")
 ax1.set_ylabel("Temperature [K]")
-ax2.set_ylabel("Temperature [K]")
 ax1.grid()
+
+# Detrended
+ax2.plot(t, T_detrended)
+ax2.set_ylabel("Detrended [K]")
 ax2.grid()
+
+# Extracted dipole
+ax3.plot(t, T_detrended, label="Signal (detrended)", alpha=0.5)
+ax3.plot(t, T_dipole_fit, label="Fitted dipole", linewidth=2)
+ax3.set_xlabel("Time [s]")
+ax3.set_ylabel("Dipole [K]")
+ax3.legend()
+ax3.grid()
+
 plt.show()

@@ -2,6 +2,7 @@
 # List all plots to be generated for DYN modules, organized by group name, to be selected on SIM_par
 
 from PPC import PPC
+from Utils import misc
 
 def DYN_TIME_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TIME"]["time_TDB"], xlabel="time_SIM [s]", ylabel="time_TDB [s]", title="Time")
@@ -73,8 +74,8 @@ def DYN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(x, y, z, style='.', label="Stars", xlabel="X SSB", ylabel="Y SSB", zlabel="Z SSB", title="Star Field Normalized", aspect="equal", color=PPC.colors["black"])
 
     # 2D sky sphere
-    STARSproj = PPC.aitoff_projection(STARSdir_SSB_reshaped)
-    boundary  = PPC.aitoff_boundary()
+    STARSproj = misc.aitoff_projection(STARSdir_SSB_reshaped)
+    boundary  = misc.aitoff_boundary()
     fig, ax = PPC.plot(STARSproj[0], STARSproj[1], style='.', label="Stars", xlabel="Right Ascension [deg]", ylabel="Declination [deg]", title="Star Field - Aitoff Projection", aspect="equal", color=PPC.colors["black"])
     PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)
 
@@ -105,9 +106,9 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(x_pulsar, y_pulsar, z_pulsar, style='x', label="Pulsars", color=PPC.colors["purple"], fig=fig, ax=ax)
 
     # 2D sky sphere
-    STARSproj   = PPC.aitoff_projection(STARSdir_SSB_reshaped)
-    PULSARSproj = PPC.aitoff_projection(PULSARSdir_SSB_reshaped)
-    boundary    = PPC.aitoff_boundary()
+    STARSproj   = misc.aitoff_projection(STARSdir_SSB_reshaped)
+    PULSARSproj = misc.aitoff_projection(PULSARSdir_SSB_reshaped)
+    boundary    = misc.aitoff_boundary()
     fig, ax = PPC.plot(STARSproj[0], STARSproj[1], style='.', label="Stars", xlabel="Right Ascension [deg]", ylabel="Declination [deg]", title="Star Field - Aitoff Projection", aspect="equal", color=PPC.colors["black"])
     PPC.plot(PULSARSproj[0], PULSARSproj[1], style='x', label="Pulsars", color=PPC.colors["purple"], fig=fig, ax=ax)
     PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)

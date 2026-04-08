@@ -2,6 +2,7 @@
 
 import numpy as np
 from PPC import PPC
+from Utils import misc
 from Utils.constants import CONSTANTS_par
 
 def NAV_EPH_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
@@ -46,9 +47,9 @@ def NAV_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(NAV_x, NAV_y, NAV_z, style='.', label="Stars NAV", color=PPC.colors["blue"], fig=fig, ax=ax)
 
     # 2D sky sphere
-    DYN_STARSproj = PPC.aitoff_projection(DYN_STARSdir_SSB_reshaped)
-    NAV_STARSproj = PPC.aitoff_projection(NAV_STARSdir_SSB_reshaped)
-    boundary  = PPC.aitoff_boundary()
+    DYN_STARSproj = misc.aitoff_projection(DYN_STARSdir_SSB_reshaped)
+    NAV_STARSproj = misc.aitoff_projection(NAV_STARSdir_SSB_reshaped)
+    boundary  = misc.aitoff_boundary()
     fig, ax = PPC.plot(DYN_STARSproj[0], DYN_STARSproj[1], style='.', label="DYN Stars", xlabel="Right Ascension [deg]", ylabel="Declination [deg]", title="Star Field - Aitoff Projection", aspect="equal", color=PPC.colors["black"])
     fig, ax = PPC.plot(NAV_STARSproj[0], NAV_STARSproj[1], style='.', label="NAV Stars", color=PPC.colors["blue"], fig=fig, ax=ax)
     PPC.plot(boundary[0], boundary[1], fig=fig, ax=ax)
@@ -82,7 +83,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         angles_deg[body["name"]] = (np.cos(z[:, idx])*CONSTANTS_par["rad2deg_cst"])
 
     active_bodies = [
-        body for body in bodies if not PPC.is_nan(angles_deg[body["name"]])
+        body for body in bodies if not misc.is_nan(angles_deg[body["name"]])
     ]
 
     # Reshape vectors for plot

@@ -1,4 +1,4 @@
-import numpy as np
+from Utils import misc
 
 # Define general constants which might be used through the entire code
 
@@ -37,16 +37,6 @@ CONSTANTS_par["mu_MARS_cst"]  = CONSTANTS_par["gravitational_cst"]*CONSTANTS_par
 SSBvel_GAL_norm  = 371 # [km/s] Absolute velocity of the Solar System
 SSBvel_GAL_dir_l = 263.85*CONSTANTS_par["deg2rad_cst"] # [rad] Galactic longitude of the SSB velocity
 SSBvel_GAL_dir_b = 48.25*CONSTANTS_par["deg2rad_cst"]  # [rad] Galactic latitude of the SSB velocity
-SSBvel_GAL_dir = np.array([
-    np.cos(SSBvel_GAL_dir_b) * np.cos(SSBvel_GAL_dir_l),
-    np.cos(SSBvel_GAL_dir_b) * np.sin(SSBvel_GAL_dir_l),
-    np.sin(SSBvel_GAL_dir_b)
-])
-# Rotation matrix from Galactic to Equatorial plane J2000
-R = np.array([
-    [-0.0548755604, -0.8734370902, -0.4838350155],
-    [ 0.4941094279, -0.4448296300,  0.7469822445],
-    [-0.8676661490, -0.1980763734,  0.4559837762]
-])
-SSBvel_CMB = SSBvel_GAL_norm * (R @ SSBvel_GAL_dir).T
+SSBvel_GAL_dir   = misc.latlon2dir(SSBvel_GAL_dir_b, SSBvel_GAL_dir_l)
+SSBvel_CMB       = misc.GALtoSSB(SSBvel_GAL_dir)
 CONSTANTS_par["SSBvel_CMB_cst"] = SSBvel_CMB

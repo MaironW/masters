@@ -2,6 +2,7 @@
 
 from PPC import PPC
 from Utils import quaternions
+from Utils import misc
 from Utils.constants import CONSTANTS_par
 
 def SEN_TIME_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
@@ -51,34 +52,34 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(time_SIM, time_STR, ylabel="time [s]", label="time_STR", fig=fig, ax=ax)
 
     # Plot STR Gnomonic lens projection
-    SUNproj    = PPC.gnomonic_projection(SUNdir_STR_mes)
-    EARTHproj  = PPC.gnomonic_projection(EARTHdir_STR_mes)
-    MOONproj   = PPC.gnomonic_projection(MOONdir_STR_mes)
-    MARSproj   = PPC.gnomonic_projection(MARSdir_STR_mes)
-    DEIMOSproj = PPC.gnomonic_projection(DEIMOSdir_STR_mes)
-    PHOBOSproj = PPC.gnomonic_projection(PHOBOSdir_STR_mes)
-    STARSproj  = PPC.gnomonic_projection(STARSdir_STR_mes)
-    boundary   = PPC.gnomonic_boundary(field_of_view)
+    SUNproj    = misc.gnomonic_projection(SUNdir_STR_mes)
+    EARTHproj  = misc.gnomonic_projection(EARTHdir_STR_mes)
+    MOONproj   = misc.gnomonic_projection(MOONdir_STR_mes)
+    MARSproj   = misc.gnomonic_projection(MARSdir_STR_mes)
+    DEIMOSproj = misc.gnomonic_projection(DEIMOSdir_STR_mes)
+    PHOBOSproj = misc.gnomonic_projection(PHOBOSdir_STR_mes)
+    STARSproj  = misc.gnomonic_projection(STARSdir_STR_mes)
+    boundary   = misc.gnomonic_boundary(field_of_view)
 
     fig, ax = PPC.plot([], [], xlabel="X STR", ylabel="Y STR", style='.', label="Stars", aspect="equal", color=PPC.colors["green"])
     PPC.plot(boundary[0], boundary[1], label="FOV", style='--', fig=fig, ax=ax, color=PPC.colors["black"])
-    if not PPC.is_nan(SUNproj):    PPC.plot(SUNproj[0],    SUNproj[1],    label="Sun",    style='.',  fig=fig, ax=ax, color=PPC.colors["orange"])
-    if not PPC.is_nan(MOONproj):   PPC.plot(MOONproj[0],   MOONproj[1],   label="Moon",   style='.',  fig=fig, ax=ax, color=PPC.colors["grey"])
-    if not PPC.is_nan(EARTHproj):  PPC.plot(EARTHproj[0],  EARTHproj[1],  label="Earth",  style='.',  fig=fig, ax=ax, color=PPC.colors["blue"])
-    if not PPC.is_nan(DEIMOSproj): PPC.plot(DEIMOSproj[0], DEIMOSproj[1], label="Deimos", style='.',  fig=fig, ax=ax, color=PPC.colors["lightgrey"])
-    if not PPC.is_nan(PHOBOSproj): PPC.plot(PHOBOSproj[0], PHOBOSproj[1], label="Phobos", style='.',  fig=fig, ax=ax, color=PPC.colors["darkgrey"])
-    if not PPC.is_nan(MARSproj):   PPC.plot(MARSproj[0],   MARSproj[1],   label="Mars",   style='.',  fig=fig, ax=ax, color=PPC.colors["red"])
-    if not PPC.is_nan(STARSproj):  PPC.plot(STARSproj[0],  STARSproj[1],                  style='.',  fig=fig, ax=ax, color=PPC.colors["green"])
+    if not misc.is_nan(SUNproj):    PPC.plot(SUNproj[0],    SUNproj[1],    label="Sun",    style='.',  fig=fig, ax=ax, color=PPC.colors["orange"])
+    if not misc.is_nan(MOONproj):   PPC.plot(MOONproj[0],   MOONproj[1],   label="Moon",   style='.',  fig=fig, ax=ax, color=PPC.colors["grey"])
+    if not misc.is_nan(EARTHproj):  PPC.plot(EARTHproj[0],  EARTHproj[1],  label="Earth",  style='.',  fig=fig, ax=ax, color=PPC.colors["blue"])
+    if not misc.is_nan(DEIMOSproj): PPC.plot(DEIMOSproj[0], DEIMOSproj[1], label="Deimos", style='.',  fig=fig, ax=ax, color=PPC.colors["lightgrey"])
+    if not misc.is_nan(PHOBOSproj): PPC.plot(PHOBOSproj[0], PHOBOSproj[1], label="Phobos", style='.',  fig=fig, ax=ax, color=PPC.colors["darkgrey"])
+    if not misc.is_nan(MARSproj):   PPC.plot(MARSproj[0],   MARSproj[1],   label="Mars",   style='.',  fig=fig, ax=ax, color=PPC.colors["red"])
+    if not misc.is_nan(STARSproj):  PPC.plot(STARSproj[0],  STARSproj[1],                  style='.',  fig=fig, ax=ax, color=PPC.colors["green"])
 
     # 3D sky sphere
     fig, ax = PPC.plot(STARSdir_SSB[:,0], STARSdir_SSB[:,1], STARSdir_SSB[:,2], style='.', label="Stars", xlabel="X SC", ylabel="Y SC", zlabel="Z SC", title="Star Field Normalized in SC frame", aspect="equal", color=PPC.colors["black"])
-    if not PPC.is_nan(STARSdir_SC_mes):   PPC.plot(STARSdir_SC_mes[:,0],  STARSdir_SC_mes[:,1],  STARSdir_SC_mes[:,2],  style='.', label="Visible Stars", fig=fig, ax=ax, color=PPC.colors["green"])
-    if not PPC.is_nan(SUNdir_SC_mes):     PPC.plot(SUNdir_SC_mes[:,0],    SUNdir_SC_mes[:,1],    SUNdir_SC_mes[:,1],    style='.', label="Sun",           fig=fig, ax=ax, color=PPC.colors["orange"])
-    if not PPC.is_nan(MOONdir_SC_mes):    PPC.plot(MOONdir_SC_mes[:,0],   MOONdir_SC_mes[:,1],   MOONdir_SC_mes[:,2],   style='.', label="MOON",          fig=fig, ax=ax, color=PPC.colors["grey"])
-    if not PPC.is_nan(EARTHdir_SC_mes):   PPC.plot(EARTHdir_SC_mes[:,0],  EARTHdir_SC_mes[:,1],  EARTHdir_SC_mes[:,2],  style='.', label="Earth",         fig=fig, ax=ax, color=PPC.colors["blue"])
-    if not PPC.is_nan(DEIMOSdir_SC_mes):  PPC.plot(DEIMOSdir_SC_mes[:,0], DEIMOSdir_SC_mes[:,1], DEIMOSdir_SC_mes[:,2], style='.', label="Deimos",        fig=fig, ax=ax, color=PPC.colors["lightgrey"])
-    if not PPC.is_nan(PHOBOSdir_SC_mes):  PPC.plot(PHOBOSdir_SC_mes[:,0], PHOBOSdir_SC_mes[:,1], PHOBOSdir_SC_mes[:,2], style='.', label="Phobos",        fig=fig, ax=ax, color=PPC.colors["darkgrey"])
-    if not PPC.is_nan(MARSdir_SC_mes):    PPC.plot(MARSdir_SC_mes[:,0],   MARSdir_SC_mes[:,1],   MARSdir_SC_mes[:,2],   style='.', label="Mars",          fig=fig, ax=ax, color=PPC.colors["red"])
+    if not misc.is_nan(STARSdir_SC_mes):   PPC.plot(STARSdir_SC_mes[:,0],  STARSdir_SC_mes[:,1],  STARSdir_SC_mes[:,2],  style='.', label="Visible Stars", fig=fig, ax=ax, color=PPC.colors["green"])
+    if not misc.is_nan(SUNdir_SC_mes):     PPC.plot(SUNdir_SC_mes[:,0],    SUNdir_SC_mes[:,1],    SUNdir_SC_mes[:,1],    style='.', label="Sun",           fig=fig, ax=ax, color=PPC.colors["orange"])
+    if not misc.is_nan(MOONdir_SC_mes):    PPC.plot(MOONdir_SC_mes[:,0],   MOONdir_SC_mes[:,1],   MOONdir_SC_mes[:,2],   style='.', label="MOON",          fig=fig, ax=ax, color=PPC.colors["grey"])
+    if not misc.is_nan(EARTHdir_SC_mes):   PPC.plot(EARTHdir_SC_mes[:,0],  EARTHdir_SC_mes[:,1],  EARTHdir_SC_mes[:,2],  style='.', label="Earth",         fig=fig, ax=ax, color=PPC.colors["blue"])
+    if not misc.is_nan(DEIMOSdir_SC_mes):  PPC.plot(DEIMOSdir_SC_mes[:,0], DEIMOSdir_SC_mes[:,1], DEIMOSdir_SC_mes[:,2], style='.', label="Deimos",        fig=fig, ax=ax, color=PPC.colors["lightgrey"])
+    if not misc.is_nan(PHOBOSdir_SC_mes):  PPC.plot(PHOBOSdir_SC_mes[:,0], PHOBOSdir_SC_mes[:,1], PHOBOSdir_SC_mes[:,2], style='.', label="Phobos",        fig=fig, ax=ax, color=PPC.colors["darkgrey"])
+    if not misc.is_nan(MARSdir_SC_mes):    PPC.plot(MARSdir_SC_mes[:,0],   MARSdir_SC_mes[:,1],   MARSdir_SC_mes[:,2],   style='.', label="Mars",          fig=fig, ax=ax, color=PPC.colors["red"])
     PPC.plot([0], [0], [0],  style='+', label="SC",  fig=fig, ax=ax, color=PPC.colors["magenta"])
 
     # Get axes in the SSB frame

@@ -134,10 +134,16 @@ def SEN_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
     time_CMB      = timeline["SEN"]["SEN_CMB"]["time_CMB"]
     SEN_CMBoutflg = timeline["SEN"]["SEN_CMB"]["SEN_CMBoutflg"]
-    T_dipole_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_mes"]
+
+    T_dipole_CMB1_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_CMB1_mes"]
+    T_dipole_CMB2_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_CMB2_mes"]
+    T_dipole_CMB3_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_CMB3_mes"]
 
     # Measured temperature dipole
-    PPC.plot(time_SIM, T_dipole_mes, ylabel="T_dipole_mes [K]", title="CMBR Temperature Dipole")
+    fig, ax1 = PPC.plot([], [], ylabel="T_dipole_mes [K]", title="Measured CMBR Temperature Dipole")
+    PPC.plot(time_SIM, T_dipole_CMB1_mes, label="CMB1", color=PPC.colors["blue"],  fig=fig, ax=ax1)
+    PPC.plot(time_SIM, T_dipole_CMB2_mes, label="CMB2", color=PPC.colors["red"],   fig=fig, ax=ax1)
+    PPC.plot(time_SIM, T_dipole_CMB3_mes, label="CMB3", color=PPC.colors["green"], fig=fig, ax=ax1)
 
 SEN_plots = {
     "SEN_TIME" : SEN_TIME_plot,

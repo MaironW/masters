@@ -9,6 +9,9 @@ events_sequence = {
     "DYN.DYN_ATT.BOFq_SSB" : [
         (0, np.array([1,0,0,0])),
     ],
+    "DYN.DYN_ATT.SCw_BOF" : [
+        (0, np.deg2rad([1e-2,0,0])),
+    ],
     "SEN.SEN_STR.STRenableflg" : [
         (100,   1),
         (6000,  0),

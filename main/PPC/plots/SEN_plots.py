@@ -128,8 +128,19 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, time_noise[:,i],    label=f"{PULSARname[i]} time noise",  fig=fig, ax=ax2)
         PPC.plot(time_SIM, range_noise[:,i],   label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
 
+def SEN_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+
+    time_CMB      = timeline["SEN"]["SEN_CMB"]["time_CMB"]
+    SEN_CMBoutflg = timeline["SEN"]["SEN_CMB"]["SEN_CMBoutflg"]
+    T_dipole_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_mes"]
+
+    # Measured temperature dipole
+    PPC.plot(time_SIM, T_dipole_mes, ylabel="T_dipole_mes [K]", title="CMBR Temperature Dipole")
+
 SEN_plots = {
     "SEN_TIME" : SEN_TIME_plot,
     "SEN_STR"  : SEN_STR_plot,
     "SEN_PSR"  : SEN_PSR_plot,
+    "SEN_CMB"  : SEN_CMB_plot,
 }

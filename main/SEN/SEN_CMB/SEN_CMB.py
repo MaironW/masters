@@ -47,33 +47,48 @@ class SEN_CMB(Level2Module):
         # This simulates that the CMB detector was turned OFF
         if self.state["SEN_CMBoutflg"] == 0:
             self.state["time_CMB"]     = 0
-            self.state["T_dipole_mes"] = self.par["T_dipole_mes_ini"]
+            self.state["T_dipole_mes"] = self.par["T_dipole_ini"]
 
         # CMB output is valid
         else:
-            # Get spacecraft velocity vector
-            SCvel_SSB = DYN_states["DYN_TRA"]["SCvel_SSB"]
+            # Spacecraft velocity vector within the Solar System
+            SCvel_SSB = DYN_states["DYN_TRA"]["SCvel_SSB"] # [km/s]
 
-            # Get spacecraft orientation
+            # Solar system velocity vector within the CMB the thermal bath expressed in the SSB frame
+            SSBvel_CMB = CONSTANTS_par["SSBvel_CMB_cst"] # [km/s]
+
+            # Add together the Solar System and spacecraft velocities
+            SCvel_CMB = SCvel_SSB + SSBvel_CMB # [km/s]
+
+            # Spacecraft orientation
             BOFq_SSB = DYN_states["DYN_ATT"]["BOFq_SSB"]
 
             # Compute angle between velocity vector and sensor direction
-            CMBq_BOF       = self.par["CMBq_BOF"]
+            CMBq_BOF       = self.par["CMBq_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
             CMBq_SSB       = quaternions.qprod(CMBq_BOF, BOFq_SSB)
             CMBdir_SSB     = quaternions.qvecprod(CMBq_SSB, [1,0,0])
-            SCvel_SSB_norm = np.linalg.norm(SCvel_SSB)
-            SCvel_SSB_dir  = SCvel_SSB/SCvel_SSB_norm
-            cos_angle      = np.clip(SCvel_SSB_dir @ CMBdir_SSB, -1, 1)
+            SCvel_CMB_norm = np.linalg.norm(SCvel_CMB)
+            SCvel_CMB_dir  = SCvel_CMB/SCvel_CMB_norm
+            cos_angle      = np.clip(SCvel_CMB_dir @ CMBdir_SSB, -1, 1)
             angle          = np.arccos(cos_angle)
 
-            # Compute temperature dipole due to the galaxy velocity
             # Compute temperature dipole due to the spacecraft velocity within the galaxy
+            light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]
+            beta            = SCvel_CMB_norm/light_speed_cst
+            T_monopole      = self.par["T_monopole"] # [K]
+            T_dipole        = np.sqrt(1-beta*beta)/(1-beta*cos_angle)*T_monopole
 
             # Apply noise
+            noise_mean = self.par["noise_mean"]
+            noise_std  = self.par["noise_std"]
+            noise_CMB  = np.random.normal(noise_mean, noise_std, size=1)
+            T_dipole_mes = T_dipole + noise_CMB
+
             # Apply time quantization to all states
             time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
             if time_OBT - self._last_update_time >= self.par["dt"]:
-                self.state["time_CMB"]      = time_OBT
+                self.state["time_CMB"]     = time_OBT
+                self.state["T_dipole_mes"] = T_dipole_mes
 
                 self._last_update_time = time_OBT
                 self._last_state = copy.deepcopy(self.state)

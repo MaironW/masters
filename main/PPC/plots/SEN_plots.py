@@ -105,9 +105,9 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
 def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    time_TDB  = timeline["DYN"]["DYN_TIME"]["time_TDB"]
     OBTdt_TDB = timeline["DYN"]["DYN_PSR"]["OBTdt_TDB"]
 
-    # TODO: Plot the other SEN_PSR outputs
     time_PSR      = timeline["SEN"]["SEN_PSR"]["time_PSR"]
     SEN_PSRoutflg = timeline["SEN"]["SEN_PSR"]["SEN_PSRoutflg"]
     OBTdt_TDB_mes = timeline["SEN"]["SEN_PSR"]["OBTdt_TDB_mes"]
@@ -117,6 +117,13 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     n_pulsars  = SEN_obj.SEN_PSR.par["n_pulsars"]
 
     light_speed_cst = CONSTANTS_par["light_speed_cst"]
+
+    # Plot status
+    fig, ax = PPC.plot(time_SIM, SEN_PSRoutflg, xlabel="time_SIM [s]", ylabel="SEN_PSRoutflg", label="PSRoutflag", title="PSR output flag")
+
+    # Compare PSR and TDB times
+    fig, ax = PPC.plot(time_SIM, time_TDB, xlabel="time_SIM [s]", ylabel="time [s]", label="time_TDB", title="PSR Time")
+    PPC.plot(time_SIM, time_PSR, ylabel="time [s]", label="time_PSR", fig=fig, ax=ax)
 
     # Measured vs True delay for TOAs between SC and SSB
     fig, ax1 = PPC.plot([], [], ylabel="OBTdt_TDB_mes [s]", title="Measured vs True TOA delay on SC", subplot=(3,1,1))
@@ -130,8 +137,8 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, range_noise[:,i],   label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
 
 def SEN_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-
+    time_SIM      = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    time_TDB      = timeline["DYN"]["DYN_TIME"]["time_TDB"]
     time_CMB      = timeline["SEN"]["SEN_CMB"]["time_CMB"]
     SEN_CMBoutflg = timeline["SEN"]["SEN_CMB"]["SEN_CMBoutflg"]
 
@@ -139,11 +146,18 @@ def SEN_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     T_dipole_CMB2_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_CMB2_mes"]
     T_dipole_CMB3_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_CMB3_mes"]
 
+    # Plot status
+    fig, ax = PPC.plot(time_SIM, SEN_CMBoutflg, xlabel="time_SIM [s]", ylabel="SEN_CMBoutflg", label="CMBoutflag", title="CMB output flag")
+
+    # Compare CMB and TDB times
+    fig, ax = PPC.plot(time_SIM, time_TDB, xlabel="time_SIM [s]", ylabel="time [s]", label="time_TDB", title="CMB Time")
+    PPC.plot(time_SIM, time_CMB, ylabel="time [s]", label="time_CMB", fig=fig, ax=ax)
+
     # Measured temperature dipole
-    fig, ax1 = PPC.plot([], [], ylabel="T_dipole_mes [K]", title="Measured CMBR Temperature Dipole")
-    PPC.plot(time_SIM, T_dipole_CMB1_mes, label="CMB1", color=PPC.colors["blue"],  fig=fig, ax=ax1)
-    PPC.plot(time_SIM, T_dipole_CMB2_mes, label="CMB2", color=PPC.colors["red"],   fig=fig, ax=ax1)
-    PPC.plot(time_SIM, T_dipole_CMB3_mes, label="CMB3", color=PPC.colors["green"], fig=fig, ax=ax1)
+    fig, ax = PPC.plot([], [], ylabel="T_dipole_mes [K]", title="Measured CMBR Temperature Dipole")
+    PPC.plot(time_SIM, T_dipole_CMB1_mes, label="CMB1", color=PPC.colors["blue"],  fig=fig, ax=ax)
+    PPC.plot(time_SIM, T_dipole_CMB2_mes, label="CMB2", color=PPC.colors["red"],   fig=fig, ax=ax)
+    PPC.plot(time_SIM, T_dipole_CMB3_mes, label="CMB3", color=PPC.colors["green"], fig=fig, ax=ax)
 
 SEN_plots = {
     "SEN_TIME" : SEN_TIME_plot,

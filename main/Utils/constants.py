@@ -25,7 +25,9 @@ CONSTANTS_par = {
     # Astronomical Unit
     "AU_cst" : 188766877, # [km]
     # Time
-    "MJD2000epoch_relMJD_TDB_days" : 51544.5, # MJD days to J2000 days
+    "MJD2000epoch_relMJD_TDB_days_cst" : 51544.5, # MJD days to J2000 days
+    # CMB temperature
+    "T_CMBR_cst" : 2.7255 # [K] CMBR average temperature
 }
 
 # Compute derived constants

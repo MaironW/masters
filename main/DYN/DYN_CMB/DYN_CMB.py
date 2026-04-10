@@ -5,6 +5,7 @@
 import copy
 
 from Utils.level2module import Level2Module
+from Utils.constants import CONSTANTS_par
 from .DYN_CMB_par import DYN_CMB_par
 
 class DYN_CMB(Level2Module):
@@ -16,7 +17,7 @@ class DYN_CMB(Level2Module):
             par.update(par_override)
         # Set initial dummy state
         self.state = {
-            "T_monopole" : par["T_monopole_ini"]
+            "T_monopole" : CONSTANTS_par["T_CMBR_cst"]
         }
         super().__init__("DYN_CMB", par)
 

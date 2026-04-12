@@ -87,7 +87,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     ]
 
     # Reshape vectors for plot
-    STARSdir_SC_mes_reshaped        = STARSdir_SC_mes.reshape(-1, 3) # [time * star, direction]
+    STARSdir_SC_mes_reshaped = STARSdir_SC_mes.reshape(-1, 3) # [time * star, direction]
 
     # Plot status
     fig, ax = PPC.plot(time_SIM, NAV_CELoutflg, xlabel="time_SIM [s]", ylabel="flag", label="NAV_CELoutflag", title="NAV_CEL output flag")
@@ -186,10 +186,10 @@ def NAV_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, sigma_z[:, i], label=f"{PULSARname[i]} σ",     fig=fig, ax=ax2)
 
     # Plot predicted measurement, assuming the true spacecraft position as the state + innovation
-    x_true   = np.hstack((SCpos_SSB, SCvel_SSB))
-    n_iter   = len(x_true)
-    h_hist   = np.full((n_iter, n_pulsars), np.nan)
-    H_hist   = np.zeros((n_iter, n_pulsars, 6))
+    x_true = np.hstack((SCpos_SSB, SCvel_SSB))
+    n_iter = len(x_true)
+    h_hist = np.full((n_iter, n_pulsars), np.nan)
+    H_hist = np.zeros((n_iter, n_pulsars, 6))
     # Iterate from idx=1 onwards, because we need to use x_true[k-1] to compute h(x)
     for k in range(n_iter):
         if NAV_PSRoutflg[k] == 1:
@@ -206,9 +206,56 @@ def NAV_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, z[:, i], label=f"z {name}", style='--', fig=fig, ax=ax1)
         PPC.plot(time_SIM, innov[:, i], label=f"{name}", xlabel="time_SIM [s]", fig=fig, ax=ax2)
 
+def NAV_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM      = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    SCpos_SSB     = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+    SCvel_SSB     = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+    SEN_STRoutflg = timeline["SEN"]["SEN_STR"]["SEN_STRoutflg"]
+    SEN_CMBoutflg = timeline["SEN"]["SEN_CMB"]["SEN_CMBoutflg"]
+    NAV_CMBoutflg = timeline["NAV"]["NAV_CMB"]["NAV_CMBoutflg"]
+
+    z = timeline["NAV"]["NAV_CMB"]["z"]
+    R = timeline["NAV"]["NAV_CMB"]["R"]
+
+    # Plot status
+    fig, ax = PPC.plot(time_SIM, NAV_CMBoutflg, xlabel="time_SIM [s]", ylabel="flag", label="NAV_CMBoutflag", title="NAV_CMB output flag")
+    PPC.plot(time_SIM, SEN_CMBoutflg, label="CMBoutflag", style='--', fig=fig, ax=ax)
+    PPC.plot(time_SIM, SEN_STRoutflg, label="STRoutflag", style='--', fig=fig, ax=ax)
+
+    # Plot times and covariance
+    R_diag  = np.diagonal(R, axis1=1, axis2=2)
+    sigma_z = np.sqrt(R_diag)
+
+    fig, ax1 = PPC.plot([], [], ylabel="CMBR Temperature Dipole [K]", title="CMBR Temperature Dipole", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", title="Standard deviation", ylabel="Covariance [K]", fig=fig, subplot=(2,1,2))
+    for i in range(3):
+        PPC.plot(time_SIM, z[:, i],       label=f"CMB{i} meas.", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, sigma_z[:, i], label=f"CMB{i} σ",     fig=fig, ax=ax2)
+
+    # Plot predicted measurement, assuming the true spacecraft velocity as the state + innovation
+    x_true = np.hstack((SCpos_SSB, SCvel_SSB))
+    n_iter = len(x_true)
+    h_hist = np.full((n_iter, 3), np.nan)
+    H_hist = np.zeros((n_iter, 3, 6))
+    # Iterate from idx=1 onwards, because we need to use x_true[k-1] to compute h(x)
+    for k in range(n_iter):
+        if NAV_CMBoutflg[k] == 1:
+            # First update NAV_CMB state, otherwise h(x) will be computed for the last (already computed) state
+            NAV_obj.NAV_CMB.state["BOFq_SSB_ref"] = timeline["NAV"]["NAV_CMB"]["BOFq_SSB_ref"][k]
+            h_hist[k] = NAV_obj.NAV_CMB.h(x_true[k])
+            H_hist[k] = NAV_obj.NAV_CMB.H(x_true[k])
+    fig, ax1 = PPC.plot([], [], ylabel="h(x)", title="Predicted Measurement h(x)", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="z - h(x)", title="Innovation z - h(x)", fig=fig, subplot=(2,1,2))
+    innov = z - h_hist
+    for i in range(3):
+        PPC.plot(time_SIM, h_hist[:, i], label=f"h(x) CMB{i}", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, z[:, i], label=f"z CMB{i}", style='--', fig=fig, ax=ax1)
+        PPC.plot(time_SIM, innov[:, i], label=f"CMB{i}", xlabel="time_SIM [s]", fig=fig, ax=ax2)
+
 NAV_plots = {
     "NAV_EPH" : NAV_EPH_plot,
     "NAV_STR" : NAV_STR_plot,
     "NAV_CEL" : NAV_CEL_plot,
     "NAV_PSR" : NAV_PSR_plot,
+    "NAV_CMB" : NAV_CMB_plot,
 }

@@ -23,6 +23,7 @@ class NAV_CMB(Level2Module):
             "NAV_CMBoutflg" : par["NAV_CMBoutflg_ini"],
             "z"             : par["z_ini"],
             "R"             : par["R_ini"],
+            "BOFq_SSB_ref"  : par["BOFq_SSB_ini"],
         }
         super().__init__("NAV_CMB", par)
 
@@ -34,18 +35,23 @@ class NAV_CMB(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
+        SEN_STRoutflg  = SEN_states["SEN_STR"]["SEN_STRoutflg"]
         SEN_CMBoutflg  = SEN_states["SEN_CMB"]["SEN_CMBoutflg"]
 
-        # Only update outputs if CMBoutflg is valid
+        # Only update outputs if SEN_CMBoutflg and SEN_STRoutflg are valid
         # Otherwise, return default values
-        if SEN_CMBoutflg == 0:
-            self.state["NAV_CMBoutflg"]  = self.par["NAV_CMBoutflg_ini"]
-            self.state["z"]              = self.par["z_ini"]
-            self.state["R"]              = self.par["R_ini"]
+        if SEN_CMBoutflg == 0 or SEN_STRoutflg == 0:
+            self.state["NAV_CMBoutflg"] = self.par["NAV_CMBoutflg_ini"]
+            self.state["z"]             = self.par["z_ini"]
+            self.state["R"]             = self.par["R_ini"]
+            self.state["BOFq_SSB_ref"]  = self.par["BOFq_SSB_ini"]
 
-        # CMB output is valid
+        # CMB and STR outputs are valid
         else:
-            # Load sensor outputs
+            # Load SEN_STR outputs
+            BOFq_SSB_ref = SEN_states["SEN_STR"]["BOFq_SSB_mes"]
+
+            # Load SEN_CMB outputs
             T_dipole_CMB1_mes = SEN_states["SEN_CMB"]["T_dipole_CMB1_mes"] # [K]
             T_dipole_CMB2_mes = SEN_states["SEN_CMB"]["T_dipole_CMB2_mes"] # [K]
             T_dipole_CMB3_mes = SEN_states["SEN_CMB"]["T_dipole_CMB3_mes"] # [K]
@@ -59,6 +65,7 @@ class NAV_CMB(Level2Module):
             self.state["NAV_CMBoutflg"] = NAV_CMBoutflg
             self.state["z"]             = z
             self.state["R"]             = R
+            self.state["BOFq_SSB_ref"]  = BOFq_SSB_ref
 
         return self.state
 
@@ -78,17 +85,17 @@ class NAV_CMB(Level2Module):
         SCvel_CMB_norm = np.linalg.norm(SCvel_CMB) # [km/s]
         SCvel_CMB_dir  = SCvel_CMB/SCvel_CMB_norm
 
-        # Spacecraft orientation
-        BOFq_SSB = [1,0,0,0] # TODO: Define this as known or measured (maybe implement a NAV_ATT module)
+        # Spacecraft orientation as measured by SEN_STR
+        BOFq_SSB_ref = self.state["BOFq_SSB_ref"]
 
         # Compute angle between velocity vector and each sensor direction
         CMB1q_BOF = self.par["CMB1q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
         CMB2q_BOF = self.par["CMB2q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
         CMB3q_BOF = self.par["CMB3q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
 
-        CMB1q_SSB = quaternions.qprod(CMB1q_BOF, BOFq_SSB)
-        CMB2q_SSB = quaternions.qprod(CMB2q_BOF, BOFq_SSB)
-        CMB3q_SSB = quaternions.qprod(CMB3q_BOF, BOFq_SSB)
+        CMB1q_SSB = quaternions.qprod(CMB1q_BOF, BOFq_SSB_ref)
+        CMB2q_SSB = quaternions.qprod(CMB2q_BOF, BOFq_SSB_ref)
+        CMB3q_SSB = quaternions.qprod(CMB3q_BOF, BOFq_SSB_ref)
 
         CMB1dir_SSB = quaternions.qvecprod(CMB1q_SSB, [0,0,1])
         CMB2dir_SSB = quaternions.qvecprod(CMB2q_SSB, [0,0,1])
@@ -128,17 +135,17 @@ class NAV_CMB(Level2Module):
         SCvel_CMB_norm = np.linalg.norm(SCvel_CMB) # [km/s]
         SCvel_CMB_dir  = SCvel_CMB/SCvel_CMB_norm
 
-        # Spacecraft orientation
-        BOFq_SSB = [1,0,0,0] # TODO: Define this as known or measured (maybe implement a NAV_ATT module)
+        # Spacecraft orientation as measured by SEN_STR
+        BOFq_SSB_ref = self.state["BOFq_SSB_ref"]
 
         # Compute angle between velocity vector and each sensor direction
         CMB1q_BOF = self.par["CMB1q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
         CMB2q_BOF = self.par["CMB2q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
         CMB3q_BOF = self.par["CMB3q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
 
-        CMB1q_SSB = quaternions.qprod(CMB1q_BOF, BOFq_SSB)
-        CMB2q_SSB = quaternions.qprod(CMB2q_BOF, BOFq_SSB)
-        CMB3q_SSB = quaternions.qprod(CMB3q_BOF, BOFq_SSB)
+        CMB1q_SSB = quaternions.qprod(CMB1q_BOF, BOFq_SSB_ref)
+        CMB2q_SSB = quaternions.qprod(CMB2q_BOF, BOFq_SSB_ref)
+        CMB3q_SSB = quaternions.qprod(CMB3q_BOF, BOFq_SSB_ref)
 
         CMB1dir_SSB = quaternions.qvecprod(CMB1q_SSB, [0,0,1])
         CMB2dir_SSB = quaternions.qvecprod(CMB2q_SSB, [0,0,1])
@@ -149,10 +156,10 @@ class NAV_CMB(Level2Module):
         cos_angle3 = np.clip(SCvel_CMB_dir @ CMB3dir_SSB, -1, 1)
 
         # Compute scalars
-        SCvel_SSB_norm  = np.linalg.norm(SCvel_SSB)
-        beta            = SCvel_SSB_norm/light_speed_cst
-        T_monopole      = self.par["T_monopole"] # [K]
-        aux0 = np.sqrt(1 - beta^2)
+        SCvel_SSB_norm = np.linalg.norm(SCvel_SSB)
+        beta           = SCvel_SSB_norm/light_speed_cst
+        T_monopole     = self.par["T_monopole"] # [K]
+        aux0 = np.sqrt(1 - beta*beta)
         aux1 = 1 - beta*cos_angle1
         aux2 = 1 - beta*cos_angle2
         aux3 = 1 - beta*cos_angle3

@@ -14,10 +14,10 @@ def SEN_TIME_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
 def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM     = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-    time_TDB     = timeline["DYN"]["DYN_TIME"]["time_TDB"]
     BOFq_SSB     = timeline["DYN"]["DYN_ATT"]["BOFq_SSB"]
     STARSdir_SSB = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0] # [time, star, direction]
 
+    time_OBT      = timeline["SEN"]["SEN_TIME"]["time_OBT"]
     time_STR      = timeline["SEN"]["SEN_STR"]["time_STR"]
     SEN_STRoutflg = timeline["SEN"]["SEN_STR"]["SEN_STRoutflg"]
     field_of_view = SEN_obj.SEN_STR.par["field_of_view"]
@@ -47,8 +47,8 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Plot status
     fig, ax = PPC.plot(time_SIM, SEN_STRoutflg, xlabel="time_SIM [s]", ylabel="SEN_STRoutflg", label="STRoutflag", title="STR output flag")
 
-    # Compare STR and TDB times
-    fig, ax = PPC.plot(time_SIM, time_TDB, xlabel="time_SIM [s]", ylabel="time [s]", label="time_TDB", title="STR Time")
+    # Compare STR and OBT times
+    fig, ax = PPC.plot(time_SIM, time_OBT, xlabel="time_SIM [s]", ylabel="time [s]", label="time_OBT", title="STR Time")
     PPC.plot(time_SIM, time_STR, ylabel="time [s]", label="time_STR", fig=fig, ax=ax)
 
     # Plot STR Gnomonic lens projection
@@ -105,9 +105,9 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
 def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-    time_TDB  = timeline["DYN"]["DYN_TIME"]["time_TDB"]
     OBTdt_TDB = timeline["DYN"]["DYN_PSR"]["OBTdt_TDB"]
 
+    time_OBT      = timeline["SEN"]["SEN_TIME"]["time_OBT"]
     time_PSR      = timeline["SEN"]["SEN_PSR"]["time_PSR"]
     SEN_PSRoutflg = timeline["SEN"]["SEN_PSR"]["SEN_PSRoutflg"]
     OBTdt_TDB_mes = timeline["SEN"]["SEN_PSR"]["OBTdt_TDB_mes"]
@@ -122,7 +122,7 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax = PPC.plot(time_SIM, SEN_PSRoutflg, xlabel="time_SIM [s]", ylabel="SEN_PSRoutflg", label="PSRoutflag", title="PSR output flag")
 
     # Compare PSR and TDB times
-    fig, ax = PPC.plot(time_SIM, time_TDB, xlabel="time_SIM [s]", ylabel="time [s]", label="time_TDB", title="PSR Time")
+    fig, ax = PPC.plot(time_SIM, time_OBT, xlabel="time_SIM [s]", ylabel="time [s]", label="time_OBT", title="PSR Time")
     PPC.plot(time_SIM, time_PSR, ylabel="time [s]", label="time_PSR", fig=fig, ax=ax)
 
     # Measured vs True delay for TOAs between SC and SSB
@@ -138,7 +138,7 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
 def SEN_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM      = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-    time_TDB      = timeline["DYN"]["DYN_TIME"]["time_TDB"]
+    time_OBT      = timeline["SEN"]["SEN_TIME"]["time_OBT"]
     time_CMB      = timeline["SEN"]["SEN_CMB"]["time_CMB"]
     SEN_CMBoutflg = timeline["SEN"]["SEN_CMB"]["SEN_CMBoutflg"]
 
@@ -150,7 +150,7 @@ def SEN_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax = PPC.plot(time_SIM, SEN_CMBoutflg, xlabel="time_SIM [s]", ylabel="SEN_CMBoutflg", label="CMBoutflag", title="CMB output flag")
 
     # Compare CMB and TDB times
-    fig, ax = PPC.plot(time_SIM, time_TDB, xlabel="time_SIM [s]", ylabel="time [s]", label="time_TDB", title="CMB Time")
+    fig, ax = PPC.plot(time_SIM, time_OBT, xlabel="time_SIM [s]", ylabel="time [s]", label="time_OBT", title="CMB Time")
     PPC.plot(time_SIM, time_CMB, ylabel="time [s]", label="time_CMB", fig=fig, ax=ax)
 
     # Measured temperature dipole

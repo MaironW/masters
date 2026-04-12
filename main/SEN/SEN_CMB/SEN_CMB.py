@@ -31,6 +31,13 @@ class SEN_CMB(Level2Module):
 
     # Initialization
     def initialize(self, DYN_states, SEN_states):
+        # Load time OBT
+        time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+
+        # Set initial value for time_OBT
+        self.par["time_CMB_ini"] = time_OBT
+        self.state["time_CMB"] = self.par["time_CMB_ini"]
+
         # CMBR temperature loaded from DYN_CMB
         self.par["T_monopole"] = DYN_states["DYN_CMB"]["T_monopole"]
 
@@ -48,7 +55,7 @@ class SEN_CMB(Level2Module):
         # Make all outputs invalid if SEN_CMBoutflg is zero
         # This simulates that the CMB detector was turned OFF
         if self.state["SEN_CMBoutflg"] == 0:
-            self.state["time_CMB"]          = 0
+            self.state["time_CMB"]          = self.par["time_CMB_ini"]
             self.state["T_dipole_CMB1_mes"] = self.par["T_dipole_ini"]
             self.state["T_dipole_CMB2_mes"] = self.par["T_dipole_ini"]
             self.state["T_dipole_CMB3_mes"] = self.par["T_dipole_ini"]

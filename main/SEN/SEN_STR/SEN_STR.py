@@ -45,8 +45,15 @@ class SEN_STR(Level2Module):
 
     # Initialization
     def initialize(self, DYN_states, SEN_states):
+        # Load time OBT
+        time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+
+        # Set initial value for time_OBT
+        self.par["time_STR_ini"] = time_OBT
+        self.state["time_STR"]   = self.par["time_STR_ini"]
+
         # Get total number of stars simulated in DYN
-        STARSdir_SSB  = DYN_states["DYN_STR"]["STARSdir_SSB"]
+        STARSdir_SSB = DYN_states["DYN_STR"]["STARSdir_SSB"]
         m, n = STARSdir_SSB.shape
         # Allocate initial stars array
         self.par["STARSid_mes_ini"]    = np.full(m, np.nan)

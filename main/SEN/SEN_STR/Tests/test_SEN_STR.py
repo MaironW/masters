@@ -67,16 +67,6 @@ events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt, e
 # Normally initialize DYN modules
 DYN_obj = DYN()
 
-# Set only modules needed for the test
-DYN_obj.modules = [
-    DYN_obj.DYN_TIME,
-    DYN_obj.DYN_EPH,
-    DYN_obj.DYN_TRA,
-    DYN_obj.DYN_GRV,
-    DYN_obj.DYN_ATT,
-    DYN_obj.DYN_STR,
-]
-
 # Normally initialize SEN modules
 SEN_obj = SEN(DYN_obj)
 

@@ -29,6 +29,10 @@ class NAV_CMB(Level2Module):
 
     # Initialization
     def initialize(self, SEN_states, NAV_states):
+        # Update KF functions
+        self.state["h"] = self.h
+        self.state["H"] = self.H
+
         # Update initial state
         self.state = self.update_algebraic(0, SEN_states, NAV_states)
         return self.state
@@ -66,6 +70,10 @@ class NAV_CMB(Level2Module):
             self.state["z"]             = z
             self.state["R"]             = R
             self.state["BOFq_SSB_ref"]  = BOFq_SSB_ref
+
+            # Update KF functions
+            self.state["h"] = self.h
+            self.state["H"] = self.H
 
         return self.state
 

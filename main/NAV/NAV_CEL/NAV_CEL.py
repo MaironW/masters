@@ -36,6 +36,10 @@ class NAV_CEL(Level2Module):
         self.state["BODYsel_STARdir_SC_ref_list"] = self.par["STARdir_SC_ini"]
         self.state["BODYpos_SSB_list"]            = self.par["BODYpos_SSB_ini"]
 
+        # Update KF functions
+        self.state["h"] = self.h
+        self.state["H"] = self.H
+
         self.state = self.update_algebraic(0, SEN_states, NAV_states)
         return self.state
 
@@ -139,6 +143,10 @@ class NAV_CEL(Level2Module):
             self.state["BODYsel_STARdir_SC_mes_list"] = BODYsel_STARdir_SC_mes_list
             self.state["BODYsel_STARdir_SC_ref_list"] = BODYsel_STARdir_SC_ref_list
             self.state["BODYpos_SSB_list"]            = BODYpos_SSB_list
+
+            # Update KF functions
+            self.state["h"] = self.h
+            self.state["H"] = self.H
 
         return self.state
 

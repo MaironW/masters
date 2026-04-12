@@ -47,6 +47,10 @@ class NAV_PSR(Level2Module):
         self.state["R"]              = self.par["R_ini"]
         self.state["SSBpos_SUN_ref"] = self.par["SSBpos_SUN_ref_ini"]
 
+        # Update KF functions
+        self.state["h"] = self.h
+        self.state["H"] = self.H
+
         # Update initial state
         self.state = self.update_algebraic(0, SEN_states, NAV_states)
 
@@ -96,6 +100,10 @@ class NAV_PSR(Level2Module):
             self.state["z"]              = z
             self.state["R"]              = R
             self.state["SSBpos_SUN_ref"] = SSBpos_SUN_ref
+
+            # Update KF functions
+            self.state["h"] = self.h
+            self.state["H"] = self.H
 
         return self.state
 

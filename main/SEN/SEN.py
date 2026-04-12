@@ -6,6 +6,7 @@ from Utils.level1module import Level1Module
 from .SEN_TIME.SEN_TIME import SEN_TIME
 from .SEN_STR.SEN_STR   import SEN_STR
 from .SEN_PSR.SEN_PSR   import SEN_PSR
+from .SEN_CMB.SEN_CMB   import SEN_CMB
 
 class SEN(Level1Module):
     def __init__(self, DYN_obj, par_override=None):
@@ -16,12 +17,14 @@ class SEN(Level1Module):
         self.SEN_TIME = SEN_TIME(par_override.get("SEN_TIME"))
         self.SEN_STR  = SEN_STR(par_override.get("SEN_STR"))
         self.SEN_PSR  = SEN_PSR(par_override.get("SEN_PSR"))
+        self.SEN_CMB  = SEN_CMB(par_override.get("SEN_CMB"))
 
         # Register modules
         self.modules = [
             self.SEN_TIME,
             self.SEN_STR,
             self.SEN_PSR,
+            self.SEN_CMB,
         ]
 
         # Initialize all modules

@@ -31,6 +31,13 @@ class SEN_PSR(Level2Module):
 
     # Initialization
     def initialize(self, DYN_states, SEN_states):
+        # Load time OBT
+        time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+
+        # Set initial value for time_OBT
+        self.par["time_PSR_ini"] = time_OBT
+        self.state["time_PSR"] = self.par["time_PSR_ini"]
+
         # Load Pulsar database
         kernel_dir = "Utils/kernels/"
         pulsar_data_file = kernel_dir + "pulsar.csv"
@@ -73,7 +80,7 @@ class SEN_PSR(Level2Module):
         # Make all outputs invalid if SEN_PSRoutflg is zero
         # This simulates that the PSR detector was turned OFF
         if self.state["SEN_PSRoutflg"] == 0:
-            self.state["time_PSR"]      = 0
+            self.state["time_PSR"]      = self.par["time_PSR_ini"]
             self.state["OBTdt_TDB_mes"] = self.par["OBTdt_TDB_mes_ini"]
             self.state["PULSARSid_mes"] = self.par["PULSARSid_mes_ini"]
 

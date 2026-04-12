@@ -2,6 +2,7 @@
 
 from PPC import PPC
 from Utils import quaternions
+from Utils import misc
 from Utils.constants import CONSTANTS_par
 
 def SEN_TIME_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
@@ -13,10 +14,10 @@ def SEN_TIME_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
 def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM     = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-    time_TDB     = timeline["DYN"]["DYN_TIME"]["time_TDB"]
     BOFq_SSB     = timeline["DYN"]["DYN_ATT"]["BOFq_SSB"]
     STARSdir_SSB = timeline["DYN"]["DYN_STR"]["STARSdir_SSB"][0] # [time, star, direction]
 
+    time_OBT      = timeline["SEN"]["SEN_TIME"]["time_OBT"]
     time_STR      = timeline["SEN"]["SEN_STR"]["time_STR"]
     SEN_STRoutflg = timeline["SEN"]["SEN_STR"]["SEN_STRoutflg"]
     field_of_view = SEN_obj.SEN_STR.par["field_of_view"]
@@ -46,39 +47,39 @@ def SEN_STR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Plot status
     fig, ax = PPC.plot(time_SIM, SEN_STRoutflg, xlabel="time_SIM [s]", ylabel="SEN_STRoutflg", label="STRoutflag", title="STR output flag")
 
-    # Compare STR and TDB times
-    fig, ax = PPC.plot(time_SIM, time_TDB, xlabel="time_SIM [s]", ylabel="time [s]", label="time_TDB", title="STR Time")
+    # Compare STR and OBT times
+    fig, ax = PPC.plot(time_SIM, time_OBT, xlabel="time_SIM [s]", ylabel="time [s]", label="time_OBT", title="STR Time")
     PPC.plot(time_SIM, time_STR, ylabel="time [s]", label="time_STR", fig=fig, ax=ax)
 
     # Plot STR Gnomonic lens projection
-    SUNproj    = PPC.gnomonic_projection(SUNdir_STR_mes)
-    EARTHproj  = PPC.gnomonic_projection(EARTHdir_STR_mes)
-    MOONproj   = PPC.gnomonic_projection(MOONdir_STR_mes)
-    MARSproj   = PPC.gnomonic_projection(MARSdir_STR_mes)
-    DEIMOSproj = PPC.gnomonic_projection(DEIMOSdir_STR_mes)
-    PHOBOSproj = PPC.gnomonic_projection(PHOBOSdir_STR_mes)
-    STARSproj  = PPC.gnomonic_projection(STARSdir_STR_mes)
-    boundary   = PPC.gnomonic_boundary(field_of_view)
+    SUNproj    = misc.gnomonic_projection(SUNdir_STR_mes)
+    EARTHproj  = misc.gnomonic_projection(EARTHdir_STR_mes)
+    MOONproj   = misc.gnomonic_projection(MOONdir_STR_mes)
+    MARSproj   = misc.gnomonic_projection(MARSdir_STR_mes)
+    DEIMOSproj = misc.gnomonic_projection(DEIMOSdir_STR_mes)
+    PHOBOSproj = misc.gnomonic_projection(PHOBOSdir_STR_mes)
+    STARSproj  = misc.gnomonic_projection(STARSdir_STR_mes)
+    boundary   = misc.gnomonic_boundary(field_of_view)
 
     fig, ax = PPC.plot([], [], xlabel="X STR", ylabel="Y STR", style='.', label="Stars", aspect="equal", color=PPC.colors["green"])
     PPC.plot(boundary[0], boundary[1], label="FOV", style='--', fig=fig, ax=ax, color=PPC.colors["black"])
-    if not PPC.is_nan(SUNproj):    PPC.plot(SUNproj[0],    SUNproj[1],    label="Sun",    style='.',  fig=fig, ax=ax, color=PPC.colors["orange"])
-    if not PPC.is_nan(MOONproj):   PPC.plot(MOONproj[0],   MOONproj[1],   label="Moon",   style='.',  fig=fig, ax=ax, color=PPC.colors["grey"])
-    if not PPC.is_nan(EARTHproj):  PPC.plot(EARTHproj[0],  EARTHproj[1],  label="Earth",  style='.',  fig=fig, ax=ax, color=PPC.colors["blue"])
-    if not PPC.is_nan(DEIMOSproj): PPC.plot(DEIMOSproj[0], DEIMOSproj[1], label="Deimos", style='.',  fig=fig, ax=ax, color=PPC.colors["lightgrey"])
-    if not PPC.is_nan(PHOBOSproj): PPC.plot(PHOBOSproj[0], PHOBOSproj[1], label="Phobos", style='.',  fig=fig, ax=ax, color=PPC.colors["darkgrey"])
-    if not PPC.is_nan(MARSproj):   PPC.plot(MARSproj[0],   MARSproj[1],   label="Mars",   style='.',  fig=fig, ax=ax, color=PPC.colors["red"])
-    if not PPC.is_nan(STARSproj):  PPC.plot(STARSproj[0],  STARSproj[1],                  style='.',  fig=fig, ax=ax, color=PPC.colors["green"])
+    if not misc.is_nan(SUNproj):    PPC.plot(SUNproj[0],    SUNproj[1],    label="Sun",    style='.',  fig=fig, ax=ax, color=PPC.colors["orange"])
+    if not misc.is_nan(MOONproj):   PPC.plot(MOONproj[0],   MOONproj[1],   label="Moon",   style='.',  fig=fig, ax=ax, color=PPC.colors["grey"])
+    if not misc.is_nan(EARTHproj):  PPC.plot(EARTHproj[0],  EARTHproj[1],  label="Earth",  style='.',  fig=fig, ax=ax, color=PPC.colors["blue"])
+    if not misc.is_nan(DEIMOSproj): PPC.plot(DEIMOSproj[0], DEIMOSproj[1], label="Deimos", style='.',  fig=fig, ax=ax, color=PPC.colors["lightgrey"])
+    if not misc.is_nan(PHOBOSproj): PPC.plot(PHOBOSproj[0], PHOBOSproj[1], label="Phobos", style='.',  fig=fig, ax=ax, color=PPC.colors["darkgrey"])
+    if not misc.is_nan(MARSproj):   PPC.plot(MARSproj[0],   MARSproj[1],   label="Mars",   style='.',  fig=fig, ax=ax, color=PPC.colors["red"])
+    if not misc.is_nan(STARSproj):  PPC.plot(STARSproj[0],  STARSproj[1],                  style='.',  fig=fig, ax=ax, color=PPC.colors["green"])
 
     # 3D sky sphere
     fig, ax = PPC.plot(STARSdir_SSB[:,0], STARSdir_SSB[:,1], STARSdir_SSB[:,2], style='.', label="Stars", xlabel="X SC", ylabel="Y SC", zlabel="Z SC", title="Star Field Normalized in SC frame", aspect="equal", color=PPC.colors["black"])
-    if not PPC.is_nan(STARSdir_SC_mes):   PPC.plot(STARSdir_SC_mes[:,0],  STARSdir_SC_mes[:,1],  STARSdir_SC_mes[:,2],  style='.', label="Visible Stars", fig=fig, ax=ax, color=PPC.colors["green"])
-    if not PPC.is_nan(SUNdir_SC_mes):     PPC.plot(SUNdir_SC_mes[:,0],    SUNdir_SC_mes[:,1],    SUNdir_SC_mes[:,1],    style='.', label="Sun",           fig=fig, ax=ax, color=PPC.colors["orange"])
-    if not PPC.is_nan(MOONdir_SC_mes):    PPC.plot(MOONdir_SC_mes[:,0],   MOONdir_SC_mes[:,1],   MOONdir_SC_mes[:,2],   style='.', label="MOON",          fig=fig, ax=ax, color=PPC.colors["grey"])
-    if not PPC.is_nan(EARTHdir_SC_mes):   PPC.plot(EARTHdir_SC_mes[:,0],  EARTHdir_SC_mes[:,1],  EARTHdir_SC_mes[:,2],  style='.', label="Earth",         fig=fig, ax=ax, color=PPC.colors["blue"])
-    if not PPC.is_nan(DEIMOSdir_SC_mes):  PPC.plot(DEIMOSdir_SC_mes[:,0], DEIMOSdir_SC_mes[:,1], DEIMOSdir_SC_mes[:,2], style='.', label="Deimos",        fig=fig, ax=ax, color=PPC.colors["lightgrey"])
-    if not PPC.is_nan(PHOBOSdir_SC_mes):  PPC.plot(PHOBOSdir_SC_mes[:,0], PHOBOSdir_SC_mes[:,1], PHOBOSdir_SC_mes[:,2], style='.', label="Phobos",        fig=fig, ax=ax, color=PPC.colors["darkgrey"])
-    if not PPC.is_nan(MARSdir_SC_mes):    PPC.plot(MARSdir_SC_mes[:,0],   MARSdir_SC_mes[:,1],   MARSdir_SC_mes[:,2],   style='.', label="Mars",          fig=fig, ax=ax, color=PPC.colors["red"])
+    if not misc.is_nan(STARSdir_SC_mes):   PPC.plot(STARSdir_SC_mes[:,0],  STARSdir_SC_mes[:,1],  STARSdir_SC_mes[:,2],  style='.', label="Visible Stars", fig=fig, ax=ax, color=PPC.colors["green"])
+    if not misc.is_nan(SUNdir_SC_mes):     PPC.plot(SUNdir_SC_mes[:,0],    SUNdir_SC_mes[:,1],    SUNdir_SC_mes[:,1],    style='.', label="Sun",           fig=fig, ax=ax, color=PPC.colors["orange"])
+    if not misc.is_nan(MOONdir_SC_mes):    PPC.plot(MOONdir_SC_mes[:,0],   MOONdir_SC_mes[:,1],   MOONdir_SC_mes[:,2],   style='.', label="MOON",          fig=fig, ax=ax, color=PPC.colors["grey"])
+    if not misc.is_nan(EARTHdir_SC_mes):   PPC.plot(EARTHdir_SC_mes[:,0],  EARTHdir_SC_mes[:,1],  EARTHdir_SC_mes[:,2],  style='.', label="Earth",         fig=fig, ax=ax, color=PPC.colors["blue"])
+    if not misc.is_nan(DEIMOSdir_SC_mes):  PPC.plot(DEIMOSdir_SC_mes[:,0], DEIMOSdir_SC_mes[:,1], DEIMOSdir_SC_mes[:,2], style='.', label="Deimos",        fig=fig, ax=ax, color=PPC.colors["lightgrey"])
+    if not misc.is_nan(PHOBOSdir_SC_mes):  PPC.plot(PHOBOSdir_SC_mes[:,0], PHOBOSdir_SC_mes[:,1], PHOBOSdir_SC_mes[:,2], style='.', label="Phobos",        fig=fig, ax=ax, color=PPC.colors["darkgrey"])
+    if not misc.is_nan(MARSdir_SC_mes):    PPC.plot(MARSdir_SC_mes[:,0],   MARSdir_SC_mes[:,1],   MARSdir_SC_mes[:,2],   style='.', label="Mars",          fig=fig, ax=ax, color=PPC.colors["red"])
     PPC.plot([0], [0], [0],  style='+', label="SC",  fig=fig, ax=ax, color=PPC.colors["magenta"])
 
     # Get axes in the SSB frame
@@ -106,7 +107,7 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
     OBTdt_TDB = timeline["DYN"]["DYN_PSR"]["OBTdt_TDB"]
 
-    # TODO: Plot the other SEN_PSR outputs
+    time_OBT      = timeline["SEN"]["SEN_TIME"]["time_OBT"]
     time_PSR      = timeline["SEN"]["SEN_PSR"]["time_PSR"]
     SEN_PSRoutflg = timeline["SEN"]["SEN_PSR"]["SEN_PSRoutflg"]
     OBTdt_TDB_mes = timeline["SEN"]["SEN_PSR"]["OBTdt_TDB_mes"]
@@ -116,6 +117,13 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     n_pulsars  = SEN_obj.SEN_PSR.par["n_pulsars"]
 
     light_speed_cst = CONSTANTS_par["light_speed_cst"]
+
+    # Plot status
+    fig, ax = PPC.plot(time_SIM, SEN_PSRoutflg, xlabel="time_SIM [s]", ylabel="SEN_PSRoutflg", label="PSRoutflag", title="PSR output flag")
+
+    # Compare PSR and TDB times
+    fig, ax = PPC.plot(time_SIM, time_OBT, xlabel="time_SIM [s]", ylabel="time [s]", label="time_OBT", title="PSR Time")
+    PPC.plot(time_SIM, time_PSR, ylabel="time [s]", label="time_PSR", fig=fig, ax=ax)
 
     # Measured vs True delay for TOAs between SC and SSB
     fig, ax1 = PPC.plot([], [], ylabel="OBTdt_TDB_mes [s]", title="Measured vs True TOA delay on SC", subplot=(3,1,1))
@@ -128,8 +136,32 @@ def SEN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, time_noise[:,i],    label=f"{PULSARname[i]} time noise",  fig=fig, ax=ax2)
         PPC.plot(time_SIM, range_noise[:,i],   label=f"{PULSARname[i]} range noise", fig=fig, ax=ax3)
 
+def SEN_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM      = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    time_OBT      = timeline["SEN"]["SEN_TIME"]["time_OBT"]
+    time_CMB      = timeline["SEN"]["SEN_CMB"]["time_CMB"]
+    SEN_CMBoutflg = timeline["SEN"]["SEN_CMB"]["SEN_CMBoutflg"]
+
+    T_dipole_CMB1_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_CMB1_mes"]
+    T_dipole_CMB2_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_CMB2_mes"]
+    T_dipole_CMB3_mes  = timeline["SEN"]["SEN_CMB"]["T_dipole_CMB3_mes"]
+
+    # Plot status
+    fig, ax = PPC.plot(time_SIM, SEN_CMBoutflg, xlabel="time_SIM [s]", ylabel="SEN_CMBoutflg", label="CMBoutflag", title="CMB output flag")
+
+    # Compare CMB and TDB times
+    fig, ax = PPC.plot(time_SIM, time_OBT, xlabel="time_SIM [s]", ylabel="time [s]", label="time_OBT", title="CMB Time")
+    PPC.plot(time_SIM, time_CMB, ylabel="time [s]", label="time_CMB", fig=fig, ax=ax)
+
+    # Measured temperature dipole
+    fig, ax = PPC.plot([], [], ylabel="T_dipole_mes [K]", title="Measured CMBR Temperature Dipole")
+    PPC.plot(time_SIM, T_dipole_CMB1_mes, label="CMB1", color=PPC.colors["blue"],  fig=fig, ax=ax)
+    PPC.plot(time_SIM, T_dipole_CMB2_mes, label="CMB2", color=PPC.colors["red"],   fig=fig, ax=ax)
+    PPC.plot(time_SIM, T_dipole_CMB3_mes, label="CMB3", color=PPC.colors["green"], fig=fig, ax=ax)
+
 SEN_plots = {
     "SEN_TIME" : SEN_TIME_plot,
     "SEN_STR"  : SEN_STR_plot,
     "SEN_PSR"  : SEN_PSR_plot,
+    "SEN_CMB"  : SEN_CMB_plot,
 }

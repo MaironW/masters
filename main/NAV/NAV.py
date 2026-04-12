@@ -7,6 +7,7 @@ from .NAV_EPH.NAV_EPH   import NAV_EPH
 from .NAV_STR.NAV_STR   import NAV_STR
 from .NAV_CEL.NAV_CEL   import NAV_CEL
 from .NAV_PSR.NAV_PSR   import NAV_PSR
+from .NAV_CMB.NAV_CMB   import NAV_CMB
 
 class NAV(Level1Module):
     def __init__(self, SEN_obj, par_override=None):
@@ -18,6 +19,7 @@ class NAV(Level1Module):
         self.NAV_STR = NAV_STR(par_override.get("NAV_STR"))
         self.NAV_CEL = NAV_CEL(par_override.get("NAV_CEL"))
         self.NAV_PSR = NAV_PSR(par_override.get("NAV_PSR"))
+        self.NAV_CMB = NAV_CMB(par_override.get("NAV_CMB"))
 
         # Register modules
         self.modules = [
@@ -25,6 +27,7 @@ class NAV(Level1Module):
             self.NAV_STR,
             self.NAV_CEL,
             self.NAV_PSR,
+            self.NAV_CMB,
         ]
 
         # Initialize all modules

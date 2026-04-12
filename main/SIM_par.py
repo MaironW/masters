@@ -23,9 +23,11 @@ SIM_par = {
         # "SEN_TIME",
         # "SEN_STR",
         # "SEN_PSR",
+        # "SEN_CMB",
         # "NAV_EPH",
         # "NAV_STR",
         # "NAV_CEL",
-        # "NAV_PSR"
+        # "NAV_PSR",
+        # "NAV_CMB",
     ],
 }

@@ -29,5 +29,6 @@ SIM_par = {
         # "NAV_CEL",
         # "NAV_PSR",
         # "NAV_CMB",
+        # "NAV_EKF",
     ],
 }

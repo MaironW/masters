@@ -46,6 +46,7 @@ class NAV_PSR(Level2Module):
         self.state["z"]              = self.par["z_ini"]
         self.state["R"]              = self.par["R_ini"]
         self.state["SSBpos_SUN_ref"] = self.par["SSBpos_SUN_ref_ini"]
+        self.state["time_valid"]     = self.par["time_valid_ini"]
 
         # Update KF functions
         self.state["h"] = self.h
@@ -68,6 +69,7 @@ class NAV_PSR(Level2Module):
             self.state["z"]              = self.par["z_ini"]
             self.state["R"]              = self.par["R_ini"]
             self.state["SSBpos_SUN_ref"] = self.par["SSBpos_SUN_ref_ini"]
+            self.state["time_valid"]     = self.par["time_valid_ini"]
 
         # PSR output is valid
         else:
@@ -75,7 +77,8 @@ class NAV_PSR(Level2Module):
             SSBpos_SUN_ref = -SUNpos_SSB_ref
 
             # Load sensor outputs
-            OBTdt_TDB_mes  = SEN_states["SEN_PSR"]["OBTdt_TDB_mes"]
+            OBTdt_TDB_mes = SEN_states["SEN_PSR"]["OBTdt_TDB_mes"]
+            time_PSR      = SEN_states["SEN_PSR"]["time_PSR"]
 
             n_pulsars = self.par["n_pulsars"]
             z = np.full(n_pulsars, np.nan)
@@ -89,10 +92,12 @@ class NAV_PSR(Level2Module):
             if np.sum(~np.isnan(z)) >= 3:
                 z = z
                 R = np.diag(R)
+                time_valid = time_PSR
                 NAV_PSRoutflg = 1
             else:
                 z = self.par["z_ini"]
                 R = np.diag(self.par["R_ini"])
+                time_valid = self.par["time_valid_ini"]
                 NAV_PSRoutflg = 0
 
             # Update states
@@ -100,6 +105,7 @@ class NAV_PSR(Level2Module):
             self.state["z"]              = z
             self.state["R"]              = R
             self.state["SSBpos_SUN_ref"] = SSBpos_SUN_ref
+            self.state["time_valid"]     = time_valid
 
             # Update KF functions
             self.state["h"] = self.h

@@ -35,6 +35,7 @@ class NAV_CEL(Level2Module):
         self.state["BODYsel_STARdir_SC_mes_list"] = self.par["STARdir_SC_ini"]
         self.state["BODYsel_STARdir_SC_ref_list"] = self.par["STARdir_SC_ini"]
         self.state["BODYpos_SSB_list"]            = self.par["BODYpos_SSB_ini"]
+        self.state["time_valid"]                  = self.par["time_valid_ini"]
 
         # Update KF functions
         self.state["h"] = self.h
@@ -53,6 +54,7 @@ class NAV_CEL(Level2Module):
             self.state["NAV_CELoutflg"] = self.par["NAV_CELoutflg_ini"]
             self.state["z"]             = self.par["z_ini"]
             self.state["R"]             = self.par["R_ini"]
+            self.state["time_valid"]    = self.par["time_valid_ini"]
             self.state["BODYsel_STARdir_SC_mes_list"] = self.par["STARdir_SC_ini"]
             self.state["BODYsel_STARdir_SC_ref_list"] = self.par["STARdir_SC_ini"]
             self.state["BODYpos_SSB_list"]            = self.par["BODYpos_SSB_ini"]
@@ -68,6 +70,7 @@ class NAV_CEL(Level2Module):
             DEIMOSdir_SC_mes = SEN_states["SEN_STR"]["DEIMOSdir_SC_mes"]
             STARSdir_SC_mes  = SEN_states["SEN_STR"]["STARSdir_SC_mes"]
             STARSid_mes      = SEN_states["SEN_STR"]["STARSid_mes"]
+            time_STR         = SEN_states["SEN_STR"]["time_STR"]
 
             # Load catalog stars (assumes SSB == SC frame)
             STARSid_ref     = NAV_states["NAV_STR"]["STARSid"]
@@ -130,16 +133,19 @@ class NAV_CEL(Level2Module):
             if np.sum(~np.isnan(z)) >= 3:
                 z = z
                 R = np.diag(R)
+                time_valid = time_STR
                 NAV_CELoutflg = 1
             else:
                 z = self.par["z_ini"]
                 R = np.diag(self.par["R_ini"])
+                time_valid = self.par["time_valid_ini"]
                 NAV_CELoutflg = 0
 
             # Update states
             self.state["NAV_CELoutflg"] = NAV_CELoutflg
             self.state["z"]             = z
             self.state["R"]             = R
+            self.state["time_valid"]    = time_valid
             self.state["BODYsel_STARdir_SC_mes_list"] = BODYsel_STARdir_SC_mes_list
             self.state["BODYsel_STARdir_SC_ref_list"] = BODYsel_STARdir_SC_ref_list
             self.state["BODYpos_SSB_list"]            = BODYpos_SSB_list

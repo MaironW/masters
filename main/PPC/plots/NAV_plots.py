@@ -252,10 +252,30 @@ def NAV_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, z[:, i], label=f"z CMB{i}", style='--', fig=fig, ax=ax1)
         PPC.plot(time_SIM, innov[:, i], label=f"CMB{i}", xlabel="time_SIM [s]", fig=fig, ax=ax2)
 
+def NAV_EKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM      = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    SCpos_SSB     = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+    SCvel_SSB     = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+    SEN_STRoutflg = timeline["SEN"]["SEN_STR"]["SEN_STRoutflg"]
+    SEN_CMBoutflg = timeline["SEN"]["SEN_CMB"]["SEN_CMBoutflg"]
+    NAV_CMBoutflg = timeline["NAV"]["NAV_CMB"]["NAV_CMBoutflg"]
+
+    x_est = timeline["NAV"]["NAV_EKF"]["x_est"]
+    SCpos_SSB_est = x_est[:, 0:3]
+    SCvel_SSB_est = x_est[:, 3:6]
+
+    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB", title="Estimated position", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB", title="Estimated velocity", fig=fig, subplot=(2,1,2))
+    PPC.plot(time_SIM, SCpos_SSB,     label=f"SCpos_SSB",     fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCpos_SSB_est, label=f"SCpos_SSB_est", fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCvel_SSB,     label=f"SCvel_SSB",     fig=fig, ax=ax2)
+    PPC.plot(time_SIM, SCvel_SSB_est, label=f"SCvel_SSB_est", fig=fig, ax=ax2)
+
 NAV_plots = {
     "NAV_EPH" : NAV_EPH_plot,
     "NAV_STR" : NAV_STR_plot,
     "NAV_CEL" : NAV_CEL_plot,
     "NAV_PSR" : NAV_PSR_plot,
     "NAV_CMB" : NAV_CMB_plot,
+    "NAV_EKF" : NAV_EKF_plot,
 }

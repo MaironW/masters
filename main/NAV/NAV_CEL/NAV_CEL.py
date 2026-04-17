@@ -173,13 +173,13 @@ class NAV_CEL(Level2Module):
             # In the future, consider using ephemerides also
             STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
 
-            # Compute the direction of the BODY from the estimated SC position
-            BODYpos_SSB     = BODYpos_SSB_list[i]
-            BODYlos_SC      = BODYpos_SSB - SCpos_SSB
-            BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
-            BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
-
-            h_vec[i] = STARdir_SC @ BODYdir_SC
+            # Compute the direction of the BODY from the estimated SC position, if the body is visible
+            BODYpos_SSB = BODYpos_SSB_list[i]
+            if np.any(BODYpos_SSB):
+                BODYlos_SC      = BODYpos_SSB - SCpos_SSB
+                BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
+                BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
+                h_vec[i] = STARdir_SC @ BODYdir_SC
 
         return h_vec
 
@@ -204,16 +204,17 @@ class NAV_CEL(Level2Module):
 
             # Compute the direction of the BODY from the estimated SC position
             BODYpos_SSB     = BODYpos_SSB_list[i]
-            BODYlos_SC      = BODYpos_SSB - SCpos_SSB
-            BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
-            BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
+            if np.any(BODYpos_SSB):
+                BODYlos_SC      = BODYpos_SSB - SCpos_SSB
+                BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
+                BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
 
-            # Compute partial derivative
-            h    = STARdir_SC @ BODYdir_SC
-            dhdr = -1 / BODYlos_SC_norm * (STARdir_SC - h * BODYdir_SC)
+                # Compute partial derivative
+                h    = STARdir_SC @ BODYdir_SC
+                dhdr = -1 / BODYlos_SC_norm * (STARdir_SC - h * BODYdir_SC)
 
-            # Fill matrix
-            H_matrix[i, 0:3] = dhdr
+                # Fill matrix
+                H_matrix[i, 0:3] = dhdr
 
         return H_matrix
 

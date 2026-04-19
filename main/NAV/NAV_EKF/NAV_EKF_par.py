@@ -22,3 +22,5 @@ NAV_EKF_par = {
     "P_ini"     : np.ones((6,6)),
     "y_inn_ini" : np.array([0,0,0,0,0,0]),
 }
+
+

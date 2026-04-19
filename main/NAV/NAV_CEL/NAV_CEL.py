@@ -121,7 +121,7 @@ class NAV_CEL(Level2Module):
                 # Compute the measurement model and covariance matrix
                 if valid:
                     # Find matching reference star
-                    ref_idx = np.where(STARSid_ref == STARid_mes)[0]
+                    ref_idx = np.where(STARSid_ref == STARid_mes)[0][0]
                     z[count] = cos_angle_mes
                     # Variance propagation: sigma_z^2 = (1 - cos^2(angle)) * sigma_angle^2
                     R[count] = (1 - cos_angle_mes**2) * sigma_angle**2

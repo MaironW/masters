@@ -44,18 +44,18 @@ class NAV_EKF(Level2Module):
     def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
 
         navigation_methods = [
-            # {
-            #     "name" : "NAV_CEL",
-            #     "data" : NAV_states["NAV_CEL"],
-            # },
-            # {
-            #     "name" : "NAV_PSR",
-            #     "data" : NAV_states["NAV_PSR"],
-            # },
-            # {
-            #     "name" : "NAV_CMB",
-            #     "data" : NAV_states["NAV_CMB"],
-            # },
+            {
+                "name" : "NAV_CEL",
+                "data" : NAV_states["NAV_CEL"],
+            },
+            {
+                "name" : "NAV_PSR",
+                "data" : NAV_states["NAV_PSR"],
+            },
+            {
+                "name" : "NAV_CMB",
+                "data" : NAV_states["NAV_CMB"],
+            },
         ]
 
         x_est = self.state["x_est"]

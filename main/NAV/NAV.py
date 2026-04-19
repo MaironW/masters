@@ -42,6 +42,10 @@ class NAV(Level1Module):
 
     # Update time-dependent, non-integrated Level-2 modules
     def update_algebraic(self, t, SEN_obj, inputs):
+        # EKF
+        if SEN_obj is None:
+            return self.snapshot()
+
         SEN_snapshot = SEN_obj.snapshot()
         for m in self.modules:
             NAV_snapshot = self.snapshot()

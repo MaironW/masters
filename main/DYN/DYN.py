@@ -6,7 +6,6 @@ from Utils.level1module import Level1Module
 from .DYN_TIME.DYN_TIME import DYN_TIME
 from .DYN_EPH.DYN_EPH   import DYN_EPH
 from .DYN_ATT.DYN_ATT   import DYN_ATT
-from .DYN_GRV.DYN_GRV   import DYN_GRV
 from .DYN_TRA.DYN_TRA   import DYN_TRA
 from .DYN_STR.DYN_STR   import DYN_STR
 from .DYN_PSR.DYN_PSR   import DYN_PSR
@@ -22,7 +21,6 @@ class DYN(Level1Module):
         self.DYN_EPH  = DYN_EPH(par_override.get("DYN_EPH"))
         self.DYN_ATT  = DYN_ATT(par_override.get("DYN_ATT"))
         self.DYN_TRA  = DYN_TRA(par_override.get("DYN_TRA"))
-        self.DYN_GRV  = DYN_GRV(par_override.get("DYN_GRV"))
         self.DYN_STR  = DYN_STR(par_override.get("DYN_STR"))
         self.DYN_PSR  = DYN_PSR(par_override.get("DYN_PSR"))
         self.DYN_CMB  = DYN_CMB(par_override.get("DYN_CMB"))
@@ -33,7 +31,6 @@ class DYN(Level1Module):
             self.DYN_EPH,
             self.DYN_ATT,
             self.DYN_TRA,
-            self.DYN_GRV,
             self.DYN_STR,
             self.DYN_PSR,
             self.DYN_CMB,

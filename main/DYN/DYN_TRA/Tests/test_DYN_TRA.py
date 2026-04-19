@@ -48,9 +48,10 @@ SIM_par = {
         "DYN_TIME",
         "DYN_EPH",
         "DYN_TRA",
-        "DYN_GRV",
     ],
 }
+
+print(SIM_par["time_end"])
 
 # Load data or run new simulation
 DYN_log_save = SIM_par["DYN_log_save"]
@@ -104,7 +105,6 @@ DYN_obj.modules = [
     DYN_obj.DYN_EPH,
     DYN_obj.DYN_EPH,
     DYN_obj.DYN_TRA,
-    DYN_obj.DYN_GRV,
 ]
 
 # Define MRO structure to store its states

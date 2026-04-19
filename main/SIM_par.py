@@ -2,9 +2,9 @@
 
 SIM_par = {
     # Time parameters
-    "dt"           : 600,       # [s] 10 min
-    "time_start"   : 0,         # [s]
-    "time_end"     : 3600*24*5, # [s] 5 days
+    "dt"           : 600,        # [s] 10 min
+    "time_start"   : 0,          # [s]
+    "time_end"     : 3600*24*10, # [s] 10 days
 
     # Log parameters
     "DYN_log_save" : False,
@@ -16,7 +16,6 @@ SIM_par = {
         # "DYN_TIME",
         # "DYN_EPH",
         # "DYN_TRA",
-        # "DYN_GRV",
         # "DYN_ATT",
         # "DYN_STR",
         # "DYN_PSR",

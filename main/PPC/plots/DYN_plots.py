@@ -26,10 +26,6 @@ def DYN_EPH_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         # Plot reference velocity from DYN
         fig, ax2 = PPC.plot(time_SIM, timeline["DYN"]["DYN_EPH"][f"{name}vel_SSB"], ylabel=f"{name}vel_SSB [km]", label=["x","y","z"], title=f"{name}vel_SSB", fig=fig, subplot=(2,1,2))
 
-def DYN_GRV_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    # Gravity acceleration on SSB frame
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_GRV"]["grvacc_SSB"], ylabel="grvacc_SSB [km/s^2]", label=["x","y","z"], title="grvacc_SSB")
-
 def DYN_TRA_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # 3D trajectories
     fig, ax = PPC.plot([0], [0], [0], style='+', label="SSB", xlabel="X SSB [km]", ylabel="Y SSB [km]", zlabel="Z SSB [km]", title="Simulation Trajectories", aspect="equal",                      color=PPC.colors["black"])
@@ -54,8 +50,9 @@ def DYN_TRA_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(MOONpos_ECI[:,0],                             MOONpos_ECI[:,1],                             label="Moon", fig=fig, ax=ax, color=PPC.colors["grey"])
 
     # Spacecraft state
-    fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"], ylabel="SCpos_SSB [km]", label=["x","y","z"], title="SCpos_SSB", subplot=(2,1,1))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"], ylabel="SCvel_SSB [km/s]", label=["x","y","z"], title="SCvel_SSB", fig=fig, subplot=(2,1,2))
+    fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"], ylabel="SCpos_SSB [km]", label=["x","y","z"], title="SCpos_SSB", subplot=(3,1,1))
+    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"], ylabel="SCvel_SSB [km/s]", label=["x","y","z"], title="SCvel_SSB", fig=fig, subplot=(3,1,2))
+    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCacc_SSB"], ylabel="SCacc_SSB [km/s]", label=["x","y","z"], title="SCacc_SSB", fig=fig, subplot=(3,1,3))
 
 def DYN_ATT_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Spacecraft attitude
@@ -125,7 +122,6 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 DYN_plots = {
     "DYN_TIME" : DYN_TIME_plot,
     "DYN_EPH"  : DYN_EPH_plot,
-    "DYN_GRV"  : DYN_GRV_plot,
     "DYN_TRA"  : DYN_TRA_plot,
     "DYN_ATT"  : DYN_ATT_plot,
     "DYN_STR"  : DYN_STR_plot,

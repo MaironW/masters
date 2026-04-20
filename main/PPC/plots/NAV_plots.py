@@ -281,6 +281,34 @@ def NAV_EKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         y = timeline["NAV"]["NAV_EKF"][f"y_{name}"]
         PPC.plot(time_SIM, y, label=f"{name}", fig=fig, ax=ax1)
 
+def NAV_UKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM      = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    SCpos_SSB     = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+    SCvel_SSB     = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+
+    x_est  = timeline["NAV"]["NAV_UKF"]["x_est"]
+    SCpos_SSB_est = x_est[:, 0:3]
+    SCvel_SSB_est = x_est[:, 3:6]
+
+    # Plot states
+    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB [km]", title="Estimated position", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB [km/s]", title="Estimated velocity", fig=fig, subplot=(2,1,2))
+    PPC.plot(time_SIM, SCpos_SSB,     label=f"SCpos_SSB",     fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCpos_SSB_est, label=f"SCpos_SSB_est", fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCvel_SSB,     label=f"SCvel_SSB",     fig=fig, ax=ax2)
+    PPC.plot(time_SIM, SCvel_SSB_est, label=f"SCvel_SSB_est", fig=fig, ax=ax2)
+
+    # Plot errors
+    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB [km]", title="Estimated position error", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB [km/s]", title="Estimated velocity error", fig=fig, subplot=(2,1,2))
+    PPC.plot(time_SIM, SCpos_SSB - SCpos_SSB_est, label=f"SCpos_SSB", fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCvel_SSB - SCvel_SSB_est, label=f"SCvel_SSB", fig=fig, ax=ax2)
+
+    # Plot innovation
+    fig, ax1 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Innovation", title="Innovation Normalized Squared")
+    for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
+        y = timeline["NAV"]["NAV_UKF"][f"y_{name}"]
+        PPC.plot(time_SIM, y, label=f"{name}", fig=fig, ax=ax1)
 
 NAV_plots = {
     "NAV_EPH" : NAV_EPH_plot,
@@ -289,4 +317,5 @@ NAV_plots = {
     "NAV_PSR" : NAV_PSR_plot,
     "NAV_CMB" : NAV_CMB_plot,
     "NAV_EKF" : NAV_EKF_plot,
+    "NAV_UKF" : NAV_UKF_plot,
 }

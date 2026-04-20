@@ -49,14 +49,14 @@ class NAV_UKF(Level2Module):
     def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
 
         navigation_methods = [
-            # {
-            #     "name" : "NAV_CEL",
-            #     "data" : NAV_states["NAV_CEL"],
-            # },
-            # {
-            #     "name" : "NAV_PSR",
-            #     "data" : NAV_states["NAV_PSR"],
-            # },
+            {
+                "name" : "NAV_CEL",
+                "data" : NAV_states["NAV_CEL"],
+            },
+            {
+                "name" : "NAV_PSR",
+                "data" : NAV_states["NAV_PSR"],
+            },
             {
                 "name" : "NAV_CMB",
                 "data" : NAV_states["NAV_CMB"],
@@ -92,17 +92,14 @@ class NAV_UKF(Level2Module):
                 continue
 
             # Get sensor-specific model
-            h_fun = data["h"]
-
-            # UKF Update
-            z_pred = h_fun(x_est)
+            h_fun_full = data["h"]
 
             # Filter by measurements
             z      = z[valid_measurements]
             R      = R[np.ix_(valid_measurements,valid_measurements)]
             R      = 0.5 * (R + R.T)
             R     += 1e-12 * np.eye(R.shape[0])
-            z_pred = z_pred[valid_measurements]
+            h_fun  = lambda x: h_fun_full(x)[valid_measurements]
 
             n_states = len(x_est)
             n_mes    = len(z)
@@ -112,7 +109,6 @@ class NAV_UKF(Level2Module):
 
             # Generate sigma points
             X_sigma_aug, weights = self.generate_sigma_points(x_est, P, Q, R)
-            n_a = X_sigma_aug.shape[0]
 
             # Get individual sigma-points
             X_sigma = X_sigma_aug[0 : n_states, :]
@@ -129,7 +125,7 @@ class NAV_UKF(Level2Module):
                 v_i = V_sigma[:, i]
 
                 # Process propagation (Euler for now)
-                x_next = self.propagate_sigma(x_i, dt, NAV_states)
+                x_next = self.propagate_sigma(x_i, dt, NAV_states) + G @ w_i
 
                 # Measurement
                 z_i = h_fun(x_next) + v_i
@@ -157,7 +153,8 @@ class NAV_UKF(Level2Module):
                 Pzz += weights[i] * np.outer(dz, dz)
                 Pxz += weights[i] * np.outer(dx, dz)
 
-            Pzz += 1e-10*np.eye(n_mes) # Add low value to ensure convergence
+            Pxx += 1e-12*np.eye(n_states) # Add low value to ensure convergence
+            Pzz += 1e-12*np.eye(n_mes) # Add low value to ensure convergence
 
             # Compute inovation
             y = z - z_pred
@@ -173,6 +170,7 @@ class NAV_UKF(Level2Module):
             x_est = x_pred + K @ y
             P     = Pxx - K @ Pzz @ K.T
             P     = 0.5 *(P + P.T) # Symmetry fix
+            P    += 1e-12*np.eye(n_states) # Add low value to ensure convergence
 
             # Save last update time
             self.last_update_time[name] = t_valid
@@ -242,7 +240,7 @@ class NAV_UKF(Level2Module):
         gamma = np.sqrt(n_a + kappa)
 
         # Generate augmented sigma-points
-        aux_sqrt = gamma * np.linalg.cholesky(P_aug + 1e-10*np.eye(n_a))
+        aux_sqrt = gamma * np.linalg.cholesky(P_aug + 1e-12*np.eye(n_a))
 
         sigma_points = [x_aug]
         for i in range(n_a):

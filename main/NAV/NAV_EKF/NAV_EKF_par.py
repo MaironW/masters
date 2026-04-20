@@ -1,0 +1,24 @@
+import numpy as np
+
+# Parameters for Module NAV_EKF
+
+# Process noise mapping
+G = np.zeros((6, 3))
+G[3:6, :] = np.eye(3)
+
+# Acceleration noise level
+sigma_a = 1e-6
+
+# Process noise covariance
+Q = sigma_a**2 * np.eye(3)
+
+NAV_EKF_par = {
+    "n_states"  : 6, # Number of estimated states [pos[3], vel[3]]
+    "G"         : G, # Process noise mapping
+    "Q"         : Q, # Process noise covariance
+
+    # Initial values for the EKF
+    "x_est_ini" : np.array([1.62228612e+08, 2.42235379e+07, 1.78903662e+07, -0.32883677, 27.86282899, 13.43536119]) + np.array([1e7, 1e7, 1e7, 10, 10, 10]), # Initial state
+    "P_ini"     : np.ones((6,6)), # Initial covariance
+    "y_ini"     : 0, # Initial innovation
+}

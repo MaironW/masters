@@ -35,6 +35,11 @@ class NAV_CEL(Level2Module):
         self.state["BODYsel_STARdir_SC_mes_list"] = self.par["STARdir_SC_ini"]
         self.state["BODYsel_STARdir_SC_ref_list"] = self.par["STARdir_SC_ini"]
         self.state["BODYpos_SSB_list"]            = self.par["BODYpos_SSB_ini"]
+        self.state["time_valid"]                  = self.par["time_valid_ini"]
+
+        # Update KF functions
+        self.state["h"] = self.h
+        self.state["H"] = self.H
 
         self.state = self.update_algebraic(0, SEN_states, NAV_states)
         return self.state
@@ -49,6 +54,7 @@ class NAV_CEL(Level2Module):
             self.state["NAV_CELoutflg"] = self.par["NAV_CELoutflg_ini"]
             self.state["z"]             = self.par["z_ini"]
             self.state["R"]             = self.par["R_ini"]
+            self.state["time_valid"]    = self.par["time_valid_ini"]
             self.state["BODYsel_STARdir_SC_mes_list"] = self.par["STARdir_SC_ini"]
             self.state["BODYsel_STARdir_SC_ref_list"] = self.par["STARdir_SC_ini"]
             self.state["BODYpos_SSB_list"]            = self.par["BODYpos_SSB_ini"]
@@ -64,6 +70,7 @@ class NAV_CEL(Level2Module):
             DEIMOSdir_SC_mes = SEN_states["SEN_STR"]["DEIMOSdir_SC_mes"]
             STARSdir_SC_mes  = SEN_states["SEN_STR"]["STARSdir_SC_mes"]
             STARSid_mes      = SEN_states["SEN_STR"]["STARSid_mes"]
+            time_STR         = SEN_states["SEN_STR"]["time_STR"]
 
             # Load catalog stars (assumes SSB == SC frame)
             STARSid_ref     = NAV_states["NAV_STR"]["STARSid"]
@@ -114,10 +121,9 @@ class NAV_CEL(Level2Module):
                 # Compute the measurement model and covariance matrix
                 if valid:
                     # Find matching reference star
-                    ref_idx = np.where(STARSid_ref == STARid_mes)[0]
-                    z[count] = cos_angle_mes
-                    # Variance propagation: sigma_z^2 = (1 - cos^2(angle)) * sigma_angle^2
-                    R[count] = (1 - cos_angle_mes**2) * sigma_angle**2
+                    ref_idx = np.where(STARSid_ref == STARid_mes)[0][0]
+                    z[count] = np.arccos(cos_angle_mes)
+                    R[count] = sigma_angle**2
                     BODYsel_STARdir_SC_mes_list[count] = STARdir_SC_mes
                     BODYsel_STARdir_SC_ref_list[count] = STARSdir_SC_ref[ref_idx]
                     BODYpos_SSB_list[count]            = BODYpos_SSB
@@ -126,19 +132,26 @@ class NAV_CEL(Level2Module):
             if np.sum(~np.isnan(z)) >= 3:
                 z = z
                 R = np.diag(R)
+                time_valid = time_STR
                 NAV_CELoutflg = 1
             else:
                 z = self.par["z_ini"]
                 R = np.diag(self.par["R_ini"])
+                time_valid = self.par["time_valid_ini"]
                 NAV_CELoutflg = 0
 
             # Update states
             self.state["NAV_CELoutflg"] = NAV_CELoutflg
             self.state["z"]             = z
             self.state["R"]             = R
+            self.state["time_valid"]    = time_valid
             self.state["BODYsel_STARdir_SC_mes_list"] = BODYsel_STARdir_SC_mes_list
             self.state["BODYsel_STARdir_SC_ref_list"] = BODYsel_STARdir_SC_ref_list
             self.state["BODYpos_SSB_list"]            = BODYpos_SSB_list
+
+            # Update KF functions
+            self.state["h"] = self.h
+            self.state["H"] = self.H
 
         return self.state
 
@@ -154,18 +167,20 @@ class NAV_CEL(Level2Module):
         h_vec = np.zeros(n_bodies)
 
         for i in range(n_bodies):
-            # Get star direction
-            # For now, do it with measurement
-            # In the future, consider using ephemerides also
-            STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
+            # Compute the direction of the BODY from the estimated SC position, if the body is visible
+            BODYpos_SSB = BODYpos_SSB_list[i]
+            if np.any(BODYpos_SSB):
+                # Get star direction
+                # For now, do it with measurement
+                # In the future, consider using ephemerides also
+                STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
 
-            # Compute the direction of the BODY from the estimated SC position
-            BODYpos_SSB     = BODYpos_SSB_list[i]
-            BODYlos_SC      = BODYpos_SSB - SCpos_SSB
-            BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
-            BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
+                BODYlos_SC      = BODYpos_SSB - SCpos_SSB
+                BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
+                BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
+                cos_angle       = np.clip(STARdir_SC @ BODYdir_SC, -1.0, 1.0)
 
-            h_vec[i] = STARdir_SC @ BODYdir_SC
+                h_vec[i] = np.arccos(cos_angle)
 
         return h_vec
 
@@ -183,23 +198,29 @@ class NAV_CEL(Level2Module):
         H_matrix = np.zeros((n_bodies, n_states))
 
         for i in range(n_bodies):
-            # Get star direction
-            # For now, do it with measurement
-            # In the future, consider using ephemerides also
-            STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
-
             # Compute the direction of the BODY from the estimated SC position
-            BODYpos_SSB     = BODYpos_SSB_list[i]
-            BODYlos_SC      = BODYpos_SSB - SCpos_SSB
-            BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
-            BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
+            BODYpos_SSB = BODYpos_SSB_list[i]
+            if np.any(BODYpos_SSB):
+                # Get star direction
+                # For now, do it with measurement
+                # In the future, consider using ephemerides also
+                STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
 
-            # Compute partial derivative
-            h    = STARdir_SC @ BODYdir_SC
-            dhdr = -1 / BODYlos_SC_norm * (STARdir_SC - h * BODYdir_SC)
+                BODYlos_SC      = BODYpos_SSB - SCpos_SSB
+                BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
+                BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
+                cos_angle       = np.clip(STARdir_SC @ BODYdir_SC, -1.0, 1.0)
 
-            # Fill matrix
-            H_matrix[i, 0:3] = dhdr
+                den = np.sqrt(1 - cos_angle**2)
+                # Avoid numerical blow-up on the denominator
+                if den < 1e-12:
+                    continue
+
+                # Compute partial derivative
+                dhdr = 1 / (BODYlos_SC_norm * den) * (STARdir_SC - cos_angle * BODYdir_SC)
+
+                # Fill matrix
+                H_matrix[i, 0:3] = dhdr
 
         return H_matrix
 

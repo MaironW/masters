@@ -69,6 +69,9 @@ for step in range(1, n_steps):
     # Update SEN
     SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
 
+    # Integrate the Navigation algorithms
+    NAV_obj = integrator.rk4_step(sim_time, sim_dt, NAV_obj, inputs)
+
     # Update NAV
     NAV_obj.update_algebraic(sim_time, SEN_obj, inputs)
 

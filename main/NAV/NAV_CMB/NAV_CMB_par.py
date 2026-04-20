@@ -21,4 +21,5 @@ NAV_CMB_par = {
     "z_ini"             : np.full(3, np.nan),
     "R_ini"             : np.full((3, 3), np.nan),
     "BOFq_SSB_ini"      : np.array([1,0,0,0]),
+    "time_valid_ini"    : 0 # [s] initial time_CMB output for valid measurements
 }

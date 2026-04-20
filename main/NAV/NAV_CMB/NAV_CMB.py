@@ -29,6 +29,11 @@ class NAV_CMB(Level2Module):
 
     # Initialization
     def initialize(self, SEN_states, NAV_states):
+        # Update KF functions
+        self.state["h"] = self.h
+        self.state["H"] = self.H
+        self.state["time_valid"] = self.par["time_valid_ini"]
+
         # Update initial state
         self.state = self.update_algebraic(0, SEN_states, NAV_states)
         return self.state
@@ -45,11 +50,13 @@ class NAV_CMB(Level2Module):
             self.state["z"]             = self.par["z_ini"]
             self.state["R"]             = self.par["R_ini"]
             self.state["BOFq_SSB_ref"]  = self.par["BOFq_SSB_ini"]
+            self.state["time_valid"]    = self.par["time_valid_ini"]
 
         # CMB and STR outputs are valid
         else:
             # Load SEN_STR outputs
             BOFq_SSB_ref = SEN_states["SEN_STR"]["BOFq_SSB_mes"]
+            time_CMB     = SEN_states["SEN_CMB"]["time_CMB"]
 
             # Load SEN_CMB outputs
             T_dipole_CMB1_mes = SEN_states["SEN_CMB"]["T_dipole_CMB1_mes"] # [K]
@@ -58,7 +65,8 @@ class NAV_CMB(Level2Module):
 
             sigma_T = np.asarray(self.par["sigma_T"])
             z = np.array([T_dipole_CMB1_mes, T_dipole_CMB2_mes, T_dipole_CMB3_mes])
-            R = sigma_T**2
+            R = np.diag(sigma_T**2)
+            time_valid = time_CMB
             NAV_CMBoutflg = 1
 
             # Update states
@@ -66,6 +74,11 @@ class NAV_CMB(Level2Module):
             self.state["z"]             = z
             self.state["R"]             = R
             self.state["BOFq_SSB_ref"]  = BOFq_SSB_ref
+            self.state["time_valid"]    = time_valid
+
+            # Update KF functions
+            self.state["h"] = self.h
+            self.state["H"] = self.H
 
         return self.state
 

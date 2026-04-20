@@ -51,8 +51,6 @@ SIM_par = {
     ],
 }
 
-print(SIM_par["time_end"])
-
 # Load data or run new simulation
 DYN_log_save = SIM_par["DYN_log_save"]
 DYN_log_load = SIM_par["DYN_log_load"]

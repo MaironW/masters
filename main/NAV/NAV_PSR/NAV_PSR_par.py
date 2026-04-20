@@ -15,5 +15,6 @@ NAV_PSR_par = {
 
     # Output initial values
     "NAV_PSRoutflg_ini"  : 0, # NAV_PSR Module output flag
-    "SSBpos_SUN_ref_ini" : np.array([0,0,0])
+    "SSBpos_SUN_ref_ini" : np.array([0,0,0]),
+    "time_valid_ini"     : 0 # [s] initial time_PSR output for valid measurements
 }

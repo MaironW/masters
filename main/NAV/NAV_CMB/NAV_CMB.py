@@ -65,7 +65,7 @@ class NAV_CMB(Level2Module):
 
             sigma_T = np.asarray(self.par["sigma_T"])
             z = np.array([T_dipole_CMB1_mes, T_dipole_CMB2_mes, T_dipole_CMB3_mes])
-            R = sigma_T**2
+            R = np.diag(sigma_T**2)
             time_valid = time_CMB
             NAV_CMBoutflg = 1
 

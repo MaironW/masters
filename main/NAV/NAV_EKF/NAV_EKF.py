@@ -35,7 +35,11 @@ class NAV_EKF(Level2Module):
 
         self.state["x_est"] = self.par["x_est_ini"]
         self.state["P"]     = self.par["P_ini"]
-        self.state["y_inn"] = self.par["y_inn_ini"]
+
+        # Store the innovation per navigation method
+        self.state["y_NAV_CEL"] = self.par["y_ini"]
+        self.state["y_NAV_PSR"] = self.par["y_ini"]
+        self.state["y_NAV_CMB"] = self.par["y_ini"]
 
         return self.state
 
@@ -58,9 +62,8 @@ class NAV_EKF(Level2Module):
             },
         ]
 
-        x_est = self.state["x_est"]
-        P     = self.state["P"]
-        y_inn = self.state["y_inn"]
+        x_est  = self.state["x_est"]
+        P      = self.state["P"]
 
         for navigation_method in navigation_methods:
             name = navigation_method["name"]
@@ -75,13 +78,9 @@ class NAV_EKF(Level2Module):
             if t_valid <= self.last_update_time[name]:
                 continue
 
+            # Get measurement and measurement covariance
             z = data["z"]
             R = data["R"]
-
-            if R.ndim == 1:
-                R = np.diag(R)
-            elif R.ndim == 0:
-                R = np.array([[R]])
 
             # Check for valid measurements
             valid_measurements = ~np.isnan(z)
@@ -96,33 +95,36 @@ class NAV_EKF(Level2Module):
 
             # EKF Update
             H      = H_fun(x_est)
-            y_pred = h_fun(x_est)
+            z_pred = h_fun(x_est)
 
             # Filter by measurements
             z      = z[valid_measurements]
             H      = H[valid_measurements, :]
             R      = R[np.ix_(valid_measurements,valid_measurements)]
-            y_pred = y_pred[valid_measurements]
+            z_pred = z_pred[valid_measurements]
 
             # Compute inovation
-            y_inn  = z - y_pred
+            y = z - z_pred
 
             # Compute gain
-            Py  = H @ P @ H.T + R
-            Pxy = P @ H.T
-            K   = Pxy @ np.linalg.inv(Py)
+            Py  = H @ P @ H.T + R         # Innovation covariance
+            Pxy = P @ H.T                 # Cross-covariance state-measurement
+            K   = Pxy @ np.linalg.inv(Py) # Kalman gain
+
+            # Compute normalized innovation squared
+            nis = y.T @ np.linalg.inv(Py) @ y
+            self.state[f"y_{name}"] = nis
 
             # Estimate
-            x_est = x_est + K @ y_inn
+            x_est = x_est + K @ y
             P     = P - K @ Py @ K.T
 
             # Save last update time
             self.last_update_time[name] = t_valid
 
         # Save final state
-        self.state["x_est"] = x_est
-        self.state["P"]     = P
-        self.state["y_inn"] = np.linalg.norm(y_inn)
+        self.state["x_est"]  = x_est
+        self.state["P"]      = P
         return self.state
 
     # Module computation of derivatives to be integrated

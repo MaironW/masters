@@ -18,9 +18,7 @@ NAV_EKF_par = {
     "Q"         : Q, # Process noise covariance
 
     # Initial values for the EKF
-    "x_est_ini" : np.array([1.62228612e+08, 2.42235379e+07, 1.78903662e+07, -0.32883677, 27.86282899, 13.43536119]) + np.array([1e7, 1e7, 1e7, 10, 10, 10]),
-    "P_ini"     : np.ones((6,6)),
-    "y_inn_ini" : np.array([0,0,0,0,0,0]),
+    "x_est_ini" : np.array([1.62228612e+08, 2.42235379e+07, 1.78903662e+07, -0.32883677, 27.86282899, 13.43536119]) + np.array([1e7, 1e7, 1e7, 10, 10, 10]), # Initial state
+    "P_ini"     : np.ones((6,6)), # Initial covariance
+    "y_ini"     : 0, # Initial innovation
 }
-
-

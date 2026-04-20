@@ -122,9 +122,8 @@ class NAV_CEL(Level2Module):
                 if valid:
                     # Find matching reference star
                     ref_idx = np.where(STARSid_ref == STARid_mes)[0][0]
-                    z[count] = cos_angle_mes
-                    # Variance propagation: sigma_z^2 = (1 - cos^2(angle)) * sigma_angle^2
-                    R[count] = (1 - cos_angle_mes**2) * sigma_angle**2
+                    z[count] = np.arccos(cos_angle_mes)
+                    R[count] = sigma_angle**2
                     BODYsel_STARdir_SC_mes_list[count] = STARdir_SC_mes
                     BODYsel_STARdir_SC_ref_list[count] = STARSdir_SC_ref[ref_idx]
                     BODYpos_SSB_list[count]            = BODYpos_SSB
@@ -168,18 +167,20 @@ class NAV_CEL(Level2Module):
         h_vec = np.zeros(n_bodies)
 
         for i in range(n_bodies):
-            # Get star direction
-            # For now, do it with measurement
-            # In the future, consider using ephemerides also
-            STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
-
             # Compute the direction of the BODY from the estimated SC position, if the body is visible
             BODYpos_SSB = BODYpos_SSB_list[i]
             if np.any(BODYpos_SSB):
+                # Get star direction
+                # For now, do it with measurement
+                # In the future, consider using ephemerides also
+                STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
+
                 BODYlos_SC      = BODYpos_SSB - SCpos_SSB
                 BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
                 BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
-                h_vec[i] = STARdir_SC @ BODYdir_SC
+                cos_angle       = np.clip(STARdir_SC @ BODYdir_SC, -1.0, 1.0)
+
+                h_vec[i] = np.arccos(cos_angle)
 
         return h_vec
 
@@ -197,21 +198,26 @@ class NAV_CEL(Level2Module):
         H_matrix = np.zeros((n_bodies, n_states))
 
         for i in range(n_bodies):
-            # Get star direction
-            # For now, do it with measurement
-            # In the future, consider using ephemerides also
-            STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
-
             # Compute the direction of the BODY from the estimated SC position
-            BODYpos_SSB     = BODYpos_SSB_list[i]
+            BODYpos_SSB = BODYpos_SSB_list[i]
             if np.any(BODYpos_SSB):
+                # Get star direction
+                # For now, do it with measurement
+                # In the future, consider using ephemerides also
+                STARdir_SC = BODYsel_STARdir_SC_ref_list[i]
+
                 BODYlos_SC      = BODYpos_SSB - SCpos_SSB
                 BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
                 BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
+                cos_angle       = np.clip(STARdir_SC @ BODYdir_SC, -1.0, 1.0)
+
+                den = np.sqrt(1 - cos_angle**2)
+                # Avoid numerical blow-up on the denominator
+                if den < 1e-12:
+                    continue
 
                 # Compute partial derivative
-                h    = STARdir_SC @ BODYdir_SC
-                dhdr = -1 / BODYlos_SC_norm * (STARdir_SC - h * BODYdir_SC)
+                dhdr = 1 / (BODYlos_SC_norm * den) * (STARdir_SC - cos_angle * BODYdir_SC)
 
                 # Fill matrix
                 H_matrix[i, 0:3] = dhdr

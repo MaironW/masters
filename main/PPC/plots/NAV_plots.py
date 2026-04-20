@@ -80,7 +80,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
     for body in bodies:
         idx = body["idx"]
-        angles_deg[body["name"]] = (np.cos(z[:, idx])*CONSTANTS_par["rad2deg_cst"])
+        angles_deg[body["name"]] = z[:, idx]*CONSTANTS_par["rad2deg_cst"]
 
     active_bodies = [
         body for body in bodies if not misc.is_nan(angles_deg[body["name"]])

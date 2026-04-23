@@ -39,12 +39,17 @@ class NAV_CMB(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
+        # Output flag
+        if inputs != None:
+            NAV_CMBoutflg = inputs["NAV"]["NAV_CMB"]["NAV_CMBenableflg"]
+            self.state["NAV_CMBoutflg"] = NAV_CMBoutflg
+
         SEN_STRoutflg  = SEN_states["SEN_STR"]["SEN_STRoutflg"]
         SEN_CMBoutflg  = SEN_states["SEN_CMB"]["SEN_CMBoutflg"]
 
         # Only update outputs if SEN_CMBoutflg and SEN_STRoutflg are valid
         # Otherwise, return default values
-        if SEN_CMBoutflg == 0 or SEN_STRoutflg == 0:
+        if SEN_CMBoutflg == 0 or SEN_STRoutflg == 0 or NAV_CMBoutflg == 0:
             self.state["NAV_CMBoutflg"] = self.par["NAV_CMBoutflg_ini"]
             self.state["z"]             = self.par["z_ini"]
             self.state["R"]             = self.par["R_ini"]

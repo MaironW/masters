@@ -26,6 +26,15 @@ events_sequence = {
         (0,     1),
         (3000,  1),
         (36000, 1),
+    ],
+    "NAV.NAV_CEL.NAV_CELenableflg" : [
+        (0, 1),
+    ],
+    "NAV.NAV_PSR.NAV_PSRenableflg" : [
+        (0, 1),
+    ],
+    "NAV.NAV_CMB.NAV_CMBenableflg" : [
+        (0, 1),
     ]
 }
 

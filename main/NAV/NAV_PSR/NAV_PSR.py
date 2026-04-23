@@ -59,12 +59,17 @@ class NAV_PSR(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
+        # Output flag
+        if inputs != None:
+            NAV_PSRoutflg = inputs["NAV"]["NAV_PSR"]["NAV_PSRenableflg"]
+            self.state["NAV_PSRoutflg"] = NAV_PSRoutflg
+
         SEN_PSRoutflg  = SEN_states["SEN_PSR"]["SEN_PSRoutflg"]
         SUNpos_SSB_ref = NAV_states["NAV_EPH"]["SUNpos_SSB"]
 
         # Only update outputs if PSRoutflg is valid
         # Otherwise, return default values
-        if SEN_PSRoutflg == 0:
+        if SEN_PSRoutflg == 0 or NAV_PSRoutflg == 0:
             self.state["NAV_PSRoutflg"]  = self.par["NAV_PSRoutflg_ini"]
             self.state["z"]              = self.par["z_ini"]
             self.state["R"]              = self.par["R_ini"]

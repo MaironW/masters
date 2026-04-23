@@ -46,11 +46,16 @@ class NAV_CEL(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
+        # Output flag
+        if inputs != None:
+            NAV_CELoutflg = inputs["NAV"]["NAV_CEL"]["NAV_CELenableflg"]
+            self.state["NAV_CELoutflg"] = NAV_CELoutflg
+
         SEN_STRoutflg = SEN_states["SEN_STR"]["SEN_STRoutflg"]
 
         # Only update outputs if SEN_STRoutflg is valid
         # Otherwise, return default values
-        if SEN_STRoutflg == 0:
+        if SEN_STRoutflg == 0 or NAV_CELoutflg == 0:
             self.state["NAV_CELoutflg"] = self.par["NAV_CELoutflg_ini"]
             self.state["z"]             = self.par["z_ini"]
             self.state["R"]             = self.par["R_ini"]

@@ -310,6 +310,20 @@ def NAV_UKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         y = timeline["NAV"]["NAV_UKF"][f"y_{name}"]
         PPC.plot(time_SIM, y, label=f"{name}", fig=fig, ax=ax1)
 
+    # Compare estimators
+    EKF_x_est  = timeline["NAV"]["NAV_EKF"]["x_est"]
+    EKF_SCpos_SSB_est = EKF_x_est[:, 0:3]
+    EKF_SCvel_SSB_est = EKF_x_est[:, 3:6]
+
+    UKF_x_est  = timeline["NAV"]["NAV_UKF"]["x_est"]
+    UKF_SCpos_SSB_est = UKF_x_est[:, 0:3]
+    UKF_SCvel_SSB_est = UKF_x_est[:, 3:6]
+
+    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB_est [km]", title="EKF vs UKF", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB_est [km/s]", fig=fig, subplot=(2,1,2))
+    PPC.plot(time_SIM, EKF_SCpos_SSB_est - UKF_SCpos_SSB_est, label=["SCpos_SSB X","SCpos_SSB Y","SCpos_SSB Z"], fig=fig, ax=ax1)
+    PPC.plot(time_SIM, EKF_SCvel_SSB_est - UKF_SCvel_SSB_est, label=["SCvel_SSB X","SCvel_SSB Y","SCvel_SSB Z"], fig=fig, ax=ax2)
+
 NAV_plots = {
     "NAV_EPH" : NAV_EPH_plot,
     "NAV_STR" : NAV_STR_plot,

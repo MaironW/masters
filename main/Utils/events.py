@@ -34,7 +34,7 @@ events_sequence = {
         (0, 1),
     ],
     "NAV.NAV_CMB.NAV_CMBenableflg" : [
-        (0, 1),
+        (0, 0),
     ]
 }
 

@@ -95,16 +95,16 @@ class NAV_EKF(Level2Module):
 
             # EKF Update
             H      = H_fun(x_est)
-            z_pred = h_fun(x_est)
+            z_est = h_fun(x_est)
 
             # Filter by measurements
             z      = z[valid_measurements]
+            z_est = z_est[valid_measurements]
             H      = H[valid_measurements, :]
             R      = R[np.ix_(valid_measurements,valid_measurements)]
-            z_pred = z_pred[valid_measurements]
 
             # Compute inovation
-            y = z - z_pred
+            y = z - z_est
 
             # Compute gain
             Py  = H @ P @ H.T + R         # Innovation covariance

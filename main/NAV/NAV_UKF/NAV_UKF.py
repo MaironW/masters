@@ -63,9 +63,45 @@ class NAV_UKF(Level2Module):
             },
         ]
 
+        # Load states and parameters
         x_est  = self.state["x_est"]
         P      = self.state["P"]
         dt     = self.par["dt"]
+        Q      = self.par["Q"]
+        G      = self.par["G"]
+
+        # Generate sigma points
+        X_sigma_aug, weights = self.generate_sigma_points(x_est, P, Q)
+
+        # Get individual sigma-points
+        n_states  = len(x_est)
+        n_process = Q.shape[0]
+        X_sigma = X_sigma_aug[0 : n_states, :]
+        W_sigma = X_sigma_aug[n_states : n_states + n_process, :]
+
+        # Propagate the sigma points through integration
+        X_sigma_prop = []
+
+        for i in range(X_sigma.shape[1]):
+            x_i = X_sigma[:, i]
+            w_i = W_sigma[:, i]
+
+            # Process propagation
+            x_next = self.propagate_sigma(x_i, dt, NAV_states) + G @ w_i
+            X_sigma_prop.append(x_next)
+
+        # Mean
+        X_sigma_prop = np.array(X_sigma_prop).T
+        x_pred = np.sum(weights * X_sigma_prop, axis=1)
+        x_est  = np.copy(x_pred)
+
+        # State covariance
+        Pxx = np.zeros((n_states, n_states))
+        for i in range(X_sigma_prop.shape[1]):
+            dx = X_sigma_prop[:, i] - x_pred
+            Pxx += weights[i] * np.outer(dx, dx)
+        Pxx = 0.5 * (Pxx + Pxx.T) # Symmetry fix
+        Pxx += 1e-12*np.eye(n_states) # Add low value to ensure convergence
 
         for navigation_method in navigation_methods:
             name = navigation_method["name"]
@@ -92,92 +128,60 @@ class NAV_UKF(Level2Module):
                 continue
 
             # Get sensor-specific model
-            h_fun_full = data["h"]
+            h_fun = data["h"]
+
+            # UKF Update
+            Z_sigma_prop = []
+            for i in range(X_sigma_prop.shape[1]):
+                z_i = h_fun(X_sigma_prop[:, i])
+                Z_sigma_prop.append(z_i)
+            Z_sigma_prop = np.array(Z_sigma_prop).T
+            z_est = np.sum(weights * Z_sigma_prop, axis=1)
 
             # Filter by measurements
             z      = z[valid_measurements]
+            z_est  = z_est[valid_measurements]
             R      = R[np.ix_(valid_measurements,valid_measurements)]
-            R      = 0.5 * (R + R.T)
-            R     += 1e-12 * np.eye(R.shape[0])
-            h_fun  = lambda x: h_fun_full(x)[valid_measurements]
-
-            n_states = len(x_est)
-            n_mes    = len(z)
-            Q = self.par["Q"]
-            G = self.par["G"]
-            n_process = Q.shape[0]
-
-            # Generate sigma points
-            X_sigma_aug, weights = self.generate_sigma_points(x_est, P, Q, R)
-
-            # Get individual sigma-points
-            X_sigma = X_sigma_aug[0 : n_states, :]
-            W_sigma = X_sigma_aug[n_states : n_states + n_process, :]
-            V_sigma = X_sigma_aug[n_states + n_process : , :]
-
-            # Propagate the sigma points through integration
-            X_sigma_prop = []
-            Z_sigma_prop = []
-
-            for i in range(X_sigma.shape[1]):
-                x_i = X_sigma[:, i]
-                w_i = W_sigma[:, i]
-                v_i = V_sigma[:, i]
-
-                # Process propagation (Euler for now)
-                x_next = self.propagate_sigma(x_i, dt, NAV_states) + G @ w_i
-
-                # Measurement
-                z_i = h_fun(x_next) + v_i
-
-                X_sigma_prop.append(x_next)
-                Z_sigma_prop.append(z_i)
-
-            X_sigma_prop = np.array(X_sigma_prop).T
-            Z_sigma_prop = np.array(Z_sigma_prop).T
-
-            # Mean
-            x_pred = np.sum(weights * X_sigma_prop, axis=1)
-            z_pred = np.sum(weights * Z_sigma_prop, axis=1)
+            R      = 0.5 * (R + R.T) # Symmetry fix
+            R     += 1e-12 * np.eye(R.shape[0]) # Add low value to ensure convergence
+            n_mes  = len(z)
 
             # Covariances
-            Pxx = np.zeros((n_states, n_states)) # State covariance
             Pzz = np.zeros((n_mes,    n_mes))    # Innovation covariance
             Pxz = np.zeros((n_states, n_mes))    # Cross-covariance state-measurement
 
-            for i in range(X_sigma_prop.shape[1]):
+            for i in range(Z_sigma_prop.shape[1]):
                 dx = X_sigma_prop[:, i] - x_pred
-                dz = Z_sigma_prop[:, i] - z_pred
+                dz = Z_sigma_prop[:, i] - z_est
 
-                Pxx += weights[i] * np.outer(dx, dx)
                 Pzz += weights[i] * np.outer(dz, dz)
                 Pxz += weights[i] * np.outer(dx, dz)
 
-            Pxx += 1e-12*np.eye(n_states) # Add low value to ensure convergence
+            Pzz += R
             Pzz += 1e-12*np.eye(n_mes) # Add low value to ensure convergence
-
-            # Compute inovation
-            y = z - z_pred
 
             # Compute gain
             K = Pxz @ np.linalg.inv(Pzz)
+
+            # Compute inovation
+            y = z - z_est
 
             # Compute normalized innovation squared
             nis = y.T @ np.linalg.inv(Pzz) @ y
             self.state[f"y_{name}"] = nis
 
             # Estimate
-            x_est = x_pred + K @ y
-            P     = Pxx - K @ Pzz @ K.T
-            P     = 0.5 *(P + P.T) # Symmetry fix
-            P    += 1e-12*np.eye(n_states) # Add low value to ensure convergence
+            x_est = x_est + K @ y
+            Pxx     = Pxx - K @ Pzz @ K.T
+            Pxx     = 0.5 *(Pxx + Pxx.T) # Symmetry fix
+            Pxx    += 1e-12*np.eye(n_states) # Add low value to ensure convergence
 
             # Save last update time
             self.last_update_time[name] = t_valid
 
         # Save final state
         self.state["x_est"]  = x_est
-        self.state["P"]      = P
+        self.state["P"]      = Pxx
         return self.state
 
     # Return integrated variables
@@ -223,17 +227,16 @@ class NAV_UKF(Level2Module):
         return np.hstack([SCvel_SSB, SCacc_SSB])
 
     # Generate sigma-points for the UKF
-    def generate_sigma_points(self, x, P, Q, R):
-        n_states  = len(x) # State size
-        n_mes     = R.shape[0] # Measurement size
-        n_process = Q.shape[0] # Process noise size
-        n_a       = n_states + n_process + n_mes  # Augmented state size
+    def generate_sigma_points(self, x, P, Q):
+        n_states  = len(x)                # State size
+        n_process = Q.shape[0]            # Process noise size
+        n_a       = n_states + n_process  # Augmented state size
 
         # Augmented state
-        x_aug = np.hstack([x, np.zeros(n_process), np.zeros(n_mes)])
+        x_aug = np.hstack([x, np.zeros(n_process)])
 
         # Augmented covariance
-        P_aug = block_diag(P, Q, R)
+        P_aug = block_diag(P, Q)
 
         # UKF parameters
         kappa = 3 - n_a # Scale parameter

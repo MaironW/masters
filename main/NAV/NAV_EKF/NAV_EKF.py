@@ -63,7 +63,7 @@ class NAV_EKF(Level2Module):
         ]
 
         x_est  = self.state["x_est"]
-        P      = self.state["P"]
+        Pxx    = self.state["P"]
 
         for navigation_method in navigation_methods:
             name = navigation_method["name"]
@@ -107,36 +107,36 @@ class NAV_EKF(Level2Module):
             y = z - z_est
 
             # Compute gain
-            Py  = H @ P @ H.T + R         # Innovation covariance
-            Py  = 0.5 * (Py + Py.T)
-            Py += 1e-12 * np.eye(Py.shape[0])
-            Pxy = P @ H.T                 # Cross-covariance state-measurement
-            K   = np.linalg.solve(Py.T, Pxy.T).T # Kalman gain
+            Pzz  = H @ Pxx @ H.T + R         # Innovation covariance
+            Pzz  = 0.5 * (Pzz + Pzz.T)
+            Pzz += 1e-12 * np.eye(Pzz.shape[0])
+            Pxy  = Pxx @ H.T                 # Cross-covariance state-measurement
+            K    = np.linalg.solve(Pzz.T, Pxy.T).T # Kalman gain
 
             # Compute normalized innovation squared
-            nis = y.T @ np.linalg.solve(Py, y)
+            nis = y.T @ np.linalg.solve(Pzz, y)
             self.state[f"y_{name}"] = nis
 
             # Estimate
             x_est = x_est + K @ y
-            I     = np.eye(P.shape[0])
-            P     = (I - K @ H) @ P @ (I - K @ H).T + K @ R @ K.T
-            P     = 0.5 * (P + P.T)
-            P    += 1e-12 * np.eye(P.shape[0])
+            I     = np.eye(Pxx.shape[0])
+            Pxx   = (I - K @ H) @ Pxx @ (I - K @ H).T + K @ R @ K.T
+            Pxx   = 0.5 * (Pxx + Pxx.T)
+            Pxx  += 1e-12 * np.eye(Pxx.shape[0])
 
             # Save last update time
             self.last_update_time[name] = t_valid
 
         # Save final state
-        self.state["x_est"]  = x_est
-        self.state["P"]      = P
+        self.state["x_est"] = x_est
+        self.state["P"]     = Pxx
         return self.state
 
     # Module computation of derivatives to be integrated
     # Equivalent to the prediction step
     def derivatives(self, t, states):
         x_est = self.state["x_est"]
-        P     = self.state["P"]
+        Pxx   = self.state["P"]
 
         # Control input is none, but kept to maintain the filter structure
         u = None
@@ -153,7 +153,7 @@ class NAV_EKF(Level2Module):
         G = self.par["G"]
         Q = self.par["Q"]
 
-        P_dot = F @ P + P @ F.T + G @ Q @ G.T
+        P_dot = F @ Pxx + Pxx @ F.T + G @ Q @ G.T
 
         return np.hstack([x_dot, P_dot.flatten()])
 

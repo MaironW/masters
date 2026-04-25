@@ -278,7 +278,8 @@ def NAV_EKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Plot innovation
     fig, ax1 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Innovation", title="EKF Innovation Normalized Squared")
     for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
-        y = timeline["NAV"]["NAV_UKF"][f"y_{name}"]
+        y  = timeline["NAV"]["NAV_EKF"][f"y_{name}"]
+        y /= len(y)
         PPC.plot(time_SIM, y, label=f"{name}", fig=fig, ax=ax1)
 
 def NAV_UKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
@@ -307,7 +308,8 @@ def NAV_UKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Plot innovation
     fig, ax1 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Innovation", title="UKF Innovation Normalized Squared")
     for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
-        y = timeline["NAV"]["NAV_UKF"][f"y_{name}"]
+        y  = timeline["NAV"]["NAV_UKF"][f"y_{name}"] 
+        y /= len(y)
         PPC.plot(time_SIM, y, label=f"{name}", fig=fig, ax=ax1)
 
     # Compare estimators

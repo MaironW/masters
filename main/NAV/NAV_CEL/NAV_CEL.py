@@ -127,8 +127,8 @@ class NAV_CEL(Level2Module):
                 if valid:
                     # Find matching reference star
                     ref_idx = np.where(STARSid_ref == STARid_mes)[0][0]
-                    z[count] = np.arccos(cos_angle_mes)
-                    R[count] = sigma_angle**2
+                    z[count] = cos_angle_mes
+                    R[count] = (1 - cos_angle_mes**2) * sigma_angle**2
                     BODYsel_STARdir_SC_mes_list[count] = STARdir_SC_mes
                     BODYsel_STARdir_SC_ref_list[count] = STARSdir_SC_ref[ref_idx]
                     BODYpos_SSB_list[count]            = BODYpos_SSB
@@ -185,7 +185,7 @@ class NAV_CEL(Level2Module):
                 BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
                 cos_angle       = np.clip(STARdir_SC @ BODYdir_SC, -1.0, 1.0)
 
-                h_vec[i] = np.arccos(cos_angle)
+                h_vec[i] = cos_angle
 
         return h_vec
 
@@ -215,6 +215,7 @@ class NAV_CEL(Level2Module):
                 BODYlos_SC_norm = np.linalg.norm(BODYlos_SC)
                 BODYdir_SC      = BODYlos_SC/BODYlos_SC_norm
                 cos_angle       = np.clip(STARdir_SC @ BODYdir_SC, -1.0, 1.0)
+                h               = cos_angle
 
                 den = np.sqrt(1 - cos_angle**2)
                 # Avoid numerical blow-up on the denominator
@@ -222,7 +223,7 @@ class NAV_CEL(Level2Module):
                     continue
 
                 # Compute partial derivative
-                dhdr = 1 / (BODYlos_SC_norm * den) * (STARdir_SC - cos_angle * BODYdir_SC)
+                dhdr = -1 / BODYlos_SC_norm * (STARdir_SC - h * BODYdir_SC)
 
                 # Fill matrix
                 H_matrix[i, 0:3] = dhdr

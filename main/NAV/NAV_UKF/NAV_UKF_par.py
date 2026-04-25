@@ -17,6 +17,9 @@ NAV_UKF_par = {
     "n_states"  : 6,   # Number of estimated states [pos[3], vel[3]]
     "G"         : G,   # Process noise mapping
     "Q"         : Q,   # Process noise covariance
+    "alpha"     : 1e-3,
+    "beta"      : 2,
+    "kappa"     : 0,
 
     # Initial values for the UKF
     "x_est_ini" : np.array([1.62228612e+08, 2.42235379e+07, 1.78903662e+07, -0.32883677, 27.86282899, 13.43536119]) + np.array([10, 10, 10, 0.01, 0.01, 0.01]), # Initial state

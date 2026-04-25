@@ -65,13 +65,13 @@ class NAV_UKF(Level2Module):
 
         # Load states and parameters
         x_est  = self.state["x_est"]
-        P      = self.state["P"]
+        Pxx    = self.state["P"]
         dt     = self.par["dt"]
         Q      = self.par["Q"]
         G      = self.par["G"]
 
         # Generate sigma points
-        X_sigma_aug, Wm, Wc = self.generate_sigma_points(x_est, P, Q)
+        X_sigma_aug, Wm, Wc = self.generate_sigma_points(x_est, Pxx, Q)
 
         # Get individual sigma-points
         n_states  = len(x_est)
@@ -81,17 +81,14 @@ class NAV_UKF(Level2Module):
 
         # Propagate the sigma points through integration
         X_sigma_prop = []
-
         for i in range(X_sigma.shape[1]):
             x_i = X_sigma[:, i]
             w_i = W_sigma[:, i]
-
-            # Process propagation
             x_next = self.propagate_sigma(x_i, dt, NAV_states) + G @ w_i
             X_sigma_prop.append(x_next)
-
-        # Mean
         X_sigma_prop = np.array(X_sigma_prop).T
+
+        # Mean, prediction
         x_pred = X_sigma_prop @ Wm
         x_est  = np.copy(x_pred)
 
@@ -103,6 +100,7 @@ class NAV_UKF(Level2Module):
         Pxx = 0.5 * (Pxx + Pxx.T) # Symmetry fix
         Pxx += 1e-12*np.eye(n_states) # Add low value to ensure convergence
 
+        # Sequential update iterating on the navigation methods
         for navigation_method in navigation_methods:
             name = navigation_method["name"]
             data = navigation_method["data"]
@@ -148,11 +146,11 @@ class NAV_UKF(Level2Module):
             n_mes  = len(z)
 
             # Covariances
-            Pzz = np.zeros((n_mes,    n_mes))    # Innovation covariance
-            Pxz = np.zeros((n_states, n_mes))    # Cross-covariance state-measurement
+            Pzz = np.zeros((n_mes,    n_mes)) # Innovation covariance
+            Pxz = np.zeros((n_states, n_mes)) # Cross-covariance state-measurement
 
             for i in range(Z_sigma_prop.shape[1]):
-                dx = X_sigma_prop[:, i] - x_pred
+                dx = X_sigma_prop[:, i] - x_est
                 dz = Z_sigma_prop[:, i] - z_est
 
                 Pzz += Wc[i] * np.outer(dz, dz)
@@ -162,13 +160,13 @@ class NAV_UKF(Level2Module):
             Pzz += 1e-12*np.eye(n_mes) # Add low value to ensure convergence
 
             # Compute gain
-            K = Pxz @ np.linalg.inv(Pzz)
+            K = Pxz @ np.linalg.solve(Pzz, np.eye(Pzz.shape[0]))
 
             # Compute inovation
             y = z - z_est
 
             # Compute normalized innovation squared
-            nis = y.T @ np.linalg.inv(Pzz) @ y
+            nis = y.T @ np.linalg.solve(Pzz, y)
             self.state[f"y_{name}"] = nis
 
             # Estimate
@@ -179,6 +177,14 @@ class NAV_UKF(Level2Module):
 
             # Save last update time
             self.last_update_time[name] = t_valid
+
+            # Regenerate sigma-points from last update
+            X_sigma_aug, Wm, Wc = self.generate_sigma_points(x_est, Pxx, Q)
+            X_sigma = X_sigma_aug[0 : n_states, :]
+            W_sigma = X_sigma_aug[n_states : n_states + n_process, :]
+
+            # Re-propagate sigma points
+            X_sigma_prop = np.copy(X_sigma)
 
         # Save final state
         self.state["x_est"]  = x_est
@@ -240,10 +246,10 @@ class NAV_UKF(Level2Module):
         P_aug = block_diag(P, Q)
 
         # UKF parameters following Wan & van der Merwe (2000)
-        alpha  = 1e-3
+        alpha  = self.par["alpha"]
         alpha2 = alpha**2
-        beta   = 2
-        kappa  = 0
+        beta   = self.par["beta"]
+        kappa  = self.par["kappa"]
         L      = alpha2*(n_a + kappa) - n_a
         gamma  = np.sqrt(n_a + L)
 

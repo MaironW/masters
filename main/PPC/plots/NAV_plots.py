@@ -80,7 +80,7 @@ def NAV_CEL_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
     for body in bodies:
         idx = body["idx"]
-        angles_deg[body["name"]] = z[:, idx]*CONSTANTS_par["rad2deg_cst"]
+        angles_deg[body["name"]] = np.cos(z[:, idx])*CONSTANTS_par["rad2deg_cst"]
 
     active_bodies = [
         body for body in bodies if not misc.is_nan(angles_deg[body["name"]])
@@ -253,34 +253,110 @@ def NAV_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, innov[:, i], label=f"CMB{i}", xlabel="time_SIM [s]", fig=fig, ax=ax2)
 
 def NAV_EKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
-    time_SIM      = timeline["DYN"]["DYN_TIME"]["time_SIM"]
-    SCpos_SSB     = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
-    SCvel_SSB     = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+    time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    SCpos_SSB = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+    SCvel_SSB = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+    n_iter    = len(time_SIM)
 
-    x_est  = timeline["NAV"]["NAV_EKF"]["x_est"]
+    x_est = timeline["NAV"]["NAV_EKF"]["x_est"]
+    P     = timeline["NAV"]["NAV_EKF"]["P"]
     SCpos_SSB_est = x_est[:, 0:3]
     SCvel_SSB_est = x_est[:, 3:6]
 
     # Plot states
-    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB [km]", title="Estimated position", subplot=(2,1,1))
-    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB [km/s]", title="Estimated velocity", fig=fig, subplot=(2,1,2))
-    PPC.plot(time_SIM, SCpos_SSB,     label=f"SCpos_SSB",     fig=fig, ax=ax1)
-    PPC.plot(time_SIM, SCpos_SSB_est, label=f"SCpos_SSB_est", fig=fig, ax=ax1)
-    PPC.plot(time_SIM, SCvel_SSB,     label=f"SCvel_SSB",     fig=fig, ax=ax2)
-    PPC.plot(time_SIM, SCvel_SSB_est, label=f"SCvel_SSB_est", fig=fig, ax=ax2)
+    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB [km]", title="EKF Estimated position", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB [km/s]", title="EKF Estimated velocity", fig=fig, subplot=(2,1,2))
+    PPC.plot(time_SIM, SCpos_SSB,     label=["SCpos_SSB X","SCpos_SSB Y","SCpos_SSB Z"],             fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCpos_SSB_est, label=["SCpos_SSB_est X","SCpos_SSB_est Y","SCpos_SSB_est Z"], fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCvel_SSB,     label=["SCvel_SSB X","SCvel_SSB Y","SCvel_SSB Z"],             fig=fig, ax=ax2)
+    PPC.plot(time_SIM, SCvel_SSB_est, label=["SCvel_SSB_est X","SCvel_SSB_est Y","SCvel_SSB_est Z"], fig=fig, ax=ax2)
+
+    # Compute RMS
+    SCpos_SSB_err = SCpos_SSB_est - SCpos_SSB
+    SCvel_SSB_err = SCvel_SSB_est - SCvel_SSB
+    error = np.hstack((SCpos_SSB_err, SCvel_SSB_err))
+    RMS_theoretical = np.zeros_like(error)
+    RMS_numerical   = np.zeros_like(error)
+    for k in range(n_iter):
+        RMS_theoretical[k, :] = np.sqrt(np.diag(P[k]))
+        RMS_numerical[k, :]   = np.sqrt(np.mean(error[:k+1, :]**2, axis=0))
 
     # Plot errors
-    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB [km]", title="Estimated position error", subplot=(2,1,1))
-    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB [km/s]", title="Estimated velocity error", fig=fig, subplot=(2,1,2))
-    PPC.plot(time_SIM, SCpos_SSB - SCpos_SSB_est, label=f"SCpos_SSB", fig=fig, ax=ax1)
-    PPC.plot(time_SIM, SCvel_SSB - SCvel_SSB_est, label=f"SCvel_SSB", fig=fig, ax=ax2)
+    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB [km]", title="EKF Estimated position error", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB [km/s]", title="EKF Estimated velocity error", fig=fig, subplot=(2,1,2))
+    PPC.plot(time_SIM, SCpos_SSB_err, label=["SCpos_SSB X","SCpos_SSB Y","SCpos_SSB Z"], fig=fig, ax=ax1)
+    # PPC.plot(time_SIM, RMS_theoretical[:, 0:3], label=["RMSt X","RMSt Y","RMSt Z"], style="--", fig=fig, ax=ax1)
+    # PPC.plot(time_SIM, RMS_numerical[:, 0:3],   label=["RMSn X","RMSn Y","RMSn Z"], style="--", fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCvel_SSB_err, label=["SCvel_SSB X","SCvel_SSB Y","SCvel_SSB Z"], fig=fig, ax=ax2)
+    # PPC.plot(time_SIM, RMS_theoretical[:, 3:6], label=["RMSt X","RMSt Y","RMSt Z"], style="--", fig=fig, ax=ax2)
+    # PPC.plot(time_SIM, RMS_numerical[:, 3:6],   label=["RMSn X","RMSn Y","RMSn Z"], style="--", fig=fig, ax=ax2)
 
     # Plot innovation
-    fig, ax1 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Innovation", title="Innovation Normalized Squared")
+    fig, ax1 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Innovation", title="EKF Innovation Normalized Squared")
     for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
-        y = timeline["NAV"]["NAV_EKF"][f"y_{name}"]
+        y  = timeline["NAV"]["NAV_EKF"][f"y_{name}"]
+        y /= len(y)
         PPC.plot(time_SIM, y, label=f"{name}", fig=fig, ax=ax1)
 
+def NAV_UKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    SCpos_SSB = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+    SCvel_SSB = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+    n_iter    = len(time_SIM)
+
+    x_est = timeline["NAV"]["NAV_UKF"]["x_est"]
+    P     = timeline["NAV"]["NAV_EKF"]["P"]
+    SCpos_SSB_est = x_est[:, 0:3]
+    SCvel_SSB_est = x_est[:, 3:6]
+
+    # Plot states
+    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB [km]", title="UKF Estimated position", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB [km/s]", title="UKF Estimated velocity", fig=fig, subplot=(2,1,2))
+    PPC.plot(time_SIM, SCpos_SSB,     label=["SCpos_SSB X","SCpos_SSB Y","SCpos_SSB Z"],             fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCpos_SSB_est, label=["SCpos_SSB_est X","SCpos_SSB_est Y","SCpos_SSB_est Z"], fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCvel_SSB,     label=["SCvel_SSB X","SCvel_SSB Y","SCvel_SSB Z"],             fig=fig, ax=ax2)
+    PPC.plot(time_SIM, SCvel_SSB_est, label=["SCvel_SSB_est X","SCvel_SSB_est Y","SCvel_SSB_est Z"], fig=fig, ax=ax2)
+
+    # Compute RMS
+    SCpos_SSB_err = SCpos_SSB_est - SCpos_SSB
+    SCvel_SSB_err = SCvel_SSB_est - SCvel_SSB
+    error = np.hstack((SCpos_SSB_err, SCvel_SSB_err))
+    RMS_theoretical = np.zeros_like(error)
+    RMS_numerical   = np.zeros_like(error)
+    for k in range(n_iter):
+        RMS_theoretical[k, :] = np.sqrt(np.diag(P[k]))
+        RMS_numerical[k, :]   = np.sqrt(np.mean(error[:k+1, :]**2, axis=0))
+
+    # Plot errors
+    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB [km]", title="UKF Estimated position error", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB [km/s]", title="UKF Estimated velocity error", fig=fig, subplot=(2,1,2))
+    PPC.plot(time_SIM, SCpos_SSB_err, label=["SCpos_SSB X","SCpos_SSB Y","SCpos_SSB Z"], fig=fig, ax=ax1)
+    # PPC.plot(time_SIM, RMS_theoretical[:, 0:3], label=["RMSt X","RMSt Y","RMSt Z"], style="--", fig=fig, ax=ax1)
+    # PPC.plot(time_SIM, RMS_numerical[:, 0:3],   label=["RMSn X","RMSn Y","RMSn Z"], style="--", fig=fig, ax=ax1)
+    PPC.plot(time_SIM, SCvel_SSB_err, label=["SCvel_SSB X","SCvel_SSB Y","SCvel_SSB Z"], fig=fig, ax=ax2)
+    # PPC.plot(time_SIM, RMS_theoretical[:, 3:6], label=["RMSt X","RMSt Y","RMSt Z"], style="--", fig=fig, ax=ax2)
+    # PPC.plot(time_SIM, RMS_numerical[:, 3:6],   label=["RMSn X","RMSn Y","RMSn Z"], style="--", fig=fig, ax=ax2)
+
+    # Plot innovation
+    fig, ax1 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="Innovation", title="UKF Innovation Normalized Squared")
+    for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
+        y  = timeline["NAV"]["NAV_UKF"][f"y_{name}"] 
+        y /= len(y)
+        PPC.plot(time_SIM, y, label=f"{name}", fig=fig, ax=ax1)
+
+    # Compare estimators
+    EKF_x_est  = timeline["NAV"]["NAV_EKF"]["x_est"]
+    EKF_SCpos_SSB_est = EKF_x_est[:, 0:3]
+    EKF_SCvel_SSB_est = EKF_x_est[:, 3:6]
+
+    UKF_x_est  = timeline["NAV"]["NAV_UKF"]["x_est"]
+    UKF_SCpos_SSB_est = UKF_x_est[:, 0:3]
+    UKF_SCvel_SSB_est = UKF_x_est[:, 3:6]
+
+    fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB_est [km]", title="EKF vs UKF", subplot=(2,1,1))
+    fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="SCvel_SSB_est [km/s]", fig=fig, subplot=(2,1,2))
+    PPC.plot(time_SIM, EKF_SCpos_SSB_est - UKF_SCpos_SSB_est, label=["SCpos_SSB X","SCpos_SSB Y","SCpos_SSB Z"], fig=fig, ax=ax1)
+    PPC.plot(time_SIM, EKF_SCvel_SSB_est - UKF_SCvel_SSB_est, label=["SCvel_SSB X","SCvel_SSB Y","SCvel_SSB Z"], fig=fig, ax=ax2)
 
 NAV_plots = {
     "NAV_EPH" : NAV_EPH_plot,
@@ -289,4 +365,5 @@ NAV_plots = {
     "NAV_PSR" : NAV_PSR_plot,
     "NAV_CMB" : NAV_CMB_plot,
     "NAV_EKF" : NAV_EKF_plot,
+    "NAV_UKF" : NAV_UKF_plot,
 }

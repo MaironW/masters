@@ -8,7 +8,6 @@ import numpy as np
 from Utils import quaternions
 from Utils.constants import CONSTANTS_par
 from Utils.level2module import Level2Module
-from Utils.pulsar_database import PulsarDatabase
 from .NAV_CMB_par import NAV_CMB_par
 
 class NAV_CMB(Level2Module):
@@ -40,12 +39,17 @@ class NAV_CMB(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, SEN_states, NAV_states, inputs=None):
+        # Output flag
+        if inputs != None:
+            NAV_CMBoutflg = inputs["NAV"]["NAV_CMB"]["NAV_CMBenableflg"]
+            self.state["NAV_CMBoutflg"] = NAV_CMBoutflg
+
         SEN_STRoutflg  = SEN_states["SEN_STR"]["SEN_STRoutflg"]
         SEN_CMBoutflg  = SEN_states["SEN_CMB"]["SEN_CMBoutflg"]
 
         # Only update outputs if SEN_CMBoutflg and SEN_STRoutflg are valid
         # Otherwise, return default values
-        if SEN_CMBoutflg == 0 or SEN_STRoutflg == 0:
+        if SEN_CMBoutflg == 0 or SEN_STRoutflg == 0 or NAV_CMBoutflg == 0:
             self.state["NAV_CMBoutflg"] = self.par["NAV_CMBoutflg_ini"]
             self.state["z"]             = self.par["z_ini"]
             self.state["R"]             = self.par["R_ini"]
@@ -121,6 +125,7 @@ class NAV_CMB(Level2Module):
         # Compute temperature dipole due to the spacecraft velocity within the galaxy
         light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]
         beta            = SCvel_CMB_norm/light_speed_cst
+        beta            = np.clip(beta, 0.0, 1.0 - 1e-12)
         T_monopole      = self.par["T_monopole"] # [K]
         T_dipole_CMB1 = np.sqrt(1-beta*beta)/(1-beta*cos_angle1)*T_monopole
         T_dipole_CMB2 = np.sqrt(1-beta*beta)/(1-beta*cos_angle2)*T_monopole
@@ -171,6 +176,7 @@ class NAV_CMB(Level2Module):
         # Compute scalars
         SCvel_SSB_norm = np.linalg.norm(SCvel_SSB)
         beta           = SCvel_SSB_norm/light_speed_cst
+        beta           = np.clip(beta, 0.0, 1.0 - 1e-12)
         T_monopole     = self.par["T_monopole"] # [K]
         aux0 = np.sqrt(1 - beta*beta)
         aux1 = 1 - beta*cos_angle1

@@ -11,7 +11,7 @@ NAV_PSR_par = {
                             2.26918341e-04,
                             5.93848437e-05,
                             5.34729613e-05,
-                            3.37885772e-07]), # [s] TOA standard deviation per pulsar
+                            3.37885772e-07])*1e1, # [s] TOA standard deviation per pulsar, tunned to reduce overconfidence
 
     # Output initial values
     "NAV_PSRoutflg_ini"  : 0, # NAV_PSR Module output flag

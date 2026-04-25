@@ -63,7 +63,7 @@ class NAV_EKF(Level2Module):
         ]
 
         x_est  = self.state["x_est"]
-        P      = self.state["P"]
+        Pxx    = self.state["P"]
 
         for navigation_method in navigation_methods:
             name = navigation_method["name"]
@@ -94,44 +94,49 @@ class NAV_EKF(Level2Module):
             H_fun = data["H"]
 
             # EKF Update
-            H      = H_fun(x_est)
-            z_pred = h_fun(x_est)
+            H     = H_fun(x_est)
+            z_est = h_fun(x_est)
 
             # Filter by measurements
-            z      = z[valid_measurements]
-            H      = H[valid_measurements, :]
-            R      = R[np.ix_(valid_measurements,valid_measurements)]
-            z_pred = z_pred[valid_measurements]
+            z     = z[valid_measurements]
+            z_est = z_est[valid_measurements]
+            H     = H[valid_measurements, :]
+            R     = R[np.ix_(valid_measurements,valid_measurements)]
 
             # Compute inovation
-            y = z - z_pred
+            y = z - z_est
 
             # Compute gain
-            Py  = H @ P @ H.T + R         # Innovation covariance
-            Pxy = P @ H.T                 # Cross-covariance state-measurement
-            K   = Pxy @ np.linalg.inv(Py) # Kalman gain
+            Pzz  = H @ Pxx @ H.T + R         # Innovation covariance
+            Pzz  = 0.5 * (Pzz + Pzz.T)
+            Pzz += 1e-12 * np.eye(Pzz.shape[0])
+            Pxy  = Pxx @ H.T                 # Cross-covariance state-measurement
+            K    = np.linalg.solve(Pzz.T, Pxy.T).T # Kalman gain
 
             # Compute normalized innovation squared
-            nis = y.T @ np.linalg.inv(Py) @ y
+            nis = y.T @ np.linalg.solve(Pzz, y)
             self.state[f"y_{name}"] = nis
 
             # Estimate
             x_est = x_est + K @ y
-            P     = P - K @ Py @ K.T
+            I     = np.eye(Pxx.shape[0])
+            Pxx   = (I - K @ H) @ Pxx @ (I - K @ H).T + K @ R @ K.T
+            Pxx   = 0.5 * (Pxx + Pxx.T)
+            Pxx  += 1e-12 * np.eye(Pxx.shape[0])
 
             # Save last update time
             self.last_update_time[name] = t_valid
 
         # Save final state
-        self.state["x_est"]  = x_est
-        self.state["P"]      = P
+        self.state["x_est"] = x_est
+        self.state["P"]     = Pxx
         return self.state
 
     # Module computation of derivatives to be integrated
     # Equivalent to the prediction step
     def derivatives(self, t, states):
         x_est = self.state["x_est"]
-        P     = self.state["P"]
+        Pxx   = self.state["P"]
 
         # Control input is none, but kept to maintain the filter structure
         u = None
@@ -148,7 +153,7 @@ class NAV_EKF(Level2Module):
         G = self.par["G"]
         Q = self.par["Q"]
 
-        P_dot = F @ P + P @ F.T + G @ Q @ G.T
+        P_dot = F @ Pxx + Pxx @ F.T + G @ Q @ G.T
 
         return np.hstack([x_dot, P_dot.flatten()])
 
@@ -161,6 +166,8 @@ class NAV_EKF(Level2Module):
         n_states = self.par["n_states"]
         x_est = vec[:n_states]
         P     = vec[n_states:].reshape((n_states, n_states))
+        P     = 0.5 * (P + P.T)
+        P    += 1e-12 * np.eye(P.shape[0])
         self.state["x_est"] = x_est
         self.state["P"]     = P
         return self.state

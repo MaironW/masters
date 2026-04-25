@@ -10,7 +10,7 @@ CMB3q_BOF = quaternions.rotvec2q(np.pi/3 * np.array([0, -np.sin(np.deg2rad(240))
 NAV_CMB_par = {
     "sigma_T" : np.array([100e-6,
                           100e-6,
-                          100e-6]), # [K] Temperature standard deviation per sensor
+                          100e-6])*1e-1, # [K] Temperature standard deviation per sensor
     "CMB1q_BOF"  : CMB1q_BOF, # Orientation of the CMB sensor 1 relative to the Spacecraft body
     "CMB2q_BOF"  : CMB2q_BOF, # Orientation of the CMB sensor 2 relative to the Spacecraft body
     "CMB3q_BOF"  : CMB3q_BOF, # Orientation of the CMB sensor 3 relative to the Spacecraft body

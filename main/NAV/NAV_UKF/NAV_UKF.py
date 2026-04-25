@@ -160,7 +160,7 @@ class NAV_UKF(Level2Module):
             Pzz += 1e-12*np.eye(n_mes) # Add low value to ensure convergence
 
             # Compute gain
-            K = Pxz @ np.linalg.solve(Pzz, np.eye(Pzz.shape[0]))
+            K = np.linalg.solve(Pzz.T, Pxz.T).T
 
             # Compute inovation
             y = z - z_est
@@ -187,8 +187,8 @@ class NAV_UKF(Level2Module):
             X_sigma_prop = np.copy(X_sigma)
 
         # Save final state
-        self.state["x_est"]  = x_est
-        self.state["P"]      = Pxx
+        self.state["x_est"] = x_est
+        self.state["P"]     = Pxx
         return self.state
 
     # Return integrated variables

@@ -94,30 +94,35 @@ class NAV_EKF(Level2Module):
             H_fun = data["H"]
 
             # EKF Update
-            H      = H_fun(x_est)
+            H     = H_fun(x_est)
             z_est = h_fun(x_est)
 
             # Filter by measurements
-            z      = z[valid_measurements]
+            z     = z[valid_measurements]
             z_est = z_est[valid_measurements]
-            H      = H[valid_measurements, :]
-            R      = R[np.ix_(valid_measurements,valid_measurements)]
+            H     = H[valid_measurements, :]
+            R     = R[np.ix_(valid_measurements,valid_measurements)]
 
             # Compute inovation
             y = z - z_est
 
             # Compute gain
             Py  = H @ P @ H.T + R         # Innovation covariance
+            Py  = 0.5 * (Py + Py.T)
+            Py += 1e-12 * np.eye(Py.shape[0])
             Pxy = P @ H.T                 # Cross-covariance state-measurement
-            K   = Pxy @ np.linalg.inv(Py) # Kalman gain
+            K   = np.linalg.solve(Py.T, Pxy.T).T # Kalman gain
 
             # Compute normalized innovation squared
-            nis = y.T @ np.linalg.inv(Py) @ y
+            nis = y.T @ np.linalg.solve(Py, y)
             self.state[f"y_{name}"] = nis
 
             # Estimate
             x_est = x_est + K @ y
-            P     = P - K @ Py @ K.T
+            I     = np.eye(P.shape[0])
+            P     = (I - K @ H) @ P @ (I - K @ H).T + K @ R @ K.T
+            P     = 0.5 * (P + P.T)
+            P    += 1e-12 * np.eye(P.shape[0])
 
             # Save last update time
             self.last_update_time[name] = t_valid
@@ -161,6 +166,8 @@ class NAV_EKF(Level2Module):
         n_states = self.par["n_states"]
         x_est = vec[:n_states]
         P     = vec[n_states:].reshape((n_states, n_states))
+        P     = 0.5 * (P + P.T)
+        P    += 1e-12 * np.eye(P.shape[0])
         self.state["x_est"] = x_est
         self.state["P"]     = P
         return self.state

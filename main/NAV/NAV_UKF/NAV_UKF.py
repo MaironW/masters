@@ -71,7 +71,7 @@ class NAV_UKF(Level2Module):
         G      = self.par["G"]
 
         # Generate sigma points
-        X_sigma_aug, weights = self.generate_sigma_points(x_est, P, Q)
+        X_sigma_aug, Wm, Wc = self.generate_sigma_points(x_est, P, Q)
 
         # Get individual sigma-points
         n_states  = len(x_est)
@@ -92,14 +92,14 @@ class NAV_UKF(Level2Module):
 
         # Mean
         X_sigma_prop = np.array(X_sigma_prop).T
-        x_pred = np.sum(weights * X_sigma_prop, axis=1)
+        x_pred = X_sigma_prop @ Wm
         x_est  = np.copy(x_pred)
 
         # State covariance
         Pxx = np.zeros((n_states, n_states))
         for i in range(X_sigma_prop.shape[1]):
             dx = X_sigma_prop[:, i] - x_pred
-            Pxx += weights[i] * np.outer(dx, dx)
+            Pxx += Wc[i] * np.outer(dx, dx)
         Pxx = 0.5 * (Pxx + Pxx.T) # Symmetry fix
         Pxx += 1e-12*np.eye(n_states) # Add low value to ensure convergence
 
@@ -136,11 +136,12 @@ class NAV_UKF(Level2Module):
                 z_i = h_fun(X_sigma_prop[:, i])
                 Z_sigma_prop.append(z_i)
             Z_sigma_prop = np.array(Z_sigma_prop).T
-            z_est = np.sum(weights * Z_sigma_prop, axis=1)
+            z_est = Z_sigma_prop @ Wm
 
             # Filter by measurements
-            z      = z[valid_measurements]
-            z_est  = z_est[valid_measurements]
+            z            = z[valid_measurements]
+            z_est        = z_est[valid_measurements]
+            Z_sigma_prop = Z_sigma_prop[valid_measurements, :]
             R      = R[np.ix_(valid_measurements,valid_measurements)]
             R      = 0.5 * (R + R.T) # Symmetry fix
             R     += 1e-12 * np.eye(R.shape[0]) # Add low value to ensure convergence
@@ -154,8 +155,8 @@ class NAV_UKF(Level2Module):
                 dx = X_sigma_prop[:, i] - x_pred
                 dz = Z_sigma_prop[:, i] - z_est
 
-                Pzz += weights[i] * np.outer(dz, dz)
-                Pxz += weights[i] * np.outer(dx, dz)
+                Pzz += Wc[i] * np.outer(dz, dz)
+                Pxz += Wc[i] * np.outer(dx, dz)
 
             Pzz += R
             Pzz += 1e-12*np.eye(n_mes) # Add low value to ensure convergence
@@ -172,9 +173,9 @@ class NAV_UKF(Level2Module):
 
             # Estimate
             x_est = x_est + K @ y
-            Pxx     = Pxx - K @ Pzz @ K.T
-            Pxx     = 0.5 *(Pxx + Pxx.T) # Symmetry fix
-            Pxx    += 1e-12*np.eye(n_states) # Add low value to ensure convergence
+            Pxx   = Pxx - K @ Pzz @ K.T
+            Pxx   = 0.5 *(Pxx + Pxx.T) # Symmetry fix
+            Pxx  += 1e-12*np.eye(n_states) # Add low value to ensure convergence
 
             # Save last update time
             self.last_update_time[name] = t_valid
@@ -238,9 +239,13 @@ class NAV_UKF(Level2Module):
         # Augmented covariance
         P_aug = block_diag(P, Q)
 
-        # UKF parameters
-        kappa = 3 - n_a # Scale parameter
-        gamma = np.sqrt(n_a + kappa)
+        # UKF parameters following Wan & van der Merwe (2000)
+        alpha  = 1e-3
+        alpha2 = alpha**2
+        beta   = 2
+        kappa  = 0
+        L      = alpha2*(n_a + kappa) - n_a
+        gamma  = np.sqrt(n_a + L)
 
         # Generate augmented sigma-points
         aux_sqrt = gamma * np.linalg.cholesky(P_aug + 1e-12*np.eye(n_a))
@@ -252,11 +257,15 @@ class NAV_UKF(Level2Module):
 
         sigma_points = np.array(sigma_points).T
 
-        # TODO: Check on this part
-        weights = np.full(2*n_a+1, 0.5/(n_a + kappa))
-        weights[0] = kappa/(n_a + kappa)
+        # Mean weights
+        Wm    = np.full(2*n_a + 1, 0.5 / (n_a + L))
+        Wm[0] = L / (n_a + L)
 
-        return sigma_points, weights
+        # Covariance weights
+        Wc     = np.copy(Wm)
+        Wc[0] += 1 - alpha2 + beta
+
+        return sigma_points, Wm, Wc
 
     # Internal RK4 integrator for the UKF
     def propagate_sigma(self, x, dt, NAV_states):

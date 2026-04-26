@@ -7,9 +7,9 @@ SIM_par = {
     "time_end"     : 3600*24*10, # [s] 10 days
 
     # Log parameters
-    "DYN_log_save" : False,
-    "DYN_log_load" : False,
-    "DYN_log_path" : "Logs/DYN",
+    "log_save" : False,
+    "log_load" : ["DYN","SEN","NAV"],
+    "log_path" : "Logs",
 
     # List of default plots
     "PPC_plot_list" : [

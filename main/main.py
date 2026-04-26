@@ -13,9 +13,9 @@ from Utils         import events
 from Utils         import integrator
 
 # Load data or run new simulation
-DYN_log_save = SIM_par["DYN_log_save"]
-DYN_log_load = SIM_par["DYN_log_load"]
-DYN_log_path = SIM_par["DYN_log_path"]
+log_save = SIM_par["log_save"]
+log_load = SIM_par["log_load"]
+log_path = SIM_par["log_path"]
 
 # Simulation parameters
 sim_dt         = SIM_par["dt"]
@@ -34,20 +34,15 @@ DYN_obj = DYN()
 SEN_obj = SEN(DYN_obj)
 NAV_obj = NAV(SEN_obj)
 
-# Initialize or load timeline
-if DYN_log_load:
-    DYN_timeline = PPC.load_timeline(DYN_log_path)
-    timeline = {
-        "DYN" : DYN_timeline,
-        "SEN" : PPC.init_timeline(SEN_obj.snapshot(), n_steps),
-        "NAV" : PPC.init_timeline(NAV_obj.snapshot(), n_steps),
-    }
-else:
-    timeline = {
-        "DYN" : PPC.init_timeline(DYN_obj.snapshot(), n_steps),
-        "SEN" : PPC.init_timeline(SEN_obj.snapshot(), n_steps),
-        "NAV" : PPC.init_timeline(NAV_obj.snapshot(), n_steps),
-    }
+# Initialize timeline
+timeline = {
+    "DYN" : PPC.init_timeline(DYN_obj.snapshot(), n_steps),
+    "SEN" : PPC.init_timeline(SEN_obj.snapshot(), n_steps),
+    "NAV" : PPC.init_timeline(NAV_obj.snapshot(), n_steps),
+}
+
+# Load timeline from log
+timeline = PPC.load_timeline(timeline, log_load, log_path)
 
 # Main loop
 for step in range(1, n_steps):
@@ -57,23 +52,34 @@ for step in range(1, n_steps):
     # Load external inputs
     inputs = events_table[sim_time]
 
-    # Load DYN from file or compute everything
-    if DYN_log_load:
-        DYN_obj = PPC.load_module(timeline["DYN"], step)
-    else:
+    # Load modules from file
+    if "DYN" in log_load:
+        state = PPC.load_module(timeline["DYN"], step)
+        DYN_obj.load_snapshot(state)
+    if "SEN" in log_load:
+        state = PPC.load_module(timeline["SEN"], step)
+        SEN_obj.load_snapshot(state)
+    if "NAV" in log_load:
+        state = PPC.load_module(timeline["NAV"], step)
+        NAV_obj.load_snapshot(state)
+
+    # Update DYN
+    if "DYN" not in log_load:
         # Integrate all dynamic states together
         DYN_obj = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
         # Update algebraic modules
         DYN_obj.update_algebraic(sim_time, None, inputs)
 
     # Update SEN
-    SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
-
-    # Integrate the Navigation algorithms
-    NAV_obj = integrator.rk4_step(sim_time, sim_dt, NAV_obj, inputs)
+    if "SEN" not in log_load:
+        SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
 
     # Update NAV
-    NAV_obj.update_algebraic(sim_time, SEN_obj, inputs)
+    if "NAV" not in log_load:
+        # Integrate the Navigation algorithms
+        NAV_obj = integrator.rk4_step(sim_time, sim_dt, NAV_obj, inputs)
+        # Update NAV
+        NAV_obj.update_algebraic(sim_time, SEN_obj, inputs)
 
     # Save results into the timeline
     states = {
@@ -84,8 +90,8 @@ for step in range(1, n_steps):
     PPC.update_timeline(timeline, states, step)
 
 # Save log (currently only for DYN module)
-if DYN_log_save:
-    PPC.store_timeline(timeline, DYN_log_path)
+if log_save:
+    PPC.store_timeline(timeline, log_path)
 
 # Clear Kernels from memory
 spice.clear_kernels()

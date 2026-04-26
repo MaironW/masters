@@ -56,21 +56,34 @@ def update_timeline(timeline, output, step):
 
 # Store the timeline data to be loaded in the future
 def store_timeline(timeline, path):
-    for module_name, module_dict in timeline["DYN"].items():
-        os.makedirs(path, exist_ok=True)
-        filename = os.path.join(path, f"{module_name}.npz")
-        np.savez_compressed(filename, data=module_dict)
+    os.makedirs(path, exist_ok=True)
+
+    # Get highest module to store
+    modules_order = ["DYN", "SEN", "NAV"]
+
+    # Detect level automatically from timeline keys
+    present = [m for m in modules_order if m in timeline]
+    if not present:
+        return
+    max_idx = max(modules_order.index(m) for m in present)
+
+    # Save up to highest level
+    for m in modules_order[:max_idx + 1]:
+        if m not in timeline:
+            continue
+        filename = os.path.join(path, f"{m}.npz")
+        np.savez_compressed(filename, data=timeline[m])
 
 # Load timeline data from file
-def load_timeline(path):
-    timeline = {}
-    for fname in os.listdir(path):
-        if not fname.endswith(".npz"):
+def load_timeline(timeline, modules, path):
+    # Load up to highest level
+    for m in modules:
+        filename = os.path.join(path, f"{m}.npz")
+        if not os.path.exists(filename):
             continue
-        module_name = fname[:-4] # remove ".npz"
-        full_path = os.path.join(path, fname)
-        data = np.load(full_path, allow_pickle=True)["data"].item()
-        timeline[module_name] = data
+        data = np.load(filename, allow_pickle=True)["data"].item()
+        timeline[m] = data
+
     return timeline
 
 # Extracts one module (DYN, SEN, NAV) for a given step,

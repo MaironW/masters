@@ -30,3 +30,8 @@ class Level1Module():
 
     def snapshot(self):
         return {m.name: m.state.copy() for m in self.modules}
+
+    def load_snapshot(self, snapshot):
+        for m in self.modules:
+            if m.name in snapshot:
+                m.state = snapshot[m.name].copy()

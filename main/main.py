@@ -52,33 +52,27 @@ for step in range(1, n_steps):
     # Load external inputs
     inputs = events_table[sim_time]
 
-    # Load modules from file
+    # DYN
     if "DYN" in log_load:
         state = PPC.load_module(timeline["DYN"], step)
         DYN_obj.load_snapshot(state)
+    else:
+        DYN_obj = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
+        DYN_obj.update_algebraic(sim_time, None, inputs)
+
+    # SEN
     if "SEN" in log_load:
         state = PPC.load_module(timeline["SEN"], step)
         SEN_obj.load_snapshot(state)
+    else:
+        SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
+
+    # NAV
     if "NAV" in log_load:
         state = PPC.load_module(timeline["NAV"], step)
         NAV_obj.load_snapshot(state)
-
-    # Update DYN
-    if "DYN" not in log_load:
-        # Integrate all dynamic states together
-        DYN_obj = integrator.rk4_step(sim_time, sim_dt, DYN_obj, inputs)
-        # Update algebraic modules
-        DYN_obj.update_algebraic(sim_time, None, inputs)
-
-    # Update SEN
-    if "SEN" not in log_load:
-        SEN_obj.update_algebraic(sim_time, DYN_obj, inputs)
-
-    # Update NAV
-    if "NAV" not in log_load:
-        # Integrate the Navigation algorithms
+    else:
         NAV_obj = integrator.rk4_step(sim_time, sim_dt, NAV_obj, inputs)
-        # Update NAV
         NAV_obj.update_algebraic(sim_time, SEN_obj, inputs)
 
     # Save results into the timeline

@@ -8,7 +8,7 @@ SIM_par = {
 
     # Log parameters
     "log_save" : False,
-    "log_load" : ["DYN","SEN","NAV"],
+    "log_load" : [],
     "log_path" : "Logs",
 
     # List of default plots

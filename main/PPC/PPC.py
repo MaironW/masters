@@ -65,25 +65,31 @@ def store_timeline(timeline, path):
     present = [m for m in modules_order if m in timeline]
     if not present:
         return
+
     max_idx = max(modules_order.index(m) for m in present)
+    data_to_save = {}
 
     # Save up to highest level
     for m in modules_order[:max_idx + 1]:
         if m not in timeline:
             continue
-        filename = os.path.join(path, f"{m}.npz")
-        np.savez_compressed(filename, data=timeline[m])
+        data_to_save[m] = np.array(timeline[m], dtype=object)
+    np.savez_compressed(path+"/timeline.npz", **data_to_save)
 
 # Load timeline data from file
 def load_timeline(timeline, modules, path):
+    if not os.path.exists(path):
+        return timeline
+    if not modules:
+        return timeline
+
+    data = np.load(path, allow_pickle=True)
+
     # Load up to highest level
     for m in modules:
-        filename = os.path.join(path, f"{m}.npz")
-        if not os.path.exists(filename):
+        if m not in data:
             continue
-        data = np.load(filename, allow_pickle=True)["data"].item()
-        timeline[m] = data
-
+        timeline[m] = data[m].item()
     return timeline
 
 # Extracts one module (DYN, SEN, NAV) for a given step,

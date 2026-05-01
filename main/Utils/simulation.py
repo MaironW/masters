@@ -1,5 +1,6 @@
 # Utils functions to run the simulations
 
+import time
 from DYN.DYN import DYN
 from SEN.SEN import SEN
 from NAV.NAV import NAV
@@ -10,7 +11,8 @@ from Utils   import events
 from Utils   import integrator
 
 # What should run for each simulation execution
-def run(SIM_par_override=None, par_override=None, run_id="0000"):
+def run(SIM_par_override=None, par_override=None, run_id="0000", log_time=True):
+    start_time = time.perf_counter()
 
     # Change default parameters of the simulation
     if SIM_par_override is not None:
@@ -92,6 +94,11 @@ def run(SIM_par_override=None, par_override=None, run_id="0000"):
     if log_save and log_save_path is not None:
         log_save_path = log_save_path+f"_{run_id}"
         PPC.store_timeline(timeline, log_save_path)
+
+    end_time = time.perf_counter()
+    if log_time:
+        runtime = end_time - start_time
+        print(f"Run Time: {runtime:.3f} s")
 
     return timeline, DYN_obj, SEN_obj, NAV_obj
 

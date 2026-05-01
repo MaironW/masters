@@ -4,10 +4,13 @@
 
 import os
 import json
+import time
 import numpy as np
 
 from PPC   import PPC
 from Utils import simulation
+
+script_start_time = time.perf_counter()
 
 # Monte Carlo configuration
 mc_steps   = 3
@@ -80,3 +83,8 @@ for i in range(mc_steps):
 
 # Stop simulation
 simulation.stop()
+
+# Log time
+script_end_time = time.perf_counter()
+runtime = script_end_time - script_start_time
+print(f"[MC] Total Run Time: {runtime:.3f} s")

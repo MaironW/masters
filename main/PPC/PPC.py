@@ -56,21 +56,40 @@ def update_timeline(timeline, output, step):
 
 # Store the timeline data to be loaded in the future
 def store_timeline(timeline, path):
-    for module_name, module_dict in timeline["DYN"].items():
-        os.makedirs(path, exist_ok=True)
-        filename = os.path.join(path, f"{module_name}.npz")
-        np.savez_compressed(filename, data=module_dict)
+    os.makedirs(path, exist_ok=True)
+
+    # Get highest module to store
+    modules_order = ["DYN", "SEN", "NAV"]
+
+    # Detect level automatically from timeline keys
+    present = [m for m in modules_order if m in timeline]
+    if not present:
+        return
+
+    max_idx = max(modules_order.index(m) for m in present)
+    data_to_save = {}
+
+    # Save up to highest level
+    for m in modules_order[:max_idx + 1]:
+        if m not in timeline:
+            continue
+        data_to_save[m] = np.array(timeline[m], dtype=object)
+    np.savez_compressed(path+"/timeline.npz", **data_to_save)
 
 # Load timeline data from file
-def load_timeline(path):
-    timeline = {}
-    for fname in os.listdir(path):
-        if not fname.endswith(".npz"):
+def load_timeline(timeline, modules, path):
+    if not os.path.exists(path):
+        return timeline
+    if not modules:
+        return timeline
+
+    data = np.load(path, allow_pickle=True)
+
+    # Load up to highest level
+    for m in modules:
+        if m not in data:
             continue
-        module_name = fname[:-4] # remove ".npz"
-        full_path = os.path.join(path, fname)
-        data = np.load(full_path, allow_pickle=True)["data"].item()
-        timeline[module_name] = data
+        timeline[m] = data[m].item()
     return timeline
 
 # Extracts one module (DYN, SEN, NAV) for a given step,
@@ -162,3 +181,16 @@ def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=No
 # Show plots after they are generated
 def show_plot():
     plt.show()
+
+# Function to allow saving multiple objects into a json file
+# Useful for storing parameters of Monte Carlo runs
+def serialize_json(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, np.generic):  # numpy scalar
+        return obj.item()
+    if isinstance(obj, dict):
+        return {k: serialize_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [serialize_json(v) for v in obj]
+    return obj

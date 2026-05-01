@@ -23,6 +23,6 @@ NAV_UKF_par = {
 
     # Initial values for the UKF
     "x_est_ini" : np.array([1.62228612e+08, 2.42235379e+07, 1.78903662e+07, -0.32883677, 27.86282899, 13.43536119]) + np.array([10, 10, 10, 0.01, 0.01, 0.01]), # Initial state
-    "P_ini"     : np.ones((6,6)), # Initial covariance
+    "P_ini"     : np.eye(6), # Initial covariance
     "y_ini"     : 0, # Initial innovation
 }

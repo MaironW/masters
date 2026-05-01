@@ -16,17 +16,6 @@ output_dir = "Logs/test_mc"
 # Create output directory
 os.makedirs(output_dir, exist_ok=True)
 
-def to_serializable(obj):
-    if isinstance(obj, np.ndarray):
-        return obj.tolist()
-    if isinstance(obj, np.generic):  # numpy scalar
-        return obj.item()
-    if isinstance(obj, dict):
-        return {k: to_serializable(v) for k, v in obj.items()}
-    if isinstance(obj, list):
-        return [to_serializable(v) for v in obj]
-    return obj
-
 # Monte Carlo loop
 for i in range(mc_steps):
     print(f"[MC] Run {i+1}/{mc_steps}")

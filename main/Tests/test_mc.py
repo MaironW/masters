@@ -6,30 +6,14 @@ import os
 import json
 import time
 import numpy as np
+import multiprocessing as mp
 
 from PPC   import PPC
 from Utils import simulation
 
-script_start_time = time.perf_counter()
-
-# Monte Carlo configuration
-mc_steps   = 3
-output_dir = "Logs/test_mc"
-
-# Create output directory
-os.makedirs(output_dir, exist_ok=True)
-
-# Run baseline simulation (To avoid running DYN every execution)
-SIM_par_override = {
-    "log_save_path": output_dir+"/baseline",
-    "log_save": True,
-    "log_load": []
-}
-print(f"[MC] Baseline Run")
-simulation.run(SIM_par_override=SIM_par_override)
-
-# Monte Carlo loop
-for i in range(mc_steps):
+# Monte Carlo function for multiprocessing
+def run_mc_case(args):
+    i, output_dir = args
     print(f"[MC] Run {i+1}/{mc_steps}")
     run_id  = f"{i:04d}"
     run_dir = os.path.join(output_dir, f"run_{run_id}")
@@ -60,7 +44,7 @@ for i in range(mc_steps):
     # Simulation override
     SIM_par_override = {
         "log_save_path": os.path.join(run_dir, "log"),
-        "log_load_path": os.path.join(run_dir, "baseline"),
+        "log_load_path": os.path.join(output_dir, "baseline"),
         "log_save": True,
         "log_load": ["DYN"]
     }
@@ -78,13 +62,38 @@ for i in range(mc_steps):
     simulation.run(
         SIM_par_override = SIM_par_override,
         par_override     = par_override,
-        run_id           = run_id
+        run_id           = run_id,
+        log_time         = False,
     )
 
-# Stop simulation
-simulation.stop()
+# Main
+if __name__ == "__main__":
 
-# Log time
-script_end_time = time.perf_counter()
-runtime = script_end_time - script_start_time
-print(f"[MC] Total Run Time: {runtime:.3f} s")
+    script_start_time = time.perf_counter()
+
+    mc_steps   = 10
+    output_dir = "Logs/test_mc"
+    os.makedirs(output_dir, exist_ok=True)
+
+    # Run baseline simulation (To avoid running DYN every execution)
+    print(f"[MC] Baseline Run")
+    SIM_par_override = {
+        "log_save_path": output_dir+"/baseline",
+        "log_save": True,
+        "log_load": []
+    }
+    simulation.run(SIM_par_override=SIM_par_override)
+
+    # Parallel execution
+    n_proc = mp.cpu_count()
+
+    with mp.Pool(processes=n_proc) as pool:
+        pool.map(run_mc_case, [(i, output_dir) for i in range(mc_steps)])
+
+    # Stop simulation
+    simulation.stop()
+
+    # Log time
+    script_end_time = time.perf_counter()
+    runtime = script_end_time - script_start_time
+    print(f"[MC] Total Run Time: {runtime:.3f} s")

@@ -16,6 +16,15 @@ output_dir = "Logs/test_mc"
 # Create output directory
 os.makedirs(output_dir, exist_ok=True)
 
+# Run baseline simulation (To avoid running DYN every execution)
+SIM_par_override = {
+    "log_save_path": output_dir+"/baseline",
+    "log_save": True,
+    "log_load": []
+}
+print(f"[MC] Baseline Run")
+simulation.run(SIM_par_override=SIM_par_override)
+
 # Monte Carlo loop
 for i in range(mc_steps):
     print(f"[MC] Run {i+1}/{mc_steps}")
@@ -47,9 +56,10 @@ for i in range(mc_steps):
 
     # Simulation override
     SIM_par_override = {
-        "log_path": os.path.join(run_dir, "log"),
+        "log_save_path": os.path.join(run_dir, "log"),
+        "log_load_path": os.path.join(run_dir, "baseline"),
         "log_save": True,
-        "log_load": []
+        "log_load": ["DYN"]
     }
 
     # Save parameters

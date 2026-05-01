@@ -19,7 +19,8 @@ def run(SIM_par_override=None, par_override=None, run_id="0000"):
     # Load data or run new simulation
     log_save = SIM_par["log_save"]
     log_load = SIM_par["log_load"]
-    log_path = SIM_par["log_path"]
+    log_save_path = SIM_par["log_save_path"]
+    log_load_path = SIM_par["log_load_path"]
 
     # Simulation parameters
     sim_dt         = SIM_par["dt"]
@@ -45,7 +46,7 @@ def run(SIM_par_override=None, par_override=None, run_id="0000"):
     }
 
     # Load timeline from log
-    timeline = PPC.load_timeline(timeline, log_load, log_path+"/timeline.npz")
+    timeline = PPC.load_timeline(timeline, log_load, log_load_path+"/timeline.npz")
 
     # Main loop
     for step in range(1, n_steps):
@@ -88,9 +89,9 @@ def run(SIM_par_override=None, par_override=None, run_id="0000"):
         PPC.update_timeline(timeline, states, step)
 
     # Save log
-    if log_save and log_path is not None:
-        log_path = log_path+f"_{run_id}"
-        PPC.store_timeline(timeline, log_path)
+    if log_save and log_save_path is not None:
+        log_save_path = log_save_path+f"_{run_id}"
+        PPC.store_timeline(timeline, log_save_path)
 
     return timeline, DYN_obj, SEN_obj, NAV_obj
 

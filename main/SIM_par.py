@@ -7,9 +7,10 @@ SIM_par = {
     "time_end"     : 3600*24*10, # [s] 10 days
 
     # Log parameters
-    "log_save" : False,
-    "log_load" : [],
-    "log_path" : "Logs",
+    "log_save"      : False,
+    "log_load"      : [],
+    "log_save_path" : "Logs",
+    "log_load_path" : "Logs",
 
     # List of default plots
     "PPC_plot_list" : [
@@ -28,7 +29,7 @@ SIM_par = {
         # "NAV_CEL",
         # "NAV_PSR",
         # "NAV_CMB",
-        # "NAV_EKF",
-        # "NAV_UKF",
+        "NAV_EKF",
+        "NAV_UKF",
     ],
 }

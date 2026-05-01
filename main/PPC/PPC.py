@@ -181,3 +181,16 @@ def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=No
 # Show plots after they are generated
 def show_plot():
     plt.show()
+
+# Function to allow saving multiple objects into a json file
+# Useful for storing parameters of Monte Carlo runs
+def serialize_json(obj):
+    if isinstance(obj, np.ndarray):
+        return obj.tolist()
+    if isinstance(obj, np.generic):  # numpy scalar
+        return obj.item()
+    if isinstance(obj, dict):
+        return {k: serialize_json(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [serialize_json(v) for v in obj]
+    return obj

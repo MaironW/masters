@@ -10,7 +10,7 @@ from Utils   import events
 from Utils   import integrator
 
 # What should run for each simulation execution
-def run(SIM_par_override=None, run_id="0000"):
+def run(SIM_par_override=None, par_override=None, run_id="0000"):
 
     # Change default parameters of the simulation
     if SIM_par_override is not None:
@@ -33,9 +33,9 @@ def run(SIM_par_override=None, run_id="0000"):
     events_table = events.build_events_table(sim_time_start, sim_time_end, sim_dt, events=events_sequence)
 
     # Initialize Level-1 modules
-    DYN_obj = DYN(         par_override=SIM_par_override)
-    SEN_obj = SEN(DYN_obj, par_override=SIM_par_override)
-    NAV_obj = NAV(SEN_obj, par_override=SIM_par_override)
+    DYN_obj = DYN(         par_override=par_override)
+    SEN_obj = SEN(DYN_obj, par_override=par_override)
+    NAV_obj = NAV(SEN_obj, par_override=par_override)
 
     # Initialize timeline
     timeline = {

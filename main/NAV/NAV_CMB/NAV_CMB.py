@@ -177,8 +177,7 @@ class NAV_CMB(Level2Module):
         cos_angle3 = np.clip(SCvel_CMB_dir @ CMB3dir_SSB, -1, 1)
 
         # Compute scalars
-        SCvel_SSB_norm = np.linalg.norm(SCvel_SSB)
-        beta           = SCvel_SSB_norm/light_speed_cst
+        beta           = SCvel_CMB_norm/light_speed_cst
         beta           = np.clip(beta, 0.0, 1.0 - 1e-12)
         T_monopole     = self.par["T_monopole"] # [K]
         aux0 = np.sqrt(1 - beta*beta)
@@ -188,13 +187,13 @@ class NAV_CMB(Level2Module):
 
         # Compute derivative
         dh1dv = T_monopole*(SCvel_CMB_dir * -beta/(aux0*aux1*light_speed_cst)
-              + aux0/aux1*aux1 * (cos_angle1*SCvel_CMB_dir/light_speed_cst + beta * (CMB1dir_SSB - cos_angle1)/SCvel_CMB_norm))
+              + aux0/aux1*aux1 * (cos_angle1*SCvel_CMB_dir/light_speed_cst + beta * (CMB1dir_SSB - cos_angle1*SCvel_CMB_dir)/SCvel_CMB_norm))
 
         dh2dv = T_monopole*(SCvel_CMB_dir * -beta/(aux0*aux2*light_speed_cst)
-              + aux0/aux2*aux2 * (cos_angle2*SCvel_CMB_dir/light_speed_cst + beta * (CMB2dir_SSB - cos_angle2)/SCvel_CMB_norm))
+              + aux0/aux2*aux2 * (cos_angle2*SCvel_CMB_dir/light_speed_cst + beta * (CMB2dir_SSB - cos_angle2*SCvel_CMB_dir)/SCvel_CMB_norm))
 
         dh3dv = T_monopole*(SCvel_CMB_dir * -beta/(aux0*aux3*light_speed_cst)
-              + aux0/aux3*aux3 * (cos_angle3*SCvel_CMB_dir/light_speed_cst + beta * (CMB3dir_SSB - cos_angle3)/SCvel_CMB_norm))
+              + aux0/aux3*aux3 * (cos_angle3*SCvel_CMB_dir/light_speed_cst + beta * (CMB3dir_SSB - cos_angle3*SCvel_CMB_dir)/SCvel_CMB_norm))
 
         # Fill matrix
         H_matrix[0, 3:6] = dh1dv

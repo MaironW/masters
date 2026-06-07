@@ -105,19 +105,22 @@ class NAV_CMB(Level2Module):
         # Spacecraft orientation as measured by SEN_STR
         BOFq_SSB_ref = self.state["BOFq_SSB_ref"]
 
+        # Orientation of the CMB sensor with respect to the BOF frame
+        CSF1q_BOF = self.par["CSF1q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
+        CSF2q_BOF = self.par["CSF2q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
+        CSF3q_BOF = self.par["CSF3q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
+
+        # Orientation of the CMB sensor with respect to the SSB frame
+        CSF1q_SSB = quaternions.qprod(CSF1q_BOF, BOFq_SSB_ref)
+        CSF2q_SSB = quaternions.qprod(CSF2q_BOF, BOFq_SSB_ref)
+        CSF3q_SSB = quaternions.qprod(CSF3q_BOF, BOFq_SSB_ref)
+
+        # Compute the direction of each sensor in the SSB frame
+        CMB1dir_SSB = quaternions.qvecprod(CSF1q_SSB, [0,0,1])
+        CMB2dir_SSB = quaternions.qvecprod(CSF2q_SSB, [0,0,1])
+        CMB3dir_SSB = quaternions.qvecprod(CSF3q_SSB, [0,0,1])
+
         # Compute angle between velocity vector and each sensor direction
-        CMB1q_BOF = self.par["CMB1q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
-        CMB2q_BOF = self.par["CMB2q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
-        CMB3q_BOF = self.par["CMB3q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
-
-        CMB1q_SSB = quaternions.qprod(CMB1q_BOF, BOFq_SSB_ref)
-        CMB2q_SSB = quaternions.qprod(CMB2q_BOF, BOFq_SSB_ref)
-        CMB3q_SSB = quaternions.qprod(CMB3q_BOF, BOFq_SSB_ref)
-
-        CMB1dir_SSB = quaternions.qvecprod(CMB1q_SSB, [0,0,1])
-        CMB2dir_SSB = quaternions.qvecprod(CMB2q_SSB, [0,0,1])
-        CMB3dir_SSB = quaternions.qvecprod(CMB3q_SSB, [0,0,1])
-
         cos_angle1 = np.clip(SCvel_CMB_dir @ CMB1dir_SSB, -1, 1)
         cos_angle2 = np.clip(SCvel_CMB_dir @ CMB2dir_SSB, -1, 1)
         cos_angle3 = np.clip(SCvel_CMB_dir @ CMB3dir_SSB, -1, 1)
@@ -157,17 +160,17 @@ class NAV_CMB(Level2Module):
         BOFq_SSB_ref = self.state["BOFq_SSB_ref"]
 
         # Compute angle between velocity vector and each sensor direction
-        CMB1q_BOF = self.par["CMB1q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
-        CMB2q_BOF = self.par["CMB2q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
-        CMB3q_BOF = self.par["CMB3q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
+        CSF1q_BOF = self.par["CSF1q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
+        CSF2q_BOF = self.par["CSF2q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
+        CSF3q_BOF = self.par["CSF3q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
 
-        CMB1q_SSB = quaternions.qprod(CMB1q_BOF, BOFq_SSB_ref)
-        CMB2q_SSB = quaternions.qprod(CMB2q_BOF, BOFq_SSB_ref)
-        CMB3q_SSB = quaternions.qprod(CMB3q_BOF, BOFq_SSB_ref)
+        CSF1q_SSB = quaternions.qprod(CSF1q_BOF, BOFq_SSB_ref)
+        CSF2q_SSB = quaternions.qprod(CSF2q_BOF, BOFq_SSB_ref)
+        CSF3q_SSB = quaternions.qprod(CSF3q_BOF, BOFq_SSB_ref)
 
-        CMB1dir_SSB = quaternions.qvecprod(CMB1q_SSB, [0,0,1])
-        CMB2dir_SSB = quaternions.qvecprod(CMB2q_SSB, [0,0,1])
-        CMB3dir_SSB = quaternions.qvecprod(CMB3q_SSB, [0,0,1])
+        CMB1dir_SSB = quaternions.qvecprod(CSF1q_SSB, [0,0,1])
+        CMB2dir_SSB = quaternions.qvecprod(CSF2q_SSB, [0,0,1])
+        CMB3dir_SSB = quaternions.qvecprod(CSF3q_SSB, [0,0,1])
 
         cos_angle1 = np.clip(SCvel_CMB_dir @ CMB1dir_SSB, -1, 1)
         cos_angle2 = np.clip(SCvel_CMB_dir @ CMB2dir_SSB, -1, 1)

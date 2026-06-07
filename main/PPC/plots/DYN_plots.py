@@ -119,6 +119,17 @@ def DYN_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         PPC.plot(time_SIM, roemer_delay[:,i], label=PULSARname[i], ylabel="roemer_delay [s]", fig=fig, ax=ax2)
         PPC.plot(time_SIM, shapiro_delay[:,i], label=PULSARname[i], ylabel="shapiro_delay [s]", fig=fig, ax=ax3)
 
+def DYN_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM      = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    T_monpole     = timeline["DYN"]["DYN_CMB"]["T_monopole"]
+    T_isotropic   = timeline["DYN"]["DYN_CMB"]["T_isotropic"]
+    T_anisotropic = timeline["DYN"]["DYN_CMB"]["T_anisotropic"]
+
+    fig, ax = PPC.plot(time_SIM, T_monpole, label="T_monopole", xlabel="time_SIM [s]", ylabel="Temperature [K]", title="CMB Temperature Components", subplot=(2,1,1))
+    PPC.plot(time_SIM, T_isotropic, label="T_isotropic", fig=fig, ax=ax)
+    PPC.plot(time_SIM, T_anisotropic, label="T_anisotropic", fig=fig, subplot=(2,1,2))
+
+
 DYN_plots = {
     "DYN_TIME" : DYN_TIME_plot,
     "DYN_EPH"  : DYN_EPH_plot,
@@ -126,4 +137,5 @@ DYN_plots = {
     "DYN_ATT"  : DYN_ATT_plot,
     "DYN_STR"  : DYN_STR_plot,
     "DYN_PSR"  : DYN_PSR_plot,
+    "DYN_CMB"  : DYN_CMB_plot,
 }

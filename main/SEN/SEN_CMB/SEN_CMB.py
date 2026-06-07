@@ -39,7 +39,7 @@ class SEN_CMB(Level2Module):
         self.state["time_CMB"] = self.par["time_CMB_ini"]
 
         # CMBR temperature loaded from DYN_CMB
-        self.par["T_monopole"] = DYN_states["DYN_CMB"]["T_monopole"]
+        self.par["T_isotropic"] = DYN_states["DYN_CMB"]["T_isotropic"]
 
         # Update initial state
         self.state = self.update_algebraic(0, DYN_states, SEN_states)
@@ -76,30 +76,39 @@ class SEN_CMB(Level2Module):
             # Spacecraft orientation
             BOFq_SSB = DYN_states["DYN_ATT"]["BOFq_SSB"]
 
+            # Orientation of the CMB sensor with respect to the BOF frame
+            CSF1q_BOF = self.par["CSF1q_BOF"]
+            CSF2q_BOF = self.par["CSF2q_BOF"]
+            CSF3q_BOF = self.par["CSF3q_BOF"]
+
+            # Orientation of the CMB sensor with respect to the SSB frame
+            CSF1q_SSB = quaternions.qprod(CSF1q_BOF, BOFq_SSB)
+            CSF2q_SSB = quaternions.qprod(CSF2q_BOF, BOFq_SSB)
+            CSF3q_SSB = quaternions.qprod(CSF3q_BOF, BOFq_SSB)
+
+            # Compute the direction of each sensor in the SSB frame
+            CSF1dir_SSB = quaternions.qvecprod(CSF1q_SSB, [0,0,1])
+            CSF2dir_SSB = quaternions.qvecprod(CSF2q_SSB, [0,0,1])
+            CSF3dir_SSB = quaternions.qvecprod(CSF3q_SSB, [0,0,1])
+
             # Compute angle between velocity vector and each sensor direction
-            CMB1q_BOF = self.par["CMB1q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
-            CMB2q_BOF = self.par["CMB2q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
-            CMB3q_BOF = self.par["CMB3q_BOF"] # Orientation of the CMB sensor with respect to the BOF frame
-
-            CMB1q_SSB = quaternions.qprod(CMB1q_BOF, BOFq_SSB)
-            CMB2q_SSB = quaternions.qprod(CMB2q_BOF, BOFq_SSB)
-            CMB3q_SSB = quaternions.qprod(CMB3q_BOF, BOFq_SSB)
-
-            CMB1dir_SSB = quaternions.qvecprod(CMB1q_SSB, [0,0,1])
-            CMB2dir_SSB = quaternions.qvecprod(CMB2q_SSB, [0,0,1])
-            CMB3dir_SSB = quaternions.qvecprod(CMB3q_SSB, [0,0,1])
-
-            cos_angle1 = np.clip(SCvel_CMB_dir @ CMB1dir_SSB, -1, 1)
-            cos_angle2 = np.clip(SCvel_CMB_dir @ CMB2dir_SSB, -1, 1)
-            cos_angle3 = np.clip(SCvel_CMB_dir @ CMB3dir_SSB, -1, 1)
+            cos_angle1 = np.clip(SCvel_CMB_dir @ CSF1dir_SSB, -1, 1)
+            cos_angle2 = np.clip(SCvel_CMB_dir @ CSF2dir_SSB, -1, 1)
+            cos_angle3 = np.clip(SCvel_CMB_dir @ CSF3dir_SSB, -1, 1)
 
             # Compute temperature dipole due to the spacecraft velocity within the galaxy
             light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]
             beta            = SCvel_CMB_norm/light_speed_cst
-            T_monopole      = self.par["T_monopole"] # [K]
-            T_dipole_CMB1 = np.sqrt(1-beta*beta)/(1-beta*cos_angle1)*T_monopole
-            T_dipole_CMB2 = np.sqrt(1-beta*beta)/(1-beta*cos_angle2)*T_monopole
-            T_dipole_CMB3 = np.sqrt(1-beta*beta)/(1-beta*cos_angle3)*T_monopole
+            T_isotropic     = self.par["T_isotropic"] # [K]
+            T_dipole_CMB1 = np.sqrt(1-beta*beta)/(1-beta*cos_angle1)*T_isotropic
+            T_dipole_CMB2 = np.sqrt(1-beta*beta)/(1-beta*cos_angle2)*T_isotropic
+            T_dipole_CMB3 = np.sqrt(1-beta*beta)/(1-beta*cos_angle3)*T_isotropic
+
+            # Apply anisotropies
+            T_anisotropic = DYN_states["DYN_CMB"]["T_anisotropic"] # [K]
+            T_dipole_CMB1 += T_anisotropic
+            T_dipole_CMB2 += T_anisotropic
+            T_dipole_CMB3 += T_anisotropic
 
             # Apply noise
             noise_mean = self.par["noise_mean"]
@@ -107,7 +116,6 @@ class SEN_CMB(Level2Module):
             noise_CMB1 = np.random.normal(noise_mean, noise_std)
             noise_CMB2 = np.random.normal(noise_mean, noise_std)
             noise_CMB3 = np.random.normal(noise_mean, noise_std)
-
             T_dipole_CMB1_mes = T_dipole_CMB1 + noise_CMB1
             T_dipole_CMB2_mes = T_dipole_CMB2 + noise_CMB2
             T_dipole_CMB3_mes = T_dipole_CMB3 + noise_CMB3

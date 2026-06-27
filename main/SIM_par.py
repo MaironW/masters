@@ -20,6 +20,7 @@ SIM_par = {
         # "DYN_ATT",
         # "DYN_STR",
         # "DYN_PSR",
+        # "DYN_CMB",
         # "SEN_TIME",
         # "SEN_STR",
         # "SEN_PSR",
@@ -29,7 +30,7 @@ SIM_par = {
         # "NAV_CEL",
         # "NAV_PSR",
         # "NAV_CMB",
-        "NAV_EKF",
-        "NAV_UKF",
+        # "NAV_EKF",
+        # "NAV_UKF",
     ],
 }

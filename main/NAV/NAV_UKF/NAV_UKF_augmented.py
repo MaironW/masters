@@ -3,6 +3,7 @@
 
 import copy
 import numpy as np
+from scipy.linalg import block_diag
 
 from Utils.constants import CONSTANTS_par
 from Utils.level2module import Level2Module
@@ -67,15 +68,23 @@ class NAV_UKF(Level2Module):
         Pxx   = self.state["P"]
         dt    = self.par["dt"]
         Q     = self.par["Q"]
+        G     = self.par["G"]
 
         # Generate sigma points
-        X_sigma, Wm, Wc = self.generate_sigma_points(x_est, Pxx)
+        X_sigma_aug, Wm, Wc = self.generate_sigma_points(x_est, Pxx, Q)
+
+        # Get individual sigma-points
+        n_states  = len(x_est)
+        n_process = Q.shape[0]
+        X_sigma = X_sigma_aug[0 : n_states, :]
+        W_sigma = X_sigma_aug[n_states : n_states + n_process, :]
 
         # Propagate the sigma points through integration
         X_sigma_prop = []
         for i in range(X_sigma.shape[1]):
             x_i = X_sigma[:, i]
-            x_next = self.propagate_sigma(x_i, dt, NAV_states)
+            w_i = W_sigma[:, i]
+            x_next = self.propagate_sigma(x_i, w_i, G, dt, NAV_states) + G @ w_i
             X_sigma_prop.append(x_next)
         X_sigma_prop = np.array(X_sigma_prop).T
 
@@ -84,12 +93,10 @@ class NAV_UKF(Level2Module):
         x_est  = np.copy(x_pred)
 
         # State covariance
-        n_states  = len(x_est)
         Pxx = np.zeros((n_states, n_states))
         for i in range(X_sigma_prop.shape[1]):
             dx = X_sigma_prop[:, i] - x_pred
             Pxx += Wc[i] * np.outer(dx, dx)
-        Pxx += Q # Add discrete process noise covariance to the state
         Pxx = 0.5 * (Pxx + Pxx.T) # Symmetry fix
         Pxx += 1e-12*np.eye(n_states) # Add low value to ensure convergence
 
@@ -172,7 +179,9 @@ class NAV_UKF(Level2Module):
             self.last_update_time[name] = t_valid
 
             # Regenerate sigma-points from last update
-            X_sigma, Wm, Wc = self.generate_sigma_points(x_est, Pxx)
+            X_sigma_aug, Wm, Wc = self.generate_sigma_points(x_est, Pxx, Q)
+            X_sigma = X_sigma_aug[0 : n_states, :]
+            W_sigma = X_sigma_aug[n_states : n_states + n_process, :]
 
             # Re-propagate sigma points
             X_sigma_prop = np.copy(X_sigma)
@@ -225,33 +234,38 @@ class NAV_UKF(Level2Module):
         return np.hstack([SCvel_SSB, SCacc_SSB])
 
     # Generate sigma-points for the UKF
-    def generate_sigma_points(self, x, P):
-        n  = len(x) # State size
+    def generate_sigma_points(self, x, P, Q):
+        n_states  = len(x)                # State size
+        n_process = Q.shape[0]            # Process noise size
+        n_a       = n_states + n_process  # Augmented state size
 
-        # State mean
-        x_mean = np.hstack([x])
+        # Augmented state
+        x_aug = np.hstack([x, np.zeros(n_process)])
+
+        # Augmented covariance
+        P_aug = block_diag(P, Q)
 
         # UKF parameters following Wan & van der Merwe (2000)
         alpha  = self.par["alpha"]
         alpha2 = alpha**2
         beta   = self.par["beta"]
         kappa  = self.par["kappa"]
-        L      = alpha2*(n + kappa) - n
-        gamma  = np.sqrt(n + L)
+        L      = alpha2*(n_a + kappa) - n_a
+        gamma  = np.sqrt(n_a + L)
 
         # Generate augmented sigma-points
-        aux_sqrt = gamma * np.linalg.cholesky(P + 1e-12*np.eye(n))
+        aux_sqrt = gamma * np.linalg.cholesky(P_aug + 1e-12*np.eye(n_a))
 
-        sigma_points = [x_mean]
-        for i in range(n):
-            sigma_points.append(x_mean + aux_sqrt[:, i])
-            sigma_points.append(x_mean - aux_sqrt[:, i])
+        sigma_points = [x_aug]
+        for i in range(n_a):
+            sigma_points.append(x_aug + aux_sqrt[:, i])
+            sigma_points.append(x_aug - aux_sqrt[:, i])
 
         sigma_points = np.array(sigma_points).T
 
         # Mean weights
-        Wm    = np.full(2*n + 1, 0.5 / (n + L))
-        Wm[0] = L / (n + L)
+        Wm    = np.full(2*n_a + 1, 0.5 / (n_a + L))
+        Wm[0] = L / (n_a + L)
 
         # Covariance weights
         Wc     = np.copy(Wm)
@@ -260,7 +274,7 @@ class NAV_UKF(Level2Module):
         return sigma_points, Wm, Wc
 
     # Internal RK4 integrator for the UKF
-    def propagate_sigma(self, x, dt, NAV_states):
+    def propagate_sigma(self, x, w, G, dt, NAV_states):
         def f_local(x_local):
             return self.f(x_local, None, NAV_states)
         k1 = f_local(x)

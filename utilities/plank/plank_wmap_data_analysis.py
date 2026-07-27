@@ -1,16 +1,21 @@
 import healpy as hp
 import numpy as np
 import matplotlib.pyplot as plt
-import os
+from matplotlib.colors import LinearSegmentedColormap
 
-# File path
-filename = "COM_CMB_IQU-smica_2048_R3.00_full.fits"
+# File paths
+# WMAP
+# wget https://lambda.gsfc.nasa.gov/data/map/dr5/dfp/ilc/wmap_ilc_9yr_v5.fits
+# Planck
+# wget https://irsa.ipac.caltech.edu/data/Planck/release_3/all-sky-maps/maps/component-maps/cmb/COM_CMB_IQU-smica_2048_R3.00_full.fits
 
-# Load Planck anisotropy map
-cmb_map = hp.read_map(filename, field=0)
+# filename = "wmap_ilc_9yr_v5.fits"; source="wmap"; scale = 1e-3 # [mK]
+filename = "COM_CMB_IQU-smica_2048_R3.00_full.fits"; source="planck"; scale = 1 # [K]
+
+cmb_map = hp.read_map(filename, field=0)*scale
 
 # OPTIONAL: downgrade resolution for speed
-cmb_map = hp.ud_grade(cmb_map, nside_out=64)
+# cmb_map = hp.ud_grade(cmb_map, nside_out=64)
 
 # Constants
 T0    = 2.725       # [K]
@@ -74,11 +79,24 @@ dipole_map = dipole_map - np.mean(dipole_map)
 
 # 3) FULL MAP (anisotropy + dipole)
 full_map = (T0 + cmb_map) * gamma / (1 - beta_dot_n)
+full_map -= T0
 
 # Diagnostics
 print("Anisotropy RMS:", np.std(anisotropy_map))
 print("Dipole peak-to-peak:", np.max(dipole_map) - np.min(dipole_map))
 print("Full map mean:", np.mean(full_map))
+
+# Color Map
+
+cmb_cmap = LinearSegmentedColormap.from_list(
+    "cmb",
+    [
+        (0.00,(0.00, 0.40, 1.00)), # blue
+        (0.5,(1,1,1)), # white
+        (1.00,(0.80, 0.00, 0.00)), # red
+    ],
+    N=512,
+)
 
 # PLOTS
 
@@ -87,7 +105,9 @@ hp.mollview(
     anisotropy_map,
     title="Planck CMB Anisotropies (µK scale)",
     unit="K",
-    cmap="coolwarm"
+    cmap=cmb_cmap,
+    # min=-300e-6,
+    # max=+300e-6,
 )
 hp.graticule()
 
@@ -96,7 +116,7 @@ hp.mollview(
     dipole_map,
     title="CMB Dipole (Relativistic, velocity only)",
     unit="K",
-    cmap="coolwarm"
+    cmap=cmb_cmap,
 )
 hp.graticule()
 
@@ -105,9 +125,8 @@ hp.mollview(
     full_map,
     title="CMB Full Sky (Dipole + Anisotropies)",
     unit="K",
-    cmap="coolwarm"
+    cmap=cmb_cmap,
 )
-
 hp.graticule()
 
 ##########################
@@ -214,3 +233,38 @@ ax3.legend()
 ax3.grid()
 
 plt.show()
+
+###############################
+# EXPORT VECTOR HAMMER MAP    #
+###############################
+
+plt.figure(figsize=(12, 6))
+
+hp.projview(
+    anisotropy_map,
+    projection_type="hammer",
+    coord=["G"],            # Galactic coordinates
+    cmap=cmb_cmap,
+    graticule=False,
+    cbar=False,
+    title="",
+    xlabel="",
+    ylabel="",
+    flip="astro",           # Astronomical convention (l increases to the left)
+    min=-300e-6,
+    max=300e-6
+)
+
+# Remove any remaining axes decorations
+ax = plt.gca()
+ax.set_axis_off()
+
+plt.savefig(
+    f"cmb_{source}.pdf",
+    format="pdf",
+    transparent=True,
+    bbox_inches="tight",
+    pad_inches=0,
+)
+
+plt.close()

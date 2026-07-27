@@ -10,7 +10,7 @@ events_sequence = {
         (0, np.array([1,0,0,0])),
     ],
     "DYN.DYN_ATT.SCw_BOF" : [
-        (0, np.deg2rad([0,0,0])),
+        (0, np.deg2rad([1,0,0])),
     ],
     "SEN.SEN_STR.STRenableflg" : [
         (100,   1),

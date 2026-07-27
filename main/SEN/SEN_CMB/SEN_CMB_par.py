@@ -21,4 +21,5 @@ SEN_CMB_par = {
     "SEN_CMBoutflg_ini" : 0,      # CMB (temperature) detector output flag
     "time_CMB_ini"      : 0,      # [s] CMB (temperature) detector time
     "T_dipole_ini"      : 2.7255, # [K] Measured temperatures
+    "T_anisotropic_ini" : 0,      # [K] Measured anisotropies
 }

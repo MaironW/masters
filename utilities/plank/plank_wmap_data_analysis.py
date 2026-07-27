@@ -3,15 +3,19 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import LinearSegmentedColormap
 
-# File path
-# weget https://irsa.ipac.caltech.edu/data/Planck/release_3/all-sky-maps/maps/component-maps/cmb/COM_CMB_IQU-smica_2048_R3.00_full.fits
-filename = "COM_CMB_IQU-smica_2048_R3.00_full.fits"
+# File paths
+# WMAP
+# wget https://lambda.gsfc.nasa.gov/data/map/dr5/dfp/ilc/wmap_ilc_9yr_v5.fits
+# Planck
+# wget https://irsa.ipac.caltech.edu/data/Planck/release_3/all-sky-maps/maps/component-maps/cmb/COM_CMB_IQU-smica_2048_R3.00_full.fits
 
-# Load Planck anisotropy map
-cmb_map = hp.read_map(filename, field=0)
+# filename = "wmap_ilc_9yr_v5.fits"; source="wmap"; scale = 1e-3 # [mK]
+filename = "COM_CMB_IQU-smica_2048_R3.00_full.fits"; source="planck"; scale = 1 # [K]
+
+cmb_map = hp.read_map(filename, field=0)*scale
 
 # OPTIONAL: downgrade resolution for speed
-cmb_map = hp.ud_grade(cmb_map, nside_out=64)
+# cmb_map = hp.ud_grade(cmb_map, nside_out=64)
 
 # Constants
 T0    = 2.725       # [K]
@@ -77,9 +81,6 @@ dipole_map = dipole_map - np.mean(dipole_map)
 full_map = (T0 + cmb_map) * gamma / (1 - beta_dot_n)
 full_map -= T0
 
-print(min(full_map))
-print(max(full_map))
-
 # Diagnostics
 print("Anisotropy RMS:", np.std(anisotropy_map))
 print("Dipole peak-to-peak:", np.max(dipole_map) - np.min(dipole_map))
@@ -91,7 +92,6 @@ cmb_cmap = LinearSegmentedColormap.from_list(
     "cmb",
     [
         (0.00,(0.00, 0.40, 1.00)), # blue
-        # (0.20, 0.80, 0.00), # green
         (0.5,(1,1,1)), # white
         (1.00,(0.80, 0.00, 0.00)), # red
     ],
@@ -106,8 +106,8 @@ hp.mollview(
     title="Planck CMB Anisotropies (µK scale)",
     unit="K",
     cmap=cmb_cmap,
-    min=-300e-6,
-    max=+300e-6,
+    # min=-300e-6,
+    # max=+300e-6,
 )
 hp.graticule()
 
@@ -127,7 +127,6 @@ hp.mollview(
     unit="K",
     cmap=cmb_cmap,
 )
-
 hp.graticule()
 
 ##########################
@@ -242,7 +241,7 @@ plt.show()
 plt.figure(figsize=(12, 6))
 
 hp.projview(
-    full_map,
+    anisotropy_map,
     projection_type="hammer",
     coord=["G"],            # Galactic coordinates
     cmap=cmb_cmap,
@@ -252,8 +251,8 @@ hp.projview(
     xlabel="",
     ylabel="",
     flip="astro",           # Astronomical convention (l increases to the left)
-    min=-3370e-6,
-    max=3370e-6
+    min=-300e-6,
+    max=300e-6
 )
 
 # Remove any remaining axes decorations
@@ -261,7 +260,7 @@ ax = plt.gca()
 ax.set_axis_off()
 
 plt.savefig(
-    "cmb_hammer.pdf",       # or "cmb_hammer.svg"
+    f"cmb_{source}.pdf",
     format="pdf",
     transparent=True,
     bbox_inches="tight",

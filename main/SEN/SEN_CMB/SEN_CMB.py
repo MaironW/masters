@@ -96,10 +96,15 @@ class SEN_CMB(Level2Module):
             CSF2q_SSB = quaternions.qprod(CSF2q_BOF, BOFq_SSB)
             CSF3q_SSB = quaternions.qprod(CSF3q_BOF, BOFq_SSB)
 
+            # Orientation of the SSB frame with respect to the CMB sensor
+            SSBq_CSF1 = quaternions.qtrans(CSF1q_SSB)
+            SSBq_CSF2 = quaternions.qtrans(CSF2q_SSB)
+            SSBq_CSF3 = quaternions.qtrans(CSF3q_SSB)
+
             # Compute the direction of each sensor in the SSB frame
-            CSF1dir_SSB = quaternions.qvecprod(CSF1q_SSB, [0,0,1])
-            CSF2dir_SSB = quaternions.qvecprod(CSF2q_SSB, [0,0,1])
-            CSF3dir_SSB = quaternions.qvecprod(CSF3q_SSB, [0,0,1])
+            CSF1dir_SSB = quaternions.qvecprod(SSBq_CSF1, [0,0,1])
+            CSF2dir_SSB = quaternions.qvecprod(SSBq_CSF2, [0,0,1])
+            CSF3dir_SSB = quaternions.qvecprod(SSBq_CSF3, [0,0,1])
 
             # Compute the direction of each sensor in the GAL frame
             CSF1dir_GAL = misc.SSBtoGAL(CSF1dir_SSB)

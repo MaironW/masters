@@ -3,9 +3,23 @@ from Utils import quaternions
 
 # Temperature sensors orientation on BOF frame (60 deg from spin axis, 120 deg apart)
 # CSF = CMB Sensor Frame
-CSF1q_BOF = quaternions.rotvec2q(np.pi/3 * np.array([0, 0, 1]))
-CSF2q_BOF = quaternions.rotvec2q(np.pi/3 * np.array([0, -np.sin(np.deg2rad(120)), +np.cos(np.deg2rad(120))]))
-CSF3q_BOF = quaternions.rotvec2q(np.pi/3 * np.array([0, -np.sin(np.deg2rad(240)), +np.cos(np.deg2rad(240))]))
+z_angle = np.deg2rad(-30) # [rad]
+y_angle = np.deg2rad(-60) # [rad]
+qz = quaternions.rotvec2q([0,0,z_angle])
+qy = quaternions.rotvec2q([0,y_angle,0])
+CSF1q_BOF = quaternions.qprod(qy,qz)
+
+z_angle = np.deg2rad(-150) # [rad]
+y_angle = np.deg2rad(-60) # [rad]
+qz = quaternions.rotvec2q([0,0,z_angle])
+qy = quaternions.rotvec2q([0,y_angle,0])
+CSF2q_BOF = quaternions.qprod(qy,qz)
+
+z_angle = np.deg2rad(-270) # [rad]
+y_angle = np.deg2rad(-60) # [rad]
+qz = quaternions.rotvec2q([0,0,z_angle])
+qy = quaternions.rotvec2q([0,y_angle,0])
+CSF3q_BOF = quaternions.qprod(qy,qz)
 
 # Parameters for Module SEN_CMB
 SEN_CMB_par = {

@@ -229,8 +229,8 @@ def NAV_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax1 = PPC.plot([], [], ylabel="CMBR Temperature Dipole [K]", title="CMBR Temperature Dipole", subplot=(2,1,1))
     fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", title="Standard deviation", ylabel="Covariance [K]", fig=fig, subplot=(2,1,2))
     for i in range(3):
-        PPC.plot(time_SIM, z[:, i],       label=f"CMB{i} meas.", fig=fig, ax=ax1)
-        PPC.plot(time_SIM, sigma_z[:, i], label=f"CMB{i} σ",     fig=fig, ax=ax2)
+        PPC.plot(time_SIM, z[:, i],       label=f"CMB{i+1} meas.", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, sigma_z[:, i], label=f"CMB{i+1} σ",     fig=fig, ax=ax2)
 
     # Plot predicted measurement, assuming the true spacecraft velocity as the state + innovation
     x_true = np.hstack((SCpos_SSB, SCvel_SSB))
@@ -248,9 +248,9 @@ def NAV_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="z - h(x)", title="Innovation z - h(x)", fig=fig, subplot=(2,1,2))
     innov = z - h_hist
     for i in range(3):
-        PPC.plot(time_SIM, h_hist[:, i], label=f"h(x) CMB{i}", fig=fig, ax=ax1)
-        PPC.plot(time_SIM, z[:, i], label=f"z CMB{i}", style='--', fig=fig, ax=ax1)
-        PPC.plot(time_SIM, innov[:, i], label=f"CMB{i}", xlabel="time_SIM [s]", fig=fig, ax=ax2)
+        PPC.plot(time_SIM, h_hist[:, i], label=f"h(x) CMB{i+1}", fig=fig, ax=ax1)
+        PPC.plot(time_SIM, z[:, i], label=f"z CMB{i+1}", style='--', fig=fig, ax=ax1)
+        PPC.plot(time_SIM, innov[:, i], label=f"CMB{i+1}", xlabel="time_SIM [s]", fig=fig, ax=ax2)
 
 def NAV_EKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]

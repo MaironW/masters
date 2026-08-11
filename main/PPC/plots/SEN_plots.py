@@ -169,6 +169,26 @@ def SEN_CMB_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     PPC.plot(time_SIM, T_anisotropic_CMB2_mes, label="CMB2", color=PPC.colors["red"],   fig=fig, ax=ax)
     PPC.plot(time_SIM, T_anisotropic_CMB3_mes, label="CMB3", color=PPC.colors["green"], fig=fig, ax=ax)
 
+    # 3D plot for sensor direction check
+    CSF1q_BOF = SEN_obj.SEN_CMB.par["CSF1q_BOF"]
+    CSF2q_BOF = SEN_obj.SEN_CMB.par["CSF2q_BOF"]
+    CSF3q_BOF = SEN_obj.SEN_CMB.par["CSF3q_BOF"]
+    BOFq_CSF1 = quaternions.qtrans(CSF1q_BOF)
+    BOFq_CSF2 = quaternions.qtrans(CSF2q_BOF)
+    BOFq_CSF3 = quaternions.qtrans(CSF3q_BOF)
+    CSF1dir_BOF = quaternions.qvecprod(BOFq_CSF1, [0, 0, 1])
+    CSF2dir_BOF = quaternions.qvecprod(BOFq_CSF2, [0, 0, 1])
+    CSF3dir_BOF = quaternions.qvecprod(BOFq_CSF3, [0, 0, 1])
+
+    fig, ax = PPC.plot([],[],[])
+    # BOF
+    PPC.plot([0,1],[0,0],[0,0], color=PPC.colors["black"], xlabel="BOFx", ylabel="BOFy", zlabel="BOFz", fig=fig, ax=ax)
+    PPC.plot([0,0],[0,1],[0,0], color=PPC.colors["black"], fig=fig, ax=ax)
+    PPC.plot([0,0],[0,0],[0,1], color=PPC.colors["black"], fig=fig, ax=ax)
+    # CSF
+    PPC.plot([0,CSF1dir_BOF[0]],[0,CSF1dir_BOF[1]],[0,CSF1dir_BOF[2]], label="CSF1", fig=fig, ax=ax)
+    PPC.plot([0,CSF2dir_BOF[0]],[0,CSF2dir_BOF[1]],[0,CSF2dir_BOF[2]], label="CSF2", fig=fig, ax=ax)
+    PPC.plot([0,CSF3dir_BOF[0]],[0,CSF3dir_BOF[1]],[0,CSF3dir_BOF[2]], label="CSF3", fig=fig, ax=ax)
 
 SEN_plots = {
     "SEN_TIME" : SEN_TIME_plot,

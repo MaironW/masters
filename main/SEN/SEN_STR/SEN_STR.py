@@ -220,10 +220,15 @@ class SEN_STR(Level2Module):
     def dir_from_pos(self, pos):
         return pos/np.linalg.norm(pos, axis=-1, keepdims=True)
 
+    # Check if objects are inside any of the two Star Trackers FOV
     def mask_visible_objects(self, dir_STR):
-        STR_boresight = np.array([0, 0, 1])
+        STR2q_BOF = self.par["STR2q_STR1"]
+        STR1_boresight = np.array([0, 0, 1])
+        STR2_boresight = quaternions.qvecprod(STR2q_BOF, STR1_boresight) # relative to STR1
         cos_field_of_view = self.par["cos_field_of_view"]
-        visible = (dir_STR @ STR_boresight) >= cos_field_of_view
+        cos_angle_1 = dir_STR @ STR1_boresight
+        cos_angle_2 = dir_STR @ STR2_boresight
+        visible = ((cos_angle_1 >= cos_field_of_view ) | (cos_angle_2 >= cos_field_of_view))
         dir_STR_masked = np.full(dir_STR.shape, np.nan, dtype=float)
         dir_STR_masked[visible] = dir_STR[visible]
         return dir_STR_masked

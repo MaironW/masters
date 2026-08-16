@@ -154,11 +154,13 @@ def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=No
 
     # Plot data
     if z is None: # Plot 2D
-        ax.plot(x, y, style, **kwargs, label=label)
+        if len(x) > 0: # Only plot when there is data, to keep the color sequence
+            ax.plot(x, y, style, **kwargs, label=label)
         if xlabel: ax.set_xlabel(xlabel)
         if ylabel: ax.set_ylabel(ylabel)
     else: # Plot 3D
-        ax.plot(x, y, z, style, **kwargs, label=label)
+        if len(x) > 0: # Only plot when there is data, to keep the color sequence
+            ax.plot(x, y, z, style, **kwargs, label=label)
         if xlabel: ax.set_xlabel(xlabel)
         if ylabel: ax.set_ylabel(ylabel)
         if zlabel: ax.set_zlabel(zlabel)

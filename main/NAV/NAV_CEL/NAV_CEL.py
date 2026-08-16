@@ -37,6 +37,10 @@ class NAV_CEL(Level2Module):
         self.state["BODYpos_SSB_list"]            = self.par["BODYpos_SSB_ini"]
         self.state["time_valid"]                  = self.par["time_valid_ini"]
 
+        # Persistent selected star for each body
+        # -1: no star selected
+        self.state["BODYsel_STARid_list"] = np.full(n_bodies, -1, dtype=int)
+
         # Update KF functions
         self.state["h"] = self.h
         self.state["H"] = self.H
@@ -121,8 +125,12 @@ class NAV_CEL(Level2Module):
             sigma_angle = self.par["sigma_angle"] # [rad]
             count = 0
             for visibility, BODYdir_SC_mes, BODYpos_SSB in bodies:
+                # Reset selected stars for bodies that are outside the FOV
+                if not visibility:
+                    self.state["BODYsel_STARid_list"][count] = -1
+
                 # Compute angles if body is visible
-                cos_angle_mes, STARdir_SC_mes, STARid_mes, valid = self.cos_los_angle(visibility, BODYdir_SC_mes, STARSdir_SC_mes, STARSid_mes)
+                cos_angle_mes, STARdir_SC_mes, STARid_mes, valid = self.cos_los_angle(count, visibility, BODYdir_SC_mes, STARSdir_SC_mes, STARSid_mes)
                 # Compute the measurement model and covariance matrix
                 if valid:
                     # Find matching reference star
@@ -237,30 +245,51 @@ class NAV_CEL(Level2Module):
 
     # Compute the cosine of one line-of-sight angle between the body and the best available star
     # Return the direction vectors for the selected star
-    def cos_los_angle(self, BODYvisibility, BODYdir_SC_mes, STARSdir_SC_mes, STARSid_mes):
-        # If body is visible
-        if BODYvisibility == True:
+    def cos_los_angle(self, BODYidx, BODYvisibility, BODYdir_SC_mes, STARSdir_SC_mes, STARSid_mes):
+        # Body is not visible
+        if not BODYvisibility:
+            return self.par["BODYangles_mes_ini"], self.par["BODYsel_STARdir_mes_ini"], None, False
+
+        # Determine whether the previously selected star is still inside the current FOV
+        selected_star_id = self.state["BODYsel_STARid_list"][BODYidx]
+        selected_idx = None
+        if selected_star_id >= 0:
+            idx = np.where(STARSid_mes == selected_star_id)[0]
+            if len(idx) > 0:
+                # Previously selected star is still inside the FOV
+                selected_idx = idx[0]
+
+        # If there is no selected star, select a new one
+        if selected_idx is None:
+            # Compute angles between body and all visible stars
             cos_angles = STARSdir_SC_mes @ BODYdir_SC_mes
             cos_angles = np.clip(cos_angles, -1.0, 1.0)
 
-            # Filter-out angles smaller than los_angle_min and larger than los_angle_max
-            valid_angles = (cos_angles >= self.par["cos_los_angle_min"]) & (cos_angles <= self.par["cos_los_angle_max"])
-            # Check if there is still one valid angle
-            if np.any(valid_angles):
-                # Select valid stars
-                cos_angles = cos_angles[valid_angles]
-                BODYsel_STARdir_SC_mes = STARSdir_SC_mes[valid_angles]
-                BODYsel_STARid_mes     = STARSid_mes[valid_angles]
-                # Select the best angle
-                best_idx = self.score_stars(BODYdir_SC_mes, BODYsel_STARdir_SC_mes)
-                cos_angle = cos_angles[best_idx]
-                BODYsel_STARdir_SC_mes = BODYsel_STARdir_SC_mes[best_idx]
-                BODYsel_STARid_mes     = BODYsel_STARid_mes[best_idx]
+            # Filter angles according to the allowed LOS range
+            valid_angles = ((cos_angles >= self.par["cos_los_angle_min"]) & (cos_angles <= self.par["cos_los_angle_max"]))
+            if not np.any(valid_angles):
+                return self.par["BODYangles_mes_ini"], self.par["BODYsel_STARdir_mes_ini"], None, False
 
-                return cos_angle, BODYsel_STARdir_SC_mes, BODYsel_STARid_mes, True
+            # Candidate stars
+            candidate_dirs = STARSdir_SC_mes[valid_angles]
+            candidate_ids  = STARSid_mes[valid_angles]
 
-        # If not valid
-        return self.par["BODYangles_mes_ini"], self.par["BODYsel_STARdir_mes_ini"], None, False
+            # Select the best star only when a new star is required
+            best_idx = self.score_stars(BODYdir_SC_mes, candidate_dirs)
+            selected_star_id = candidate_ids[best_idx]
+
+            # Store persistent selection
+            self.state["BODYsel_STARid_list"][BODYidx] = selected_star_id
+
+            # Recover index in the complete visible-star array
+            selected_idx = np.where(STARSid_mes == selected_star_id)[0][0]
+
+        # Use the selected star
+        STARdir_SC_mes = STARSdir_SC_mes[selected_idx]
+        STARid_mes     = STARSid_mes[selected_idx]
+        cos_angle = np.clip(STARdir_SC_mes @ BODYdir_SC_mes, -1.0, 1.0)
+
+        return cos_angle, STARdir_SC_mes, STARid_mes, True
 
     # Select the single most informative star relative to a body
     # Maximize angular separation from body direction

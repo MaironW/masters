@@ -12,3 +12,6 @@ wget https://naif.jpl.nasa.gov/pub/naif/pds/data/mro-m-spice-6-v1.0/mrosp_1000/d
 
 # Not a Kernel, but star catalogue
 wget https://cdsarc.cds.unistra.fr/ftp/cats/I/239/hip_main.dat
+
+# CMBR WMAP data (because it is lighter than the Plank one)
+wget https://lambda.gsfc.nasa.gov/data/map/dr5/dfp/ilc/wmap_ilc_9yr_v5.fits

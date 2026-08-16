@@ -1,6 +1,6 @@
 # Level 2 Module DYN_CMB
 # Simulates the cosmic microwave background radiation as a thermal bath for an inertial observer
-# The anisotropies can be added later to the monopole
+# Because the anisotropies are dependent onf the observed direction, they are added in the sensor model
 
 import copy
 import numpy as np
@@ -30,7 +30,7 @@ class DYN_CMB(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, parent_states, DYN_states, inputs=None):
-        T_anisotropic = np.random.normal(self.par["noise_mean"], self.par["noise_std"])
+        T_anisotropic = 0
         self.state["T_anisotropic"] = T_anisotropic
         self.state["T_monopole"] = self.state["T_isotropic"] + self.state["T_anisotropic"]
         return self.state

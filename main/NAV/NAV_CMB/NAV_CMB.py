@@ -115,15 +115,20 @@ class NAV_CMB(Level2Module):
         CSF2q_SSB = quaternions.qprod(CSF2q_BOF, BOFq_SSB_ref)
         CSF3q_SSB = quaternions.qprod(CSF3q_BOF, BOFq_SSB_ref)
 
+        # Orientation of the SSB frame with respect to the CMB sensor
+        SSBq_CSF1 = quaternions.qtrans(CSF1q_SSB)
+        SSBq_CSF2 = quaternions.qtrans(CSF2q_SSB)
+        SSBq_CSF3 = quaternions.qtrans(CSF3q_SSB)
+
         # Compute the direction of each sensor in the SSB frame
-        CMB1dir_SSB = quaternions.qvecprod(CSF1q_SSB, [0,0,1])
-        CMB2dir_SSB = quaternions.qvecprod(CSF2q_SSB, [0,0,1])
-        CMB3dir_SSB = quaternions.qvecprod(CSF3q_SSB, [0,0,1])
+        CSF1dir_SSB = quaternions.qvecprod(SSBq_CSF1, [0,0,1])
+        CSF2dir_SSB = quaternions.qvecprod(SSBq_CSF2, [0,0,1])
+        CSF3dir_SSB = quaternions.qvecprod(SSBq_CSF3, [0,0,1])
 
         # Compute angle between velocity vector and each sensor direction
-        cos_angle1 = np.clip(SCvel_CMB_dir @ CMB1dir_SSB, -1, 1)
-        cos_angle2 = np.clip(SCvel_CMB_dir @ CMB2dir_SSB, -1, 1)
-        cos_angle3 = np.clip(SCvel_CMB_dir @ CMB3dir_SSB, -1, 1)
+        cos_angle1 = np.clip(SCvel_CMB_dir @ CSF1dir_SSB, -1, 1)
+        cos_angle2 = np.clip(SCvel_CMB_dir @ CSF2dir_SSB, -1, 1)
+        cos_angle3 = np.clip(SCvel_CMB_dir @ CSF3dir_SSB, -1, 1)
 
         # Compute temperature dipole due to the spacecraft velocity within the galaxy
         light_speed_cst = CONSTANTS_par["light_speed_cst"] # [km/s]

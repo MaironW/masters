@@ -25,6 +25,17 @@ def GALtoSSB(vec_GAL):
     vec_SSB = (R @ vec_GAL).T
     return vec_SSB
 
+# Convert vector from SSB frame to Galactic frame
+def SSBtoGAL(vec_SSB):
+    # Rotation matrix from Galactic to Equatorial plane J2000
+    R = np.array([
+        [-0.0548755604, -0.8734370902, -0.4838350155],
+        [+0.4941094279, -0.4448296300, +0.7469822445],
+        [-0.8676661490, -0.1980763734, +0.4559837762]
+    ])
+    vec_GAL = (R.T @ vec_SSB).T
+    return vec_GAL
+
 # Generate a gnomonic projection of a vector
 def gnomonic_projection(vec):
     x = vec[:,0]

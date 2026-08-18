@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     script_start_time = time.perf_counter()
 
-    mc_steps   = 2
+    mc_steps   = 25
     output_dir = "Logs/test_mc"
     os.makedirs(output_dir, exist_ok=True)
 

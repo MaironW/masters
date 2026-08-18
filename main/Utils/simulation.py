@@ -92,7 +92,10 @@ def run(SIM_par_override=None, par_override=None, run_id="0000", log_time=True):
 
     # Save log
     if log_save and log_save_path is not None:
-        log_save_path = log_save_path+f"_{run_id}"
+        # Check if there is a run_id to add as suffix
+        if run_id:
+            log_save_path = log_save_path+f"_{run_id}"
+        
         PPC.store_timeline(timeline, log_save_path)
 
     end_time = time.perf_counter()

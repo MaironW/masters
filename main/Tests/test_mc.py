@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     script_start_time = time.perf_counter()
 
-    mc_steps   = 10
+    mc_steps   = 2
     output_dir = "Logs/test_mc"
     os.makedirs(output_dir, exist_ok=True)
 
@@ -82,7 +82,7 @@ if __name__ == "__main__":
         "log_save": True,
         "log_load": []
     }
-    simulation.run(SIM_par_override=SIM_par_override)
+    simulation.run(SIM_par_override=SIM_par_override, run_id="")
 
     # Parallel execution
     n_proc = mp.cpu_count()

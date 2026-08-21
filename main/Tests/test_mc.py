@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
     script_start_time = time.perf_counter()
 
-    mc_steps   = 25
+    mc_steps   = 5
     output_dir = "Logs/test_mc"
     os.makedirs(output_dir, exist_ok=True)
 
@@ -85,10 +85,14 @@ if __name__ == "__main__":
     simulation.run(SIM_par_override=SIM_par_override, run_id="")
 
     # Parallel execution
-    n_proc = mp.cpu_count()
+    # n_proc = mp.cpu_count()
+    # with mp.Pool(processes=n_proc) as pool:
+    #     pool.map(run_mc_case, [(i, output_dir) for i in range(mc_steps)])
 
-    with mp.Pool(processes=n_proc) as pool:
-        pool.map(run_mc_case, [(i, output_dir) for i in range(mc_steps)])
+    # Parallel execution is messing with memory
+    # Keeping execution serialized for now
+    for i in range(mc_steps):
+        run_mc_case((i, output_dir))
 
     # Stop simulation
     simulation.stop()

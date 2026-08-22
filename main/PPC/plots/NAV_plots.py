@@ -293,12 +293,12 @@ def NAV_EKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # PPC.plot(time_SIM_days, RMS_theoretical[:, 3:6], label=["RMSt X","RMSt Y","RMSt Z"], style="--", fig=fig, ax=ax2)
     # PPC.plot(time_SIM_days, RMS_numerical[:, 3:6],   label=["RMSn X","RMSn Y","RMSn Z"], style="--", fig=fig, ax=ax2)
 
-    # Plot innovation
-    fig, ax1 = PPC.plot([], [], xlabel="time_SIM [days]", ylabel="Innovation", title="EKF Innovation Normalized Squared")
-    for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
-        y  = timeline["NAV"]["NAV_EKF"][f"y_{name}"]
-        y /= len(y)
-        PPC.plot(time_SIM_days, y, label=f"{name}", fig=fig, ax=ax1)
+    # # Plot innovation
+    # fig, ax1 = PPC.plot([], [], xlabel="time_SIM [days]", ylabel="Innovation", title="EKF Innovation Normalized Squared")
+    # for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
+    #     y  = timeline["NAV"]["NAV_EKF"][f"y_{name}"]
+    #     y /= len(y)
+    #     PPC.plot(time_SIM_days, y, label=f"{name}", fig=fig, ax=ax1)
 
 def NAV_UKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
@@ -341,12 +341,12 @@ def NAV_UKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # PPC.plot(time_SIM_days, RMS_theoretical[:, 3:6], label=["RMSt X","RMSt Y","RMSt Z"], style="--", fig=fig, ax=ax2)
     # PPC.plot(time_SIM_days, RMS_numerical[:, 3:6],   label=["RMSn X","RMSn Y","RMSn Z"], style="--", fig=fig, ax=ax2)
 
-    # Plot innovation
-    fig, ax1 = PPC.plot([], [], xlabel="time_SIM [days]", ylabel="Innovation", title="UKF Innovation Normalized Squared")
-    for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
-        y  = timeline["NAV"]["NAV_UKF"][f"y_{name}"] 
-        y /= len(y)
-        PPC.plot(time_SIM_days, y, label=f"{name}", fig=fig, ax=ax1)
+    # # Plot innovation
+    # fig, ax1 = PPC.plot([], [], xlabel="time_SIM [days]", ylabel="Innovation", title="UKF Innovation Normalized Squared")
+    # for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
+    #     y  = timeline["NAV"]["NAV_UKF"][f"y_{name}"] 
+    #     y /= len(y)
+    #     PPC.plot(time_SIM_days, y, label=f"{name}", fig=fig, ax=ax1)
 
     # Compare estimators
     EKF_x_est  = timeline["NAV"]["NAV_EKF"]["x_est"]

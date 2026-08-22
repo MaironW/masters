@@ -14,7 +14,7 @@ STR2q_STR1 = quaternions.qprod(STR2q_BOF, quaternions.qtrans(STR1q_BOF))
 # Parameters for Module SEN_STR
 SEN_STR_par = {
     # Star Tracker Parameters
-    "dt"                : 1,                 # [s] Discretization of the STR time
+    "dt"                : 60,                # [s] Discretization of the STR time
     "STRq_BOF"          : STR1q_BOF,         # Orientation of the STR1 relative to the Spacecraft body
     "STR1q_BOF"         : STR1q_BOF,         # Orientation of the STR1 relative to the Spacecraft body
     "STR2q_BOF"         : STR2q_BOF,         # Orientation of the STR2 relative to the Spacecraft body

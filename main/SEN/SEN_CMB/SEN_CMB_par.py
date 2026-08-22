@@ -24,7 +24,7 @@ CSF3q_BOF = quaternions.qprod(qy,qz)
 # Parameters for Module SEN_CMB
 SEN_CMB_par = {
     # Temperature detector parameters
-    "dt"         : 600,       # [s] Discretization of the sensor time - Also observation time
+    "dt"         : 60,        # [s] Discretization of the sensor time - Also observation time
     "noise_mean" : 0,         # [K] Sensor noise mean
     "noise_std"  : 100e-6,    # [K] Sensor noise std
     "CSF1q_BOF"  : CSF1q_BOF, # Orientation of the CMB sensor 1 relative to the Spacecraft body

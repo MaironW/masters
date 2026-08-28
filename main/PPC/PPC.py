@@ -206,3 +206,10 @@ def serialize_json(obj):
     if isinstance(obj, list):
         return [serialize_json(v) for v in obj]
     return obj
+
+# Downsample array of data from the timeline
+# Useful to generate tikz figures
+def downsample(original_array, n_points):
+    idx = np.linspace(0, len(original_array)-1, n_points, dtype=int)
+    array_downsampled = original_array[idx]
+    return array_downsampled

@@ -23,7 +23,7 @@ spice.load_kernel(kernel_dir + "msl_cruise.bsp")
 # Get Spacecraft initial condition
 # MSL trajectory will be compared during the cruise phase, in a period of time without any trajectory correction maneuvers
 time_TDB_ini = spice.get_time("2012-01-01 T00:00:00")
-time_TDB_end = spice.get_time("2012-07-01 T00:00:00")
+time_TDB_end = spice.get_time("2012-07-30 T00:00:00")
 
 MSLpos_SSB_ini, MSLvel_SSB_ini = spice.get_state("MSL", time_TDB_ini)
 
@@ -151,27 +151,34 @@ spice.clear_kernels()
 # RESULTS #
 ###########
 
+SCpos_SSB    = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+SCvel_SSB    = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+MSLpos_SSB   = timeline["MSL"]["MSLpos_SSB"]
+MSLvel_SSB   = timeline["MSL"]["MSLvel_SSB"]
+EARTHpos_SSB = timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"]
+MARSpos_SSB  = timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"]
+MARSvel_SSB  = timeline["DYN"]["DYN_EPH"]["MARSvel_SSB"]
+SUNpos_SSB   = timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"]
+
 time_days = timeline["DYN"]["DYN_TIME"]["time_SIM"]/3600/24
 
 # Plot spacecraft position vs MSL position
-fig, ax_x = PPC.plot(time_days, timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], ylabel="posx_SSB [km]", label="SC", title="pos SC vs MSL", subplot=(3,1,1))
-fig, ax_y = PPC.plot(time_days, timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], ylabel="posy_SSB [km]", label="SC", fig=fig, subplot=(3,1,2))
-fig, ax_z = PPC.plot(time_days, timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2], xlabel="Time SIM [days]", ylabel="posz_SSB [km]", label="SC", fig=fig, subplot=(3,1,3))
-PPC.plot(time_days, timeline["MSL"]["MSLpos_SSB"][:,0], label="MSL", fig=fig, ax=ax_x)
-PPC.plot(time_days, timeline["MSL"]["MSLpos_SSB"][:,1], label="MSL", fig=fig, ax=ax_y)
-PPC.plot(time_days, timeline["MSL"]["MSLpos_SSB"][:,2], label="MSL", fig=fig, ax=ax_z)
+fig, ax_x = PPC.plot(time_days, SCpos_SSB[:,0], ylabel="posx_SSB [km]", label="SC", title="pos SC vs MSL", subplot=(3,1,1))
+fig, ax_y = PPC.plot(time_days, SCpos_SSB[:,1], ylabel="posy_SSB [km]", label="SC", fig=fig, subplot=(3,1,2))
+fig, ax_z = PPC.plot(time_days, SCpos_SSB[:,2], xlabel="Time SIM [days]", ylabel="posz_SSB [km]", label="SC", fig=fig, subplot=(3,1,3))
+PPC.plot(time_days, MSLpos_SSB[:,0], label="MSL", fig=fig, ax=ax_x)
+PPC.plot(time_days, MSLpos_SSB[:,1], label="MSL", fig=fig, ax=ax_y)
+PPC.plot(time_days, MSLpos_SSB[:,2], label="MSL", fig=fig, ax=ax_z)
 
 # Plot spacecraft velocity vs MSL velocity
-fig, ax_x = PPC.plot(time_days, timeline["DYN"]["DYN_TRA"]["SCvel_SSB"][:,0], ylabel="velx_SSB [km/s]", label="SC", title="vel SC vs MSL", subplot=(3,1,1))
-fig, ax_y = PPC.plot(time_days, timeline["DYN"]["DYN_TRA"]["SCvel_SSB"][:,1], ylabel="vely_SSB [km/s]", label="SC", fig=fig, subplot=(3,1,2))
-fig, ax_z = PPC.plot(time_days, timeline["DYN"]["DYN_TRA"]["SCvel_SSB"][:,2], xlabel="Time SIM [days]", ylabel="velz_SSB [km/s]", label="SC", fig=fig, subplot=(3,1,3))
-PPC.plot(time_days, timeline["MSL"]["MSLvel_SSB"][:,0], label="MSL", fig=fig, ax=ax_x)
-PPC.plot(time_days, timeline["MSL"]["MSLvel_SSB"][:,1], label="MSL", fig=fig, ax=ax_y)
-PPC.plot(time_days, timeline["MSL"]["MSLvel_SSB"][:,2], label="MSL", fig=fig, ax=ax_z)
+fig, ax_x = PPC.plot(time_days, SCvel_SSB[:,0], ylabel="velx_SSB [km/s]", label="SC", title="vel SC vs MSL", subplot=(3,1,1))
+fig, ax_y = PPC.plot(time_days, SCvel_SSB[:,1], ylabel="vely_SSB [km/s]", label="SC", fig=fig, subplot=(3,1,2))
+fig, ax_z = PPC.plot(time_days, SCvel_SSB[:,2], xlabel="Time SIM [days]", ylabel="velz_SSB [km/s]", label="SC", fig=fig, subplot=(3,1,3))
+PPC.plot(time_days, MSLvel_SSB[:,0], label="MSL", fig=fig, ax=ax_x)
+PPC.plot(time_days, MSLvel_SSB[:,1], label="MSL", fig=fig, ax=ax_y)
+PPC.plot(time_days, MSLvel_SSB[:,2], label="MSL", fig=fig, ax=ax_z)
 
 # Plot error on position comparing SC and MSL
-SCpos_SSB  = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
-MSLpos_SSB = timeline["MSL"]["MSLpos_SSB"]
 pos_error_x = np.sqrt((SCpos_SSB[:,0] - MSLpos_SSB[:,0])**2)
 pos_error_y = np.sqrt((SCpos_SSB[:,1] - MSLpos_SSB[:,1])**2)
 pos_error_z = np.sqrt((SCpos_SSB[:,2] - MSLpos_SSB[:,2])**2)
@@ -182,8 +189,6 @@ PPC.plot(time_days, pos_error_z, label="|$r_{SC,z} - r_{MSL,z}$|", fig=fig, ax=a
 PPC.plot(time_days, pos_error, label="|$r_{SC} - r_{MSL}$|", fig=fig, ax=ax_r, color=PPC.colors['magenta'])
 
 # Plot error on velocity comparing SC and MSL
-SCvel_SSB  = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
-MSLvel_SSB = timeline["MSL"]["MSLvel_SSB"]
 vel_error_x = np.sqrt((SCvel_SSB[:,0] - MSLvel_SSB[:,0])**2)
 vel_error_y = np.sqrt((SCvel_SSB[:,1] - MSLvel_SSB[:,1])**2)
 vel_error_z = np.sqrt((SCvel_SSB[:,2] - MSLvel_SSB[:,2])**2)
@@ -194,15 +199,15 @@ PPC.plot(time_days, vel_error_z, label="|$v_{SC,z} - v_{MSL,z}$|", subplot=(4,1,
 PPC.plot(time_days, vel_error, xlabel="Time SIM [days]", ylabel="vel error [km/s]", label="|$v_{SC} - v_{MSL}$|", fig=fig, ax=ax_v, color=PPC.colors['magenta'])
 
 # Trajectoy in the orbital plane
-fig, ax = PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], xlabel="x SSB [km]", ylabel="y SSB [km]", title="SC vs MSL trajectory", aspect='equal', color=PPC.colors["magenta"], style=':', zorder=4)
-PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][-1,1], label='SC', style='x', fig=fig, ax=ax, color=PPC.colors["magenta"], zorder=4)
-PPC.plot(timeline["MSL"]["MSLpos_SSB"][:,0],  timeline["MSL"]["MSLpos_SSB"][:,1], fig=fig, ax=ax, color=PPC.colors["grey"])
-PPC.plot(timeline["MSL"]["MSLpos_SSB"][-1,0], timeline["MSL"]["MSLpos_SSB"][-1,1], label="MSL", style='X', fig=fig, ax=ax, color=PPC.colors["grey"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][:,0],  timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][:,1],  fig=fig, ax=ax, color=PPC.colors["blue"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][-1,0], timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"][-1,1], label="Earth", style='o', fig=fig, ax=ax, color=PPC.colors["blue"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][:,0],   timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][:,1],   fig=fig, ax=ax, color=PPC.colors["red"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][-1,0],  timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"][-1,1],  label="Mars", style='o', fig=fig, ax=ax, color=PPC.colors["red"])
-PPC.plot(timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"][0,0],    timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"][0,1],    label="Sun", style='o', fig=fig, ax=ax, color=PPC.colors["orange"])
+fig, ax = PPC.plot(SCpos_SSB[:,0], SCpos_SSB[:,1], xlabel="x SSB [km]", ylabel="y SSB [km]", title="SC vs MSL trajectory", aspect='equal', color=PPC.colors["magenta"], style=':', zorder=4)
+PPC.plot(SCpos_SSB[-1,0],    SCpos_SSB[-1,1],    label='SC', style='x', fig=fig, ax=ax, color=PPC.colors["magenta"], zorder=4)
+PPC.plot(MSLpos_SSB[:,0],    MSLpos_SSB[:,1],    fig=fig, ax=ax, color=PPC.colors["grey"])
+PPC.plot(MSLpos_SSB[-1,0],   MSLpos_SSB[-1,1],   label="MSL", style='X', fig=fig, ax=ax, color=PPC.colors["grey"])
+PPC.plot(EARTHpos_SSB[:,0],  EARTHpos_SSB[:,1],  fig=fig, ax=ax, color=PPC.colors["blue"])
+PPC.plot(EARTHpos_SSB[-1,0], EARTHpos_SSB[-1,1], label="Earth", style='o', fig=fig, ax=ax, color=PPC.colors["blue"])
+PPC.plot(MARSpos_SSB[:,0],   MARSpos_SSB[:,1],   fig=fig, ax=ax, color=PPC.colors["red"])
+PPC.plot(MARSpos_SSB[-1,0],  MARSpos_SSB[-1,1],  label="Mars", style='o', fig=fig, ax=ax, color=PPC.colors["red"])
+PPC.plot(SUNpos_SSB[0,0],    SUNpos_SSB[0,1],    label="Sun", style='o', fig=fig, ax=ax, color=PPC.colors["orange"])
 
 # 3D trajectories
 fig, ax = PPC.plot([0], [0], [0], style='+', label="SSB", xlabel="X SSB [km]", ylabel="Y SSB [km]", zlabel="Z SSB [km]", title="Simulation Trajectories", aspect="equal",                      color=PPC.colors["black"])
@@ -218,8 +223,49 @@ for body in bodies:
     name = body["name"]
     PPC.plot(timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"][:,0], timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"][:,1], timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"][:,2], label=name, fig=fig, ax=ax, color=body["color"])
 # Plot Spacecraft
-PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2], label="SC", fig=fig, ax=ax, color=PPC.colors["magenta"])
-PPC.plot(timeline["MSL"]["MSLpos_SSB"][:,0], timeline["MSL"]["MSLpos_SSB"][:,1], timeline["MSL"]["MSLpos_SSB"][:,2], label="MSL", fig=fig, ax=ax, color=PPC.colors["grey"])
+PPC.plot(SCpos_SSB[:,0],  SCpos_SSB[:,1],  SCpos_SSB[:,2],  label="SC",  fig=fig, ax=ax, color=PPC.colors["magenta"])
+PPC.plot(MSLpos_SSB[:,0], MSLpos_SSB[:,1], MSLpos_SSB[:,2], label="MSL", fig=fig, ax=ax, color=PPC.colors["grey"])
 
+# SC and MSL distance to Mars
+SCpos_MCI  = SCpos_SSB  - MARSpos_SSB
+MSLpos_MCI = MSLpos_SSB - MARSpos_SSB
+SCvel_MCI  = SCvel_SSB  - MARSvel_SSB
+MSLvel_MCI = MSLvel_SSB - MARSvel_SSB
+
+SCpos_error  = np.sqrt(SCpos_MCI[:,0]**2 + SCpos_MCI[:,1]**2 + SCpos_MCI[:,2]**2)
+MSLpos_error = np.sqrt(MSLpos_MCI[:,0]**2 + MSLpos_MCI[:,1]**2 + MSLpos_MCI[:,2]**2)
+fig, ax_r = PPC.plot(time_days, SCpos_error, ylabel="SC distance to Mars [km]", label="|$r_{SC}^{MCI}$|", title="SC distance to Mars", subplot=(2,1,1), color=PPC.colors['black'])
+PPC.plot(time_days, MSLpos_error, label="|$r_{MSL}^{MCI}$|", fig=fig, ax=ax_r, color=PPC.colors['green'])
+
+SCvel_error  = np.sqrt(SCvel_MCI[:,0]**2 + SCvel_MCI[:,1]**2 + SCvel_MCI[:,2]**2)
+MSLvel_error = np.sqrt(MSLvel_MCI[:,0]**2 + MSLvel_MCI[:,1]**2 + MSLvel_MCI[:,2]**2)
+fig, ax_v = PPC.plot(time_days, SCvel_error, ylabel="SC velocity to Mars [km/s]", label="|$v_{SC}^{MCI}$|", subplot=(2,1,2), color=PPC.colors['black'], fig=fig)
+PPC.plot(time_days, MSLvel_error, label="|$v_{MSL}^{MCI}$|", fig=fig, ax=ax_v, color=PPC.colors['green'])
 
 PPC.show_plot()
+
+# Save data
+save_flg = True
+if save_flg:
+    # Downsample data
+    n_samples = 200
+    SCpos_SSB_ds    = PPC.downsample(SCpos_SSB,    n_samples)
+    SCvel_SSB_ds    = PPC.downsample(SCvel_SSB,    n_samples)
+    MSLpos_SSB_ds   = PPC.downsample(MSLpos_SSB,   n_samples)
+    MSLvel_SSB_ds   = PPC.downsample(MSLvel_SSB,   n_samples)
+    EARTHpos_SSB_ds = PPC.downsample(EARTHpos_SSB, n_samples)
+    MARSpos_SSB_ds  = PPC.downsample(MARSpos_SSB,  n_samples)
+    SUNpos_SSB_ds   = PPC.downsample(SUNpos_SSB,   n_samples)
+    pos_error_ds    = PPC.downsample(pos_error,    n_samples)
+    vel_error_ds    = PPC.downsample(vel_error,    n_samples)
+
+    # Write data into file
+    np.savetxt("SCpos_SSB.csv",    SCpos_SSB_ds,    delimiter=',')
+    np.savetxt("SCvel_SSB.csv",    SCvel_SSB_ds,    delimiter=',')
+    np.savetxt("MSLpos_SSB.csv",   MSLpos_SSB_ds,   delimiter=',')
+    np.savetxt("MSLvel_SSB.csv",   MSLvel_SSB_ds,   delimiter=',')
+    np.savetxt("EARTHpos_SSB.csv", EARTHpos_SSB_ds, delimiter=',')
+    np.savetxt("MARSpos_SSB.csv",  MARSpos_SSB_ds,  delimiter=',')
+    np.savetxt("SUNpos_SSB.csv",   SUNpos_SSB_ds,   delimiter=',')
+    np.savetxt("pos_error.csv",    pos_error_ds,    delimiter=',')
+    np.savetxt("vel_error.csv",    vel_error_ds,    delimiter=',')

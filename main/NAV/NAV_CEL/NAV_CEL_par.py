@@ -13,7 +13,7 @@ NAV_CEL_par = {
     "cos_los_angle_min" : cos_los_angle_min, # Minimum cosine for angle between body and star to be considered valid
     "cos_los_angle_max" : cos_los_angle_max, # Maximum cosine for angle between body and star to be considered valid
     "n_bodies"          : 6,                 # Number of celestial bodies to be evaluated as reference
-    "sigma_angle"       : 1e-5*1e2,          # [rad] STR noise std in [X,Y,Z] directions
+    "sigma_angle"       : 7.2722e-5,         # [rad] STR noise std in [X,Y,Z] directions (15 arcsec)
     # Outputs initial values
     "NAV_CELoutflg_ini"       : 0,                  # NAV_CEL Module output flag
     "BODYangles_mes_ini"      : np.full(1, np.nan), # [rad] LOS angle between the body and one star

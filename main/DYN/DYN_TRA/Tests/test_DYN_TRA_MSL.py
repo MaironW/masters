@@ -151,14 +151,17 @@ spice.clear_kernels()
 # RESULTS #
 ###########
 
-SCpos_SSB    = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
-SCvel_SSB    = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
-MSLpos_SSB   = timeline["MSL"]["MSLpos_SSB"]
-MSLvel_SSB   = timeline["MSL"]["MSLvel_SSB"]
-EARTHpos_SSB = timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"]
-MARSpos_SSB  = timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"]
-MARSvel_SSB  = timeline["DYN"]["DYN_EPH"]["MARSvel_SSB"]
-SUNpos_SSB   = timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"]
+SCpos_SSB     = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+SCvel_SSB     = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+MSLpos_SSB    = timeline["MSL"]["MSLpos_SSB"]
+MSLvel_SSB    = timeline["MSL"]["MSLvel_SSB"]
+EARTHpos_SSB  = timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"]
+MOONpos_SSB   = timeline["DYN"]["DYN_EPH"]["MOONpos_SSB"]
+MARSpos_SSB   = timeline["DYN"]["DYN_EPH"]["MARSpos_SSB"]
+MARSvel_SSB   = timeline["DYN"]["DYN_EPH"]["MARSvel_SSB"]
+DEIMOSpos_SSB = timeline["DYN"]["DYN_EPH"]["DEIMOSpos_SSB"]
+PHOBOSpos_SSB = timeline["DYN"]["DYN_EPH"]["PHOBOSpos_SSB"]
+SUNpos_SSB    = timeline["DYN"]["DYN_EPH"]["SUNpos_SSB"]
 
 time_days = timeline["DYN"]["DYN_TIME"]["time_SIM"]/3600/24
 
@@ -244,28 +247,44 @@ PPC.plot(time_days, MSLvel_error, label="|$v_{MSL}^{MCI}$|", fig=fig, ax=ax_v, c
 
 PPC.show_plot()
 
+# Compute extra data, just to plot on text
+MOONpos_ECI   = MOONpos_SSB - EARTHpos_SSB
+DEIMOSpos_MCI = DEIMOSpos_SSB - MARSpos_SSB
+PHOBOSpos_MCI = PHOBOSpos_SSB - MARSpos_SSB
+
 # Save data
 save_flg = True
 if save_flg:
     # Downsample data
     n_samples = 200
-    SCpos_SSB_ds    = PPC.downsample(SCpos_SSB,    n_samples)
-    SCvel_SSB_ds    = PPC.downsample(SCvel_SSB,    n_samples)
-    MSLpos_SSB_ds   = PPC.downsample(MSLpos_SSB,   n_samples)
-    MSLvel_SSB_ds   = PPC.downsample(MSLvel_SSB,   n_samples)
-    EARTHpos_SSB_ds = PPC.downsample(EARTHpos_SSB, n_samples)
-    MARSpos_SSB_ds  = PPC.downsample(MARSpos_SSB,  n_samples)
-    SUNpos_SSB_ds   = PPC.downsample(SUNpos_SSB,   n_samples)
-    pos_error_ds    = PPC.downsample(pos_error,    n_samples)
-    vel_error_ds    = PPC.downsample(vel_error,    n_samples)
+    time_days_ds     = PPC.downsample(time_days,     n_samples)
+    SCpos_SSB_ds     = PPC.downsample(SCpos_SSB,     n_samples)
+    SCvel_SSB_ds     = PPC.downsample(SCvel_SSB,     n_samples)
+    MSLpos_SSB_ds    = PPC.downsample(MSLpos_SSB,    n_samples)
+    MSLvel_SSB_ds    = PPC.downsample(MSLvel_SSB,    n_samples)
+    EARTHpos_SSB_ds  = PPC.downsample(EARTHpos_SSB,  n_samples)
+    MARSpos_SSB_ds   = PPC.downsample(MARSpos_SSB,   n_samples)
+    SUNpos_SSB_ds    = PPC.downsample(SUNpos_SSB,    n_samples)
+    pos_error_ds     = PPC.downsample(pos_error,     n_samples)
+    vel_error_ds     = PPC.downsample(vel_error,     n_samples)
+    MOONpos_ECI_ds   = PPC.downsample(MOONpos_ECI,   n_samples)
+    DEIMOSpos_MCI_ds = PPC.downsample(DEIMOSpos_MCI, n_samples)
+    PHOBOSpos_MCI_ds = PPC.downsample(PHOBOSpos_MCI, n_samples)
+
+    # Stack time column
+    pos_error_ds = np.column_stack((time_days_ds, pos_error_ds))
+    vel_error_ds = np.column_stack((time_days_ds, vel_error_ds))
 
     # Write data into file
-    np.savetxt("SCpos_SSB.csv",    SCpos_SSB_ds,    delimiter=',')
-    np.savetxt("SCvel_SSB.csv",    SCvel_SSB_ds,    delimiter=',')
-    np.savetxt("MSLpos_SSB.csv",   MSLpos_SSB_ds,   delimiter=',')
-    np.savetxt("MSLvel_SSB.csv",   MSLvel_SSB_ds,   delimiter=',')
-    np.savetxt("EARTHpos_SSB.csv", EARTHpos_SSB_ds, delimiter=',')
-    np.savetxt("MARSpos_SSB.csv",  MARSpos_SSB_ds,  delimiter=',')
-    np.savetxt("SUNpos_SSB.csv",   SUNpos_SSB_ds,   delimiter=',')
-    np.savetxt("pos_error.csv",    pos_error_ds,    delimiter=',')
-    np.savetxt("vel_error.csv",    vel_error_ds,    delimiter=',')
+    np.savetxt("SCpos_SSB.csv",     SCpos_SSB_ds,     delimiter=',')
+    np.savetxt("SCvel_SSB.csv",     SCvel_SSB_ds,     delimiter=',')
+    np.savetxt("MSLpos_SSB.csv",    MSLpos_SSB_ds,    delimiter=',')
+    np.savetxt("MSLvel_SSB.csv",    MSLvel_SSB_ds,    delimiter=',')
+    np.savetxt("EARTHpos_SSB.csv",  EARTHpos_SSB_ds,  delimiter=',')
+    np.savetxt("MARSpos_SSB.csv",   MARSpos_SSB_ds,   delimiter=',')
+    np.savetxt("SUNpos_SSB.csv",    SUNpos_SSB_ds,    delimiter=',')
+    np.savetxt("pos_error.csv",     pos_error_ds,     delimiter=',')
+    np.savetxt("vel_error.csv",     vel_error_ds,     delimiter=',')
+    np.savetxt("MOONpos_ECI.csv",   MOONpos_ECI_ds,   delimiter=',')
+    np.savetxt("DEIMOSpos_MCI.csv", DEIMOSpos_MCI_ds, delimiter=',')
+    np.savetxt("PHOBOSpos_MCI.csv", PHOBOSpos_MCI_ds, delimiter=',')

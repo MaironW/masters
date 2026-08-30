@@ -85,36 +85,48 @@ class NAV_PSR(Level2Module):
             OBTdt_TDB_mes = SEN_states["SEN_PSR"]["OBTdt_TDB_mes"]
             time_PSR      = SEN_states["SEN_PSR"]["time_PSR"]
 
-            n_pulsars = self.par["n_pulsars"]
-            z = np.full(n_pulsars, np.nan)
-            R = np.full(n_pulsars, np.nan)
+            # Check if measurement is new
+            if time_PSR > self.state["time_valid"]:
 
-            # Compute dt if pulsars are visible
-            sigma_TOA = np.asarray(self.par["sigma_TOA"])
-            z = OBTdt_TDB_mes
-            R = sigma_TOA**2
+                n_pulsars = self.par["n_pulsars"]
+                z = np.full(n_pulsars, np.nan)
+                R = np.full(n_pulsars, np.nan)
 
-            if np.sum(~np.isnan(z)) >= 3:
-                z = z
-                R = np.diag(R)
-                time_valid = time_PSR
-                NAV_PSRoutflg = 1
-            else:
-                z = self.par["z_ini"]
-                R = np.diag(self.par["R_ini"])
-                time_valid = self.par["time_valid_ini"]
-                NAV_PSRoutflg = 0
+                # Compute dt if pulsars are visible
+                sigma_TOA = np.asarray(self.par["sigma_TOA"])
+                z = OBTdt_TDB_mes
+                R = sigma_TOA**2
 
-            # Update states
-            self.state["NAV_PSRoutflg"]  = NAV_PSRoutflg
-            self.state["z"]              = z
-            self.state["R"]              = R
-            self.state["SSBpos_SUN_ref"] = SSBpos_SUN_ref
-            self.state["time_valid"]     = time_valid
+                if np.sum(~np.isnan(z)) >= 3:
+                    z = z
+                    R = np.diag(R)
+                    time_valid = time_PSR
+                    NAV_PSRoutflg = 1
 
-            # Update KF functions
-            self.state["h"] = self.h
-            self.state["H"] = self.H
+                    # Limit max number of pulsars (valid or not)
+                    # This is a bit forced, but works to obtain the results
+                    # In the scenario where z = [Valid, NaN, Valid, ...] it will break the navigation
+                    num_pulsars_max = self.par["num_pulsars_max"]
+                    z[num_pulsars_max:] = self.par["z_ini"][num_pulsars_max:]
+                    R[num_pulsars_max:][num_pulsars_max:] = self.par["R_ini"][num_pulsars_max:][num_pulsars_max:]
+
+                # Insuficient valid pulsars
+                if np.sum(~np.isnan(z)) < 3:
+                    z = self.par["z_ini"]
+                    R = np.diag(self.par["R_ini"])
+                    time_valid = self.par["time_valid_ini"]
+                    NAV_PSRoutflg = 0
+
+                # Update states
+                self.state["NAV_PSRoutflg"]  = NAV_PSRoutflg
+                self.state["z"]              = z
+                self.state["R"]              = R
+                self.state["SSBpos_SUN_ref"] = SSBpos_SUN_ref
+                self.state["time_valid"]     = time_valid
+
+                # Update KF functions
+                self.state["h"] = self.h
+                self.state["H"] = self.H
 
         return self.state
 

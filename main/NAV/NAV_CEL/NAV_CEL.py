@@ -81,90 +81,93 @@ class NAV_CEL(Level2Module):
             STARSid_mes      = SEN_states["SEN_STR"]["STARSid_mes"]
             time_STR         = SEN_states["SEN_STR"]["time_STR"]
 
-            # Load catalog stars (assumes SSB == SC frame)
-            STARSid_ref     = NAV_states["NAV_STR"]["STARSid"]
-            STARSdir_SC_ref = NAV_states["NAV_STR"]["STARSdir_SSB"]
+            # Check if measurement is new
+            if time_STR > self.state["time_valid"]:
 
-            # Filter out non-visible stars
-            idx = ~np.isnan(STARSdir_SC_mes).any(axis=1)
-            STARSid_mes     = STARSid_mes[idx]
-            STARSdir_SC_mes = STARSdir_SC_mes[idx]
+                # Load catalog stars (assumes SSB == SC frame)
+                STARSid_ref     = NAV_states["NAV_STR"]["STARSid"]
+                STARSdir_SC_ref = NAV_states["NAV_STR"]["STARSdir_SSB"]
 
-            # Check each body visibility
-            SUNvisibility    = self.body_visibility(SUNdir_SC_mes)
-            EARTHvisibility  = self.body_visibility(EARTHdir_SC_mes)
-            MOONvisibility   = self.body_visibility(MOONdir_SC_mes)
-            MARSvisibility   = self.body_visibility(MARSdir_SC_mes)
-            PHOBOSvisibility = self.body_visibility(PHOBOSdir_SC_mes)
-            DEIMOSvisibility = self.body_visibility(DEIMOSdir_SC_mes)
+                # Filter out non-visible stars
+                idx = ~np.isnan(STARSdir_SC_mes).any(axis=1)
+                STARSid_mes     = STARSid_mes[idx]
+                STARSdir_SC_mes = STARSdir_SC_mes[idx]
 
-            # Get bodies ephemerides for measurement model
-            SUNpos_SSB    = NAV_states["NAV_EPH"]["SUNpos_SSB"]
-            EARTHpos_SSB  = NAV_states["NAV_EPH"]["EARTHpos_SSB"]
-            MOONpos_SSB   = NAV_states["NAV_EPH"]["MOONpos_SSB"]
-            MARSpos_SSB   = NAV_states["NAV_EPH"]["MARSpos_SSB"]
-            DEIMOSpos_SSB = NAV_states["NAV_EPH"]["DEIMOSpos_SSB"]
-            PHOBOSpos_SSB = NAV_states["NAV_EPH"]["PHOBOSpos_SSB"]
+                # Check each body visibility
+                SUNvisibility    = self.body_visibility(SUNdir_SC_mes)
+                EARTHvisibility  = self.body_visibility(EARTHdir_SC_mes)
+                MOONvisibility   = self.body_visibility(MOONdir_SC_mes)
+                MARSvisibility   = self.body_visibility(MARSdir_SC_mes)
+                PHOBOSvisibility = self.body_visibility(PHOBOSdir_SC_mes)
+                DEIMOSvisibility = self.body_visibility(DEIMOSdir_SC_mes)
 
-            # List bodies
-            bodies = [
-                (SUNvisibility,    SUNdir_SC_mes,    SUNpos_SSB),
-                (EARTHvisibility,  EARTHdir_SC_mes,  EARTHpos_SSB),
-                (MOONvisibility,   MOONdir_SC_mes,   MOONpos_SSB),
-                (MARSvisibility,   MARSdir_SC_mes,   MARSpos_SSB),
-                (DEIMOSvisibility, DEIMOSdir_SC_mes, DEIMOSpos_SSB),
-                (PHOBOSvisibility, PHOBOSdir_SC_mes, PHOBOSpos_SSB),
-            ]
+                # Get bodies ephemerides for measurement model
+                SUNpos_SSB    = NAV_states["NAV_EPH"]["SUNpos_SSB"]
+                EARTHpos_SSB  = NAV_states["NAV_EPH"]["EARTHpos_SSB"]
+                MOONpos_SSB   = NAV_states["NAV_EPH"]["MOONpos_SSB"]
+                MARSpos_SSB   = NAV_states["NAV_EPH"]["MARSpos_SSB"]
+                DEIMOSpos_SSB = NAV_states["NAV_EPH"]["DEIMOSpos_SSB"]
+                PHOBOSpos_SSB = NAV_states["NAV_EPH"]["PHOBOSpos_SSB"]
 
-            n_bodies = self.par["n_bodies"]
-            z = np.full(n_bodies, np.nan)
-            R = np.full(n_bodies, np.nan)
-            BODYsel_STARdir_SC_mes_list = np.zeros((n_bodies, 3))
-            BODYsel_STARdir_SC_ref_list = np.zeros((n_bodies, 3))
-            BODYpos_SSB_list            = np.zeros((n_bodies, 3))
-            sigma_angle = self.par["sigma_angle"] # [rad]
-            count = 0
-            for visibility, BODYdir_SC_mes, BODYpos_SSB in bodies:
-                # Reset selected stars for bodies that are outside the FOV
-                if not visibility:
-                    self.state["BODYsel_STARid_list"][count] = -1
+                # List bodies
+                bodies = [
+                    (SUNvisibility,    SUNdir_SC_mes,    SUNpos_SSB),
+                    (EARTHvisibility,  EARTHdir_SC_mes,  EARTHpos_SSB),
+                    (MOONvisibility,   MOONdir_SC_mes,   MOONpos_SSB),
+                    (MARSvisibility,   MARSdir_SC_mes,   MARSpos_SSB),
+                    (DEIMOSvisibility, DEIMOSdir_SC_mes, DEIMOSpos_SSB),
+                    (PHOBOSvisibility, PHOBOSdir_SC_mes, PHOBOSpos_SSB),
+                ]
 
-                # Compute angles if body is visible
-                cos_angle_mes, STARdir_SC_mes, STARid_mes, valid = self.cos_los_angle(count, visibility, BODYdir_SC_mes, STARSdir_SC_mes, STARSid_mes)
-                # Compute the measurement model and covariance matrix
-                if valid:
-                    # Find matching reference star
-                    ref_idx = np.where(STARSid_ref == STARid_mes)[0][0]
-                    z[count] = cos_angle_mes
-                    R[count] = (1 - cos_angle_mes**2) * sigma_angle**2
-                    BODYsel_STARdir_SC_mes_list[count] = STARdir_SC_mes
-                    BODYsel_STARdir_SC_ref_list[count] = STARSdir_SC_ref[ref_idx]
-                    BODYpos_SSB_list[count]            = BODYpos_SSB
-                count += 1
+                n_bodies = self.par["n_bodies"]
+                z = np.full(n_bodies, np.nan)
+                R = np.full(n_bodies, np.nan)
+                BODYsel_STARdir_SC_mes_list = np.zeros((n_bodies, 3))
+                BODYsel_STARdir_SC_ref_list = np.zeros((n_bodies, 3))
+                BODYpos_SSB_list            = np.zeros((n_bodies, 3))
+                sigma_angle = self.par["sigma_angle"] # [rad]
+                count = 0
+                for visibility, BODYdir_SC_mes, BODYpos_SSB in bodies:
+                    # Reset selected stars for bodies that are outside the FOV
+                    if not visibility:
+                        self.state["BODYsel_STARid_list"][count] = -1
 
-            if np.sum(~np.isnan(z)) >= 3:
-                z = z
-                R = np.diag(R)
-                time_valid = time_STR
-                NAV_CELoutflg = 1
-            else:
-                z = self.par["z_ini"]
-                R = np.diag(self.par["R_ini"])
-                time_valid = self.par["time_valid_ini"]
-                NAV_CELoutflg = 0
+                    # Compute angles if body is visible
+                    cos_angle_mes, STARdir_SC_mes, STARid_mes, valid = self.cos_los_angle(count, visibility, BODYdir_SC_mes, STARSdir_SC_mes, STARSid_mes)
+                    # Compute the measurement model and covariance matrix
+                    if valid:
+                        # Find matching reference star
+                        ref_idx = np.where(STARSid_ref == STARid_mes)[0][0]
+                        z[count] = cos_angle_mes
+                        R[count] = (1 - cos_angle_mes**2) * sigma_angle**2
+                        BODYsel_STARdir_SC_mes_list[count] = STARdir_SC_mes
+                        BODYsel_STARdir_SC_ref_list[count] = STARSdir_SC_ref[ref_idx]
+                        BODYpos_SSB_list[count]            = BODYpos_SSB
+                    count += 1
 
-            # Update states
-            self.state["NAV_CELoutflg"] = NAV_CELoutflg
-            self.state["z"]             = z
-            self.state["R"]             = R
-            self.state["time_valid"]    = time_valid
-            self.state["BODYsel_STARdir_SC_mes_list"] = BODYsel_STARdir_SC_mes_list
-            self.state["BODYsel_STARdir_SC_ref_list"] = BODYsel_STARdir_SC_ref_list
-            self.state["BODYpos_SSB_list"]            = BODYpos_SSB_list
+                if np.sum(~np.isnan(z)) >= 3:
+                    z = z
+                    R = np.diag(R)
+                    time_valid = time_STR
+                    NAV_CELoutflg = 1
+                else:
+                    z = self.par["z_ini"]
+                    R = np.diag(self.par["R_ini"])
+                    time_valid = self.par["time_valid_ini"]
+                    NAV_CELoutflg = 0
 
-            # Update KF functions
-            self.state["h"] = self.h
-            self.state["H"] = self.H
+                # Update states
+                self.state["NAV_CELoutflg"] = NAV_CELoutflg
+                self.state["z"]             = z
+                self.state["R"]             = R
+                self.state["time_valid"]    = time_valid
+                self.state["BODYsel_STARdir_SC_mes_list"] = BODYsel_STARdir_SC_mes_list
+                self.state["BODYsel_STARdir_SC_ref_list"] = BODYsel_STARdir_SC_ref_list
+                self.state["BODYpos_SSB_list"]            = BODYpos_SSB_list
+
+                # Update KF functions
+                self.state["h"] = self.h
+                self.state["H"] = self.H
 
         return self.state
 

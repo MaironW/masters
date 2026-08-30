@@ -66,6 +66,33 @@ class SEN_PSR(Level2Module):
         self.state["OBTdt_TDB_mes"]   = self.par["OBTdt_TDB_mes_ini"]
         self.state["PULSARSid_mes"]   = self.par["PULSARSid_mes_ini"]
 
+        # Sensor properties
+        A       = self.par["detector_area"] # [m^2]
+        A_cm2   = A*CONSTANTS_par["m2cm_cst"]**2
+        T_obs   = self.par["dt"]
+        SNR_max = self.par["SNR_max"]
+
+        # X-ray properties
+        n_pulsars = self.par["n_pulsars"]
+        Bx        = self.par["Bx"]
+        Fx        = self.par["Fx"]
+        pf        = self.par["pf"]
+        W         = self.par["W"]
+        d         = self.par["d"]
+
+        # Compute detector noise for all pulsars
+        Ns_pulsed    = Fx*A_cm2*T_obs*pf       # Pulsed photon counts
+        Ns_nonpulsed = Fx*A_cm2*T_obs*d*(1-pf) # Nonpulsed photon counts
+        Nb           = Bx*A_cm2*T_obs*d        # Background photon counts
+        SNR = Ns_pulsed / np.sqrt(Nb + Ns_nonpulsed + Ns_pulsed) # Signal to Noise Ratio
+
+        # Limit SNR
+        SNR = SNR_max*SNR/(SNR_max+SNR)
+
+        # Compute std for all pulsars
+        sigma_TOA = 0.5*W / SNR
+        self.par["sigma_TOA"] = sigma_TOA
+
         # Update initial state
         self.state = self.update_algebraic(0, DYN_states, SEN_states)
         return self.state
@@ -86,33 +113,14 @@ class SEN_PSR(Level2Module):
 
         # PSR output is valid
         else:
-            # TODO: Filter out objects outside the sensor FOV
             PULSARSid_mes = self.par["name"]
 
-            # Sensor properties
-            A       = self.par["detector_area"] # [m^2]
-            A_cm2   = A*CONSTANTS_par["m2cm_cst"]**2
-            T_obs   = self.par["dt"]
-            t_bias  = self.par["t_bias"]
-            SNR_max = self.par["SNR_max"]
-
-            # X-ray properties
+            # Properties
+            t_bias    = self.par["t_bias"]
             n_pulsars = self.par["n_pulsars"]
-            Bx        = self.par["Bx"]
-            Fx        = self.par["Fx"]
-            pf        = self.par["pf"]
-            W         = self.par["W"]
-            d         = self.par["d"]
+            sigma_TOA = self.par["sigma_TOA"]
 
-            # Compute detector noise
-            Ns_pulsed    = Fx*A_cm2*T_obs*pf       # Pulsed photon counts
-            Ns_nonpulsed = Fx*A_cm2*T_obs*d*(1-pf) # Nonpulsed photon counts
-            Nb           = Bx*A_cm2*T_obs*d        # Background photon counts
-            SNR = Ns_pulsed / np.sqrt(Nb + Ns_nonpulsed + Ns_pulsed) # Signal to Noise Ratio
-
-            # Limit SNR
-            SNR = SNR_max*SNR/(SNR_max+SNR)
-            sigma_TOA = 0.5*W / SNR
+            # Compute noise for all pulsars
             noise = np.random.randn(n_pulsars) * sigma_TOA
 
             # Apply noise to true OBTdt_TDB for visible pulsars

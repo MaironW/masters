@@ -62,27 +62,30 @@ class NAV_CMB(Level2Module):
             BOFq_SSB_ref = SEN_states["SEN_STR"]["BOFq_SSB_mes"]
             time_CMB     = SEN_states["SEN_CMB"]["time_CMB"]
 
-            # Load SEN_CMB outputs
-            T_dipole_CMB1_mes = SEN_states["SEN_CMB"]["T_dipole_CMB1_mes"] # [K]
-            T_dipole_CMB2_mes = SEN_states["SEN_CMB"]["T_dipole_CMB2_mes"] # [K]
-            T_dipole_CMB3_mes = SEN_states["SEN_CMB"]["T_dipole_CMB3_mes"] # [K]
+            # Check if measurement is new
+            if time_CMB > self.state["time_valid"]:
 
-            sigma_T = np.asarray(self.par["sigma_T"])
-            z = np.array([T_dipole_CMB1_mes, T_dipole_CMB2_mes, T_dipole_CMB3_mes])
-            R = np.diag(sigma_T**2)
-            time_valid = time_CMB
-            NAV_CMBoutflg = 1
+                # Load SEN_CMB outputs
+                T_dipole_CMB1_mes = SEN_states["SEN_CMB"]["T_dipole_CMB1_mes"] # [K]
+                T_dipole_CMB2_mes = SEN_states["SEN_CMB"]["T_dipole_CMB2_mes"] # [K]
+                T_dipole_CMB3_mes = SEN_states["SEN_CMB"]["T_dipole_CMB3_mes"] # [K]
 
-            # Update states
-            self.state["NAV_CMBoutflg"] = NAV_CMBoutflg
-            self.state["z"]             = z
-            self.state["R"]             = R
-            self.state["BOFq_SSB_ref"]  = BOFq_SSB_ref
-            self.state["time_valid"]    = time_valid
+                sigma_T = np.asarray(self.par["sigma_T"])
+                z = np.array([T_dipole_CMB1_mes, T_dipole_CMB2_mes, T_dipole_CMB3_mes])
+                R = np.diag(sigma_T**2)
+                time_valid = time_CMB
+                NAV_CMBoutflg = 1
 
-            # Update KF functions
-            self.state["h"] = self.h
-            self.state["H"] = self.H
+                # Update states
+                self.state["NAV_CMBoutflg"] = NAV_CMBoutflg
+                self.state["z"]             = z
+                self.state["R"]             = R
+                self.state["BOFq_SSB_ref"]  = BOFq_SSB_ref
+                self.state["time_valid"]    = time_valid
+
+                # Update KF functions
+                self.state["h"] = self.h
+                self.state["H"] = self.H
 
         return self.state
 

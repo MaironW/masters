@@ -165,8 +165,9 @@ def NAV_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     SEN_PSRoutflg = timeline["SEN"]["SEN_PSR"]["SEN_PSRoutflg"]
     NAV_PSRoutflg = timeline["NAV"]["NAV_PSR"]["NAV_PSRoutflg"]
 
-    n_pulsars  = NAV_obj.NAV_PSR.par["n_pulsars"]
-    PULSARname = NAV_obj.NAV_PSR.par["name"]
+    n_pulsars       = NAV_obj.NAV_PSR.par["n_pulsars"]
+    num_pulsars_max = NAV_obj.NAV_PSR.par["num_pulsars_max"]
+    PULSARname      = NAV_obj.NAV_PSR.par["name"]
 
     z = timeline["NAV"]["NAV_PSR"]["z"]
     R = timeline["NAV"]["NAV_PSR"]["R"]
@@ -181,7 +182,7 @@ def NAV_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
 
     fig, ax1 = PPC.plot([], [], ylabel="OBTdt_TDB_mes [s]", title="TOA delay on SC", subplot=(2,1,1))
     fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", title="Standard deviation", ylabel="Covariance [s]", fig=fig, subplot=(2,1,2))
-    for i in range(n_pulsars):
+    for i in range(num_pulsars_max):
         PPC.plot(time_SIM, z[:, i],       label=f"{PULSARname[i]} meas.", fig=fig, ax=ax1)
         PPC.plot(time_SIM, sigma_z[:, i], label=f"{PULSARname[i]} σ",     fig=fig, ax=ax2)
 
@@ -200,7 +201,7 @@ def NAV_PSR_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     fig, ax1 = PPC.plot([], [], ylabel="h(x)", title="Predicted Measurement h(x)", subplot=(2,1,1))
     fig, ax2 = PPC.plot([], [], xlabel="time_SIM [s]", ylabel="z - h(x)", title="Innovation z - h(x)", fig=fig, subplot=(2,1,2))
     innov = z - h_hist
-    for i in range(n_pulsars):
+    for i in range(num_pulsars_max):
         name = PULSARname[i]
         PPC.plot(time_SIM, h_hist[:, i], label=f"h(x) {name}", fig=fig, ax=ax1)
         PPC.plot(time_SIM, z[:, i], label=f"z {name}", style='--', fig=fig, ax=ax1)
@@ -344,7 +345,7 @@ def NAV_UKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # # Plot innovation
     # fig, ax1 = PPC.plot([], [], xlabel="time_SIM [days]", ylabel="Innovation", title="UKF Innovation Normalized Squared")
     # for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
-    #     y  = timeline["NAV"]["NAV_UKF"][f"y_{name}"] 
+    #     y  = timeline["NAV"]["NAV_UKF"][f"y_{name}"]
     #     y /= len(y)
     #     PPC.plot(time_SIM_days, y, label=f"{name}", fig=fig, ax=ax1)
 

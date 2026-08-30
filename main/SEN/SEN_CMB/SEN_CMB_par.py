@@ -3,13 +3,13 @@ from Utils import quaternions
 
 # Temperature sensors orientation on BOF frame (60 deg from spin axis, 120 deg apart)
 # CSF = CMB Sensor Frame
-z_angle = np.deg2rad(-30) # [rad]
+z_angle = np.deg2rad(-150) # [rad]
 y_angle = np.deg2rad(-60) # [rad]
 qz = quaternions.rotvec2q([0,0,z_angle])
 qy = quaternions.rotvec2q([0,y_angle,0])
 CSF1q_BOF = quaternions.qprod(qy,qz)
 
-z_angle = np.deg2rad(-150) # [rad]
+z_angle = np.deg2rad(-30) # [rad]
 y_angle = np.deg2rad(-60) # [rad]
 qz = quaternions.rotvec2q([0,0,z_angle])
 qy = quaternions.rotvec2q([0,y_angle,0])

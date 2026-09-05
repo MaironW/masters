@@ -96,6 +96,11 @@ def run(SIM_par_override=None, par_override=None, run_id="0000", log_time=True):
 
         PPC.update_timeline(timeline, states, step)
 
+        # Update execution status
+        if step % max(1, n_steps // 100) == 0:
+            percentage = step / n_steps
+            print(f"Running: {percentage:.0%}", end="\r")
+
     # Save log
     if log_save and log_save_path is not None:
         # Check if there is a run_id to add as suffix

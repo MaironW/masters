@@ -4,8 +4,10 @@
 
 import copy
 import numpy as np
+import healpy as hp
 
 from Utils import quaternions
+from Utils import misc
 from Utils.constants import CONSTANTS_par
 from Utils.level2module import Level2Module
 from .NAV_CMB_par import NAV_CMB_par
@@ -32,6 +34,11 @@ class NAV_CMB(Level2Module):
         self.state["h"] = self.h
         self.state["H"] = self.H
         self.state["time_valid"] = self.par["time_valid_ini"]
+
+        # Load CMBR map
+        kernel_dir = "Utils/kernels/"
+        self.cmb_map = hp.read_map(kernel_dir + "wmap_ilc_9yr_v5.fits", field=0)*1e-3 # [K]
+        self.nside = hp.get_nside(self.cmb_map)
 
         # Update initial state
         self.state = self.update_algebraic(0, SEN_states, NAV_states)
@@ -128,6 +135,21 @@ class NAV_CMB(Level2Module):
         CSF2dir_SSB = quaternions.qvecprod(SSBq_CSF2, [0,0,1])
         CSF3dir_SSB = quaternions.qvecprod(SSBq_CSF3, [0,0,1])
 
+        # Compute the direction of each sensor in the GAL frame
+        CSF1dir_GAL = misc.SSBtoGAL(CSF1dir_SSB)
+        CSF2dir_GAL = misc.SSBtoGAL(CSF2dir_SSB)
+        CSF3dir_GAL = misc.SSBtoGAL(CSF3dir_SSB)
+
+        # Retrieve the CMB pixel observed by each sensor
+        pix1 = hp.vec2pix(self.nside,CSF1dir_GAL[0],CSF1dir_GAL[1],CSF1dir_GAL[2])
+        pix2 = hp.vec2pix(self.nside,CSF2dir_GAL[0],CSF2dir_GAL[1],CSF2dir_GAL[2])
+        pix3 = hp.vec2pix(self.nside,CSF3dir_GAL[0],CSF3dir_GAL[1],CSF3dir_GAL[2])
+
+        # Retrieve the anisotropic temperature observed by each sensor
+        T_anisotropic_CMB1 = self.cmb_map[pix1] # [K]
+        T_anisotropic_CMB2 = self.cmb_map[pix2] # [K]
+        T_anisotropic_CMB3 = self.cmb_map[pix3] # [K]
+
         # Compute angle between velocity vector and each sensor direction
         cos_angle1 = np.clip(SCvel_CMB_dir @ CSF1dir_SSB, -1, 1)
         cos_angle2 = np.clip(SCvel_CMB_dir @ CSF2dir_SSB, -1, 1)
@@ -141,6 +163,11 @@ class NAV_CMB(Level2Module):
         T_dipole_CMB1 = np.sqrt(1-beta*beta)/(1-beta*cos_angle1)*T_monopole
         T_dipole_CMB2 = np.sqrt(1-beta*beta)/(1-beta*cos_angle2)*T_monopole
         T_dipole_CMB3 = np.sqrt(1-beta*beta)/(1-beta*cos_angle3)*T_monopole
+
+        # Apply anisotropies
+        T_dipole_CMB1 += T_anisotropic_CMB1 # [K]
+        T_dipole_CMB2 += T_anisotropic_CMB2 # [K]
+        T_dipole_CMB3 += T_anisotropic_CMB3 # [K]
 
         h_vec = np.array([T_dipole_CMB1, T_dipole_CMB2, T_dipole_CMB3])
 

@@ -22,9 +22,9 @@ CSF3q_BOF = quaternions.qprod(qy,qz)
 
 # Parameters for Module NAV_CMB
 NAV_CMB_par = {
-    "sigma_T" : np.array([33.7e-6,
-                          33.7e-6,
-                          33.7e-6]), # [K] Temperature standard deviation per sensor
+    "sigma_T" : np.array([100e-6,
+                          100e-6,
+                          100e-6]), # [K] Temperature standard deviation per sensor
     "CSF1q_BOF"  : CSF1q_BOF, # Orientation of the CMB sensor 1 relative to the Spacecraft body
     "CSF2q_BOF"  : CSF2q_BOF, # Orientation of the CMB sensor 2 relative to the Spacecraft body
     "CSF3q_BOF"  : CSF3q_BOF, # Orientation of the CMB sensor 3 relative to the Spacecraft body

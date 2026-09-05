@@ -40,6 +40,12 @@ def run(SIM_par_override=None, par_override=None, run_id="0000", log_time=True):
     SEN_obj = SEN(DYN_obj, par_override=par_override)
     NAV_obj = NAV(SEN_obj, par_override=par_override)
 
+    # Apply initial events values
+    inputs = events_table[sim_time_start]
+    DYN_obj.update_algebraic(sim_time_start, None, inputs)
+    SEN_obj.update_algebraic(sim_time_start, DYN_obj, inputs)
+    NAV_obj.update_algebraic(sim_time_start, SEN_obj, inputs)
+
     # Initialize timeline
     timeline = {
         "DYN" : PPC.init_timeline(DYN_obj.snapshot(), n_steps),
@@ -90,12 +96,17 @@ def run(SIM_par_override=None, par_override=None, run_id="0000", log_time=True):
 
         PPC.update_timeline(timeline, states, step)
 
+        # Update execution status
+        if step % max(1, n_steps // 100) == 0:
+            percentage = step / n_steps
+            print(f"Running: {percentage:.0%}", end="\r")
+
     # Save log
     if log_save and log_save_path is not None:
         # Check if there is a run_id to add as suffix
         if run_id:
             log_save_path = log_save_path+f"_{run_id}"
-        
+
         PPC.store_timeline(timeline, log_save_path)
 
     end_time = time.perf_counter()

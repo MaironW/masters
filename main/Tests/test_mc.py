@@ -28,7 +28,7 @@ def run_mc_case(args):
     pos_ini_err = np.random.normal(0, 10,   size=3)
     vel_ini_err = np.random.normal(0, 0.01, size=3)
     x_ini_err   = np.hstack([pos_ini_err, vel_ini_err])
-    x_ini_true  = np.array([1.62228612e+08, 2.42235379e+07, 1.78903662e+07, -0.32883677, 27.86282899, 13.43536119])
+    x_ini_true  = np.array([-3.10735179e+07, 1.41664640e+08, 5.83463713e+07, -31.44040794, -1.35567615, -1.45138134])
     x_est_ini   = x_ini_true + x_ini_err
 
     # Parameter override
@@ -46,7 +46,7 @@ def run_mc_case(args):
         "log_save_path": os.path.join(run_dir, "log"),
         "log_load_path": os.path.join(output_dir, "baseline"),
         "log_save": True,
-        "log_load": ["DYN"]
+        "log_load": ["DYN","SEN"]
     }
 
     # Save parameters

@@ -3,13 +3,13 @@ from Utils import quaternions
 
 # Temperature sensors orientation on BOF frame (60 deg from spin axis, 120 deg apart)
 # CSF = CMB Sensor Frame
-z_angle = np.deg2rad(-30) # [rad]
+z_angle = np.deg2rad(-150) # [rad]
 y_angle = np.deg2rad(-60) # [rad]
 qz = quaternions.rotvec2q([0,0,z_angle])
 qy = quaternions.rotvec2q([0,y_angle,0])
 CSF1q_BOF = quaternions.qprod(qy,qz)
 
-z_angle = np.deg2rad(-150) # [rad]
+z_angle = np.deg2rad(-30) # [rad]
 y_angle = np.deg2rad(-60) # [rad]
 qz = quaternions.rotvec2q([0,0,z_angle])
 qy = quaternions.rotvec2q([0,y_angle,0])
@@ -21,12 +21,18 @@ qz = quaternions.rotvec2q([0,0,z_angle])
 qy = quaternions.rotvec2q([0,y_angle,0])
 CSF3q_BOF = quaternions.qprod(qy,qz)
 
+# Noise calculation
+bandwidth = 10e9 # [Hz]
+dt        = 36   # [s] Discretization of the sensor time - Also observation time
+T_sys     = 30   # [K] Sensor system temperature
+T_rms     = 2*T_sys/np.sqrt(bandwidth*dt) # [K]
+
 # Parameters for Module SEN_CMB
 SEN_CMB_par = {
     # Temperature detector parameters
-    "dt"         : 600,       # [s] Discretization of the sensor time - Also observation time
+    "dt"         : dt,        # [s] Discretization of the sensor time - Also observation time
     "noise_mean" : 0,         # [K] Sensor noise mean
-    "noise_std"  : 100e-6,    # [K] Sensor noise std
+    "noise_std"  : T_rms,     # [K] Sensor noise std
     "CSF1q_BOF"  : CSF1q_BOF, # Orientation of the CMB sensor 1 relative to the Spacecraft body
     "CSF2q_BOF"  : CSF2q_BOF, # Orientation of the CMB sensor 2 relative to the Spacecraft body
     "CSF3q_BOF"  : CSF3q_BOF, # Orientation of the CMB sensor 3 relative to the Spacecraft body

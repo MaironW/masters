@@ -3,17 +3,17 @@
 import numpy as np
 from copy import deepcopy
 
-# Default eeents definition (time, value)
+# Default events definition (time, value)
 # The simulation will hold the lastest value based on the current time step
 events_sequence = {
     "DYN.DYN_ATT.BOFq_SSB" : [
         (0, np.array([1,0,0,0])),
     ],
     "DYN.DYN_ATT.SCw_BOF" : [
-        (0, np.deg2rad([0,0,1e-3])),
+        (0, np.deg2rad([0,0,1])),
     ],
     "SEN.SEN_STR.STRenableflg" : [
-        (100,   1),
+        (0,     1),
         (6000,  1),
         (36000, 1),
     ],

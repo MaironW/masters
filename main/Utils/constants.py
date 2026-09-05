@@ -1,4 +1,5 @@
 from Utils import misc
+import numpy as np
 
 # Define general constants which might be used through the entire code
 
@@ -27,7 +28,7 @@ CONSTANTS_par = {
     # Time
     "MJD2000epoch_relMJD_TDB_days_cst" : 51544.5, # MJD days to J2000 days
     # CMB temperature
-    "T_CMBR_cst" : 2.7255 # [K] CMBR average temperature
+    "T_CMBR_cst" : 2.7255, # [K] CMBR average temperature
 }
 
 # Compute derived constants

@@ -2,7 +2,7 @@
 # Use the main code solver to propagate spacecraft trajectory
 # Compares the result using data from Spice
 # Run from repository root with:
-#   python3 -m DYN.DYN_TRA.Tests.test_DYN_TRA
+#   python3 -m DYN.DYN_TRA.Tests.test_DYN_TRA_MRO
 
 import numpy as np
 from DYN.DYN import DYN

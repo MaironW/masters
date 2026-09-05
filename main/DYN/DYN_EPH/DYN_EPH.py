@@ -38,14 +38,14 @@ class DYN_EPH(Level2Module):
 
     # Module main function
     def update_algebraic(self, t, parent_states, DYN_states, inputs=None):
-        time_STR = DYN_states["DYN_TIME"]["time_TDB"]
+        time_TDB = DYN_states["DYN_TIME"]["time_TDB"]
 
-        SUNpos_SSB,    SUNvel_SSB    = spice.get_state("SUN",    time_STR)
-        EARTHpos_SSB,  EARTHvel_SSB  = spice.get_state("EARTH",  time_STR)
-        MOONpos_SSB,   MOONvel_SSB   = spice.get_state("MOON",   time_STR)
-        MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   time_STR)
-        DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", time_STR)
-        PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", time_STR)
+        SUNpos_SSB,    SUNvel_SSB    = spice.get_state("SUN",    time_TDB)
+        EARTHpos_SSB,  EARTHvel_SSB  = spice.get_state("EARTH",  time_TDB)
+        MOONpos_SSB,   MOONvel_SSB   = spice.get_state("MOON",   time_TDB)
+        MARSpos_SSB,   MARSvel_SSB   = spice.get_state("MARS",   time_TDB)
+        DEIMOSpos_SSB, DEIMOSvel_SSB = spice.get_state("DEIMOS", time_TDB)
+        PHOBOSpos_SSB, PHOBOSvel_SSB = spice.get_state("PHOBOS", time_TDB)
 
         self.state["SUNpos_SSB"]    = SUNpos_SSB
         self.state["SUNvel_SSB"]    = SUNvel_SSB

@@ -152,6 +152,16 @@ def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=No
     if zorder is not None:
         kwargs['zorder'] = zorder
 
+    # Convert scalars to 1-element arrays
+    if np.isscalar(x):
+        x = np.atleast_1d(x)
+
+    if np.isscalar(y):
+        y = np.atleast_1d(y)
+
+    if z is not None and np.isscalar(z):
+        z = np.atleast_1d(z)
+
     # Plot data
     if z is None: # Plot 2D
         if len(x) > 0: # Only plot when there is data, to keep the color sequence
@@ -196,3 +206,10 @@ def serialize_json(obj):
     if isinstance(obj, list):
         return [serialize_json(v) for v in obj]
     return obj
+
+# Downsample array of data from the timeline
+# Useful to generate tikz figures
+def downsample(original_array, n_points):
+    idx = np.linspace(0, len(original_array)-1, n_points, dtype=int)
+    array_downsampled = original_array[idx]
+    return array_downsampled

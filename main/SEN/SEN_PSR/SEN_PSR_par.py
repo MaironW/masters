@@ -3,7 +3,7 @@ import numpy as np
 # Parameters for Module SEN_PSR
 SEN_PSR_par = {
     # X-ray detector parameters
-    "dt"            : 600,  # [s]   Discretization of the sensor time - Also observation time
+    "dt"            : 1200, # [s]   Discretization of the sensor time - Also observation time
     "detector_area" : 0.19, # [m^2] Detector area
     "t_bias"        : 0,    # [s]   Detector (spacecraft) clock bias
     "SNR_max"       : 1000, # Maximuim SNR value

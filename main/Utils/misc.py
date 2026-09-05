@@ -36,6 +36,17 @@ def SSBtoGAL(vec_SSB):
     vec_GAL = (R.T @ vec_SSB).T
     return vec_GAL
 
+# Convert vector from ecliptic J2000 to equatorial J2000
+def ECLtoEQT(vec_ECL):
+    epsilon = np.deg2rad(23.439291111)
+    R = np.array([
+        [1.0,              0.0,               0.0],
+        [0.0,  np.cos(epsilon), -np.sin(epsilon)],
+        [0.0,  np.sin(epsilon),  np.cos(epsilon)]
+    ])
+    vec_EQT = (R @ vec_ECL).T
+    return vec_EQT
+
 # Generate a gnomonic projection of a vector
 def gnomonic_projection(vec):
     x = vec[:,0]

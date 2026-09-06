@@ -96,6 +96,13 @@ class SEN_STR(Level2Module):
 
         # STR output is valid
         else:
+            # Apply time quantization to all states before starting computations
+            # This is useful here because there are so many stars
+            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+            if time_OBT - self._last_update_time < self.par["dt"]:
+                self.state = copy.deepcopy(self._last_state)
+                return self.state
+
             # Satellite attitude
             BOFq_SSB = DYN_states["DYN_ATT"]["BOFq_SSB"]
 
@@ -132,8 +139,8 @@ class SEN_STR(Level2Module):
             STARSdir_SSB = DYN_states["DYN_STR"]["STARSdir_SSB"]
             STARSid      = DYN_states["DYN_STR"]["STARSid"]
 
-            # Stars directions relative to the Spacecraft
-            STARSdir_SC = STARSdir_SSB.copy()
+            # Stars directions relative to the Spacecraft (just for the ease of notation)
+            STARSdir_SC = STARSdir_SSB
 
             # Rotate to STR frame
             SUNdir_STR    = quaternions.qvecprod(STRq_SSB, SUNdir_SC)
@@ -188,31 +195,27 @@ class SEN_STR(Level2Module):
             STRq_SSB_mes = quaternions.qtrans(SSBq_STR_mes)
             BOFq_SSB_mes = quaternions.qprod(BOFq_STR, STRq_SSB_mes)
 
-            # Apply time quantization to all states
-            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
-            if time_OBT - self._last_update_time >= self.par["dt"]:
-                self.state["time_STR"]          = time_OBT
-                self.state["STARSid_mes"]       = STARSid_mes
-                self.state["SUNdir_STR_mes"]    = SUNdir_STR_mes
-                self.state["EARTHdir_STR_mes"]  = EARTHdir_STR_mes
-                self.state["MOONdir_STR_mes"]   = MOONdir_STR_mes
-                self.state["MARSdir_STR_mes"]   = MARSdir_STR_mes
-                self.state["DEIMOSdir_STR_mes"] = DEIMOSdir_STR_mes
-                self.state["PHOBOSdir_STR_mes"] = PHOBOSdir_STR_mes
-                self.state["STARSdir_STR_mes"]  = STARSdir_STR_mes
-                self.state["SUNdir_SC_mes"]     = SUNdir_SC_mes
-                self.state["EARTHdir_SC_mes"]   = EARTHdir_SC_mes
-                self.state["MOONdir_SC_mes"]    = MOONdir_SC_mes
-                self.state["MARSdir_SC_mes"]    = MARSdir_SC_mes
-                self.state["DEIMOSdir_SC_mes"]  = DEIMOSdir_SC_mes
-                self.state["PHOBOSdir_SC_mes"]  = PHOBOSdir_SC_mes
-                self.state["STARSdir_SC_mes"]   = STARSdir_SC_mes
-                self.state["BOFq_SSB_mes"]      = BOFq_SSB_mes
+            # States are already quanticized at the start of the step
+            self.state["time_STR"]          = time_OBT
+            self.state["STARSid_mes"]       = STARSid_mes
+            self.state["SUNdir_STR_mes"]    = SUNdir_STR_mes
+            self.state["EARTHdir_STR_mes"]  = EARTHdir_STR_mes
+            self.state["MOONdir_STR_mes"]   = MOONdir_STR_mes
+            self.state["MARSdir_STR_mes"]   = MARSdir_STR_mes
+            self.state["DEIMOSdir_STR_mes"] = DEIMOSdir_STR_mes
+            self.state["PHOBOSdir_STR_mes"] = PHOBOSdir_STR_mes
+            self.state["STARSdir_STR_mes"]  = STARSdir_STR_mes
+            self.state["SUNdir_SC_mes"]     = SUNdir_SC_mes
+            self.state["EARTHdir_SC_mes"]   = EARTHdir_SC_mes
+            self.state["MOONdir_SC_mes"]    = MOONdir_SC_mes
+            self.state["MARSdir_SC_mes"]    = MARSdir_SC_mes
+            self.state["DEIMOSdir_SC_mes"]  = DEIMOSdir_SC_mes
+            self.state["PHOBOSdir_SC_mes"]  = PHOBOSdir_SC_mes
+            self.state["STARSdir_SC_mes"]   = STARSdir_SC_mes
+            self.state["BOFq_SSB_mes"]      = BOFq_SSB_mes
 
-                self._last_update_time = time_OBT
-                self._last_state = copy.deepcopy(self.state)
-            else:
-                self.state = copy.deepcopy(self._last_state)
+            self._last_update_time = time_OBT
+            self._last_state = copy.deepcopy(self.state)
 
         return self.state
 

@@ -72,6 +72,12 @@ class SEN_CMB(Level2Module):
 
         # CMB output is valid
         else:
+            # Apply time quantization to all states before starting computations
+            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+            if time_OBT - self._last_update_time < self.par["dt"]:
+                self.state = copy.deepcopy(self._last_state)
+                return self.state
+
             # Spacecraft velocity vector within the Solar System
             SCvel_SSB = DYN_states["DYN_TRA"]["SCvel_SSB"] # [km/s]
 
@@ -149,20 +155,16 @@ class SEN_CMB(Level2Module):
             T_dipole_CMB2_mes = T_dipole_CMB2 + noise_CMB2
             T_dipole_CMB3_mes = T_dipole_CMB3 + noise_CMB3
 
-            # Apply time quantization to all states
-            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
-            if time_OBT - self._last_update_time >= self.par["dt"]:
-                self.state["time_CMB"]     = time_OBT
-                self.state["T_anisotropic_CMB1_mes"] = T_anisotropic_CMB1
-                self.state["T_anisotropic_CMB2_mes"] = T_anisotropic_CMB2
-                self.state["T_anisotropic_CMB3_mes"] = T_anisotropic_CMB3
-                self.state["T_dipole_CMB1_mes"] = T_dipole_CMB1_mes
-                self.state["T_dipole_CMB2_mes"] = T_dipole_CMB2_mes
-                self.state["T_dipole_CMB3_mes"] = T_dipole_CMB3_mes
+            # Update states
+            self.state["time_CMB"] = time_OBT
+            self.state["T_anisotropic_CMB1_mes"] = T_anisotropic_CMB1
+            self.state["T_anisotropic_CMB2_mes"] = T_anisotropic_CMB2
+            self.state["T_anisotropic_CMB3_mes"] = T_anisotropic_CMB3
+            self.state["T_dipole_CMB1_mes"] = T_dipole_CMB1_mes
+            self.state["T_dipole_CMB2_mes"] = T_dipole_CMB2_mes
+            self.state["T_dipole_CMB3_mes"] = T_dipole_CMB3_mes
 
-                self._last_update_time = time_OBT
-                self._last_state = copy.deepcopy(self.state)
-            else:
-                self.state = copy.deepcopy(self._last_state)
+            self._last_update_time = time_OBT
+            self._last_state = copy.deepcopy(self.state)
 
         return self.state

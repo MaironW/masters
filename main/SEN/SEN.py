@@ -35,5 +35,7 @@ class SEN(Level1Module):
 
     # Update time-dependent, non-integrated Level-2 modules
     def update_algebraic(self, t, DYN_obj, inputs):
+        DYN_snapshot = DYN_obj.snapshot()
         for m in self.modules:
-            m.update_algebraic(t, DYN_obj.snapshot(), self.snapshot(), inputs)
+            SEN_snapshot = self.snapshot()
+            m.update_algebraic(t, DYN_snapshot, SEN_snapshot, inputs)

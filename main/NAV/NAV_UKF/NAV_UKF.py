@@ -26,6 +26,7 @@ class NAV_UKF(Level2Module):
             "NAV_PSR" : -np.inf,
             "NAV_CMB" : -np.inf,
         }
+        self.first_update = True
         super().__init__("NAV_UKF", par)
 
     # Initialization
@@ -71,8 +72,13 @@ class NAV_UKF(Level2Module):
         # Generate sigma points
         X_sigma, Wm, Wc = self.generate_sigma_points(x_est, Pxx)
 
+        # Do not propagate the initial state on the first step
+        if self.first_update:
+            X_sigma_prop = X_sigma
+            self.first_update = False
         # Propagate the sigma points all at once
-        X_sigma_prop = self.propagate_sigma(X_sigma, dt, NAV_states)
+        else:
+            X_sigma_prop = self.propagate_sigma(X_sigma, dt, NAV_states)
 
         # Mean, prediction
         x_pred = X_sigma_prop @ Wm

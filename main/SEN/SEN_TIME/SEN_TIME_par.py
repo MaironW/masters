@@ -1,7 +1,7 @@
 # Parameters for Module DYN_TIME
 SEN_TIME_par = {
     # Onboard time parameters
-    "dt"      : 60, # [s] Discretization of the time
+    "dt"      : 1, # [s] Discretization of the time
     "sigma_t" : 0, # [s] Time standard deviation
     "bias"    : 0, # [s] Time bias
 

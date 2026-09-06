@@ -62,6 +62,13 @@ class SEN_STR(Level2Module):
         self.state["STARSdir_STR_mes"] = self.par["STARSdir_mes_ini"]
         self.state["STARSdir_SC_mes"]  = self.par["STARSdir_mes_ini"]
 
+        # Precomputed quantities
+        STR2q_BOF = self.par["STR2q_STR1"]
+        STR1_boresight = np.array([0, 0, 1])
+        STR2_boresight = quaternions.qvecprod(STR2q_BOF, STR1_boresight) # relative to STR1
+        self.par["STR1_boresight"] = STR1_boresight
+        self.par["STR2_boresight"] = STR2_boresight
+
         # Initialize other variables
         self.state = self.update_algebraic(0, DYN_states, SEN_states)
         return self.state
@@ -161,8 +168,8 @@ class SEN_STR(Level2Module):
             STARSdir_STR  = self.mask_visible_objects(STARSdir_STR)
 
             # Filter out STARSid outside the FOV
-            is_nan_mask = np.isnan(STARSdir_STR).any(-1)
-            STARSid_mes = np.where(is_nan_mask, np.nan, STARSid)
+            visible = ~np.isnan(STARSdir_STR).any(axis=1)
+            STARSid_mes = np.where(~visible, np.nan, STARSid)
 
             # Compute noise quaternion (the same for all objects)
             noise_mean = self.par["noise_mean"]
@@ -177,7 +184,8 @@ class SEN_STR(Level2Module):
             MARSdir_STR_mes   = quaternions.qvecprod(noiseq_STR, MARSdir_STR)
             DEIMOSdir_STR_mes = quaternions.qvecprod(noiseq_STR, DEIMOSdir_STR)
             PHOBOSdir_STR_mes = quaternions.qvecprod(noiseq_STR, PHOBOSdir_STR)
-            STARSdir_STR_mes  = quaternions.qvecprod(noiseq_STR, STARSdir_STR)
+            STARSdir_STR_mes = STARSdir_STR.copy()
+            STARSdir_STR_mes[visible] = quaternions.qvecprod(noiseq_STR, STARSdir_STR[visible])
 
             # Convert back to SC
             SSBq_STR         = quaternions.qtrans(STRq_SSB)
@@ -187,7 +195,8 @@ class SEN_STR(Level2Module):
             MARSdir_SC_mes   = quaternions.qvecprod(SSBq_STR, MARSdir_STR_mes)
             DEIMOSdir_SC_mes = quaternions.qvecprod(SSBq_STR, DEIMOSdir_STR_mes)
             PHOBOSdir_SC_mes = quaternions.qvecprod(SSBq_STR, PHOBOSdir_STR_mes)
-            STARSdir_SC_mes  = quaternions.qvecprod(SSBq_STR, STARSdir_STR_mes)
+            STARSdir_SC_mes  = STARSdir_SC.copy()
+            STARSdir_SC_mes[visible] = quaternions.qvecprod(SSBq_STR, STARSdir_STR_mes[visible])
 
             # Compute BOFq_SSB_mes
             BOFq_STR     = quaternions.qtrans(STRq_BOF)
@@ -195,7 +204,7 @@ class SEN_STR(Level2Module):
             STRq_SSB_mes = quaternions.qtrans(SSBq_STR_mes)
             BOFq_SSB_mes = quaternions.qprod(BOFq_STR, STRq_SSB_mes)
 
-            # States are already quanticized at the start of the step
+            # Update states
             self.state["time_STR"]          = time_OBT
             self.state["STARSid_mes"]       = STARSid_mes
             self.state["SUNdir_STR_mes"]    = SUNdir_STR_mes
@@ -225,13 +234,11 @@ class SEN_STR(Level2Module):
 
     # Check if objects are inside any of the two Star Trackers FOV
     def mask_visible_objects(self, dir_STR):
-        STR2q_BOF = self.par["STR2q_STR1"]
-        STR1_boresight = np.array([0, 0, 1])
-        STR2_boresight = quaternions.qvecprod(STR2q_BOF, STR1_boresight) # relative to STR1
+        STR1_boresight = self.par["STR1_boresight"]
+        STR2_boresight = self.par["STR2_boresight"]
         cos_field_of_view = self.par["cos_field_of_view"]
         cos_angle_1 = dir_STR @ STR1_boresight
         cos_angle_2 = dir_STR @ STR2_boresight
         visible = ((cos_angle_1 >= cos_field_of_view ) | (cos_angle_2 >= cos_field_of_view))
-        dir_STR_masked = np.full(dir_STR.shape, np.nan, dtype=float)
-        dir_STR_masked[visible] = dir_STR[visible]
-        return dir_STR_masked
+        dir_STR[~visible] = np.nan
+        return dir_STR

@@ -3,7 +3,7 @@ import numpy as np
 # Parameters for Module NAV_UKF
 
 # Integration time
-dt = 1 # [s] 1 min
+dt = 1 # [s]
 
 # Process noise mapping
 G = np.zeros((6, 3))

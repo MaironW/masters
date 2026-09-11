@@ -171,20 +171,30 @@ class SEN_STR(Level2Module):
             visible = ~np.isnan(STARSdir_STR).any(axis=1)
             STARSid_mes = np.where(~visible, np.nan, STARSid)
 
-            # Compute noise quaternion (the same for all objects)
+            # Compute noise quaternion (different for each objects, otherwise it would cancel out on the angles)
             noise_mean = self.par["noise_mean"]
             noise_std  = [self.par["noise_std"], self.par["noise_std"], self.par["noise_std"]]
-            noise_STR  = np.random.normal(noise_mean, noise_std, size=3)
-            noiseq_STR = quaternions.rotvec2q(noise_STR)
+            noiseq_STR        = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_SUN    = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_EARTH  = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_MOON   = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_MARS   = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_DEIMOS = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_PHOBOS = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
 
-            # Apply noise on the focal plane
-            SUNdir_STR_mes    = quaternions.qvecprod(noiseq_STR, SUNdir_STR)
-            EARTHdir_STR_mes  = quaternions.qvecprod(noiseq_STR, EARTHdir_STR)
-            MOONdir_STR_mes   = quaternions.qvecprod(noiseq_STR, MOONdir_STR)
-            MARSdir_STR_mes   = quaternions.qvecprod(noiseq_STR, MARSdir_STR)
-            DEIMOSdir_STR_mes = quaternions.qvecprod(noiseq_STR, DEIMOSdir_STR)
-            PHOBOSdir_STR_mes = quaternions.qvecprod(noiseq_STR, PHOBOSdir_STR)
-            STARSdir_STR_mes = STARSdir_STR.copy()
+            # Apply noise on the focal plane (different value for each body)
+            SUNdir_STR_mes    = quaternions.qvecprod(noiseq_STR_SUN,    SUNdir_STR)
+            EARTHdir_STR_mes  = quaternions.qvecprod(noiseq_STR_EARTH,  EARTHdir_STR)
+            MOONdir_STR_mes   = quaternions.qvecprod(noiseq_STR_MOON,   MOONdir_STR)
+            MARSdir_STR_mes   = quaternions.qvecprod(noiseq_STR_MARS,   MARSdir_STR)
+            DEIMOSdir_STR_mes = quaternions.qvecprod(noiseq_STR_DEIMOS, DEIMOSdir_STR)
+            PHOBOSdir_STR_mes = quaternions.qvecprod(noiseq_STR_PHOBOS, PHOBOSdir_STR)
+
+            # The same noise is applied to all stars
+            # This is computationally easier to do than to apply different noise to each star
+            # And has no downside because each body already have their own noises
+            STARSdir_STR_mes = np.empty(STARSdir_STR.shape, dtype=float)
+            STARSdir_STR_mes.fill(np.nan)
             STARSdir_STR_mes[visible] = quaternions.qvecprod(noiseq_STR, STARSdir_STR[visible])
 
             # Convert back to SC
@@ -195,7 +205,8 @@ class SEN_STR(Level2Module):
             MARSdir_SC_mes   = quaternions.qvecprod(SSBq_STR, MARSdir_STR_mes)
             DEIMOSdir_SC_mes = quaternions.qvecprod(SSBq_STR, DEIMOSdir_STR_mes)
             PHOBOSdir_SC_mes = quaternions.qvecprod(SSBq_STR, PHOBOSdir_STR_mes)
-            STARSdir_SC_mes  = STARSdir_SC.copy()
+            # Copying STARSdir_SC_mes from STARSdir_STR_mes is only safe because the NaN values would be in the same spots for both
+            STARSdir_SC_mes = np.copy(STARSdir_STR_mes)
             STARSdir_SC_mes[visible] = quaternions.qvecprod(SSBq_STR, STARSdir_STR_mes[visible])
 
             # Compute BOFq_SSB_mes

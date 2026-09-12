@@ -91,7 +91,7 @@ def mc_data(runs, postprocess, x_var, x_axis=None, y_axis=None, check_x=True):
     # Average independently at each timestep.
     # NaNs are ignored.
     y_mean = np.nanmean(y_runs, axis=0)
-    y_std = np.nanstd(y_runs, axis=0)
+    y_std = np.nanstd(y_runs, axis=0, ddof=1)
 
     return x, y_runs, y_mean, y_std
 

@@ -190,12 +190,11 @@ class SEN_STR(Level2Module):
             DEIMOSdir_STR_mes = quaternions.qvecprod(noiseq_STR_DEIMOS, DEIMOSdir_STR)
             PHOBOSdir_STR_mes = quaternions.qvecprod(noiseq_STR_PHOBOS, PHOBOSdir_STR)
 
-            # The same noise is applied to all stars
+            # Do not apply noise to the stars
             # This is computationally easier to do than to apply different noise to each star
             # And has no downside because each body already have their own noises
-            STARSdir_STR_mes = np.empty(STARSdir_STR.shape, dtype=float)
-            STARSdir_STR_mes.fill(np.nan)
-            STARSdir_STR_mes[visible] = quaternions.qvecprod(noiseq_STR, STARSdir_STR[visible])
+            # This part could be updated to account for star tracker misalignment
+            STARSdir_STR_mes = np.copy(STARSdir_STR)
 
             # Convert back to SC
             SSBq_STR         = quaternions.qtrans(STRq_SSB)

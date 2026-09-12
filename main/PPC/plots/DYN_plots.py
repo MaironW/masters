@@ -27,6 +27,12 @@ def DYN_EPH_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         fig, ax2 = PPC.plot(time_SIM, timeline["DYN"]["DYN_EPH"][f"{name}vel_SSB"], ylabel=f"{name}vel_SSB [km]", label=["x","y","z"], title=f"{name}vel_SSB", fig=fig, subplot=(2,1,2))
 
 def DYN_TRA_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
+    time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]
+    SCpos_SSB = timeline["DYN"]["DYN_TRA"]["SCpos_SSB"]
+    SCvel_SSB = timeline["DYN"]["DYN_TRA"]["SCvel_SSB"]
+    SCacc_SSB = timeline["DYN"]["DYN_TRA"]["SCacc_SSB"]
+    SCpos_ECI = timeline["DYN"]["DYN_TRA"]["SCpos_ECI"]
+
     # 3D trajectories
     fig, ax = PPC.plot([0], [0], [0], style='+', label="SSB", xlabel="X SSB [km]", ylabel="Y SSB [km]", zlabel="Z SSB [km]", title="Simulation Trajectories", aspect="equal",                      color=PPC.colors["black"])
     bodies = [
@@ -41,18 +47,18 @@ def DYN_TRA_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
         name = body["name"]
         PPC.plot(timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"][:,0], timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"][:,1], timeline["DYN"]["DYN_EPH"][f"{name}pos_SSB"][:,2], label=name, fig=fig, ax=ax, color=body["color"])
     # Plot Spacecraft
-    PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,1], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"][:,2], label="SC", fig=fig, ax=ax, color=PPC.colors["magenta"])
+    PPC.plot(SCpos_SSB[:,0], SCpos_SSB[:,1], SCpos_SSB[:,2], label="SC", fig=fig, ax=ax, color=PPC.colors["magenta"])
 
     # 2D SC and Moon trajectories around Earth
     MOONpos_ECI = timeline["DYN"]["DYN_EPH"]["EARTHpos_SSB"] - timeline["DYN"]["DYN_EPH"]["MOONpos_SSB"]
     fig, ax = PPC.plot([0], [0], style='o', label="Earth", xlabel="X ECI [km]", ylabel="Y ECI [km]", title="Trajectories around Earth", aspect="equal", color=PPC.colors["blue"])
-    PPC.plot(timeline["DYN"]["DYN_TRA"]["SCpos_ECI"][:,0], timeline["DYN"]["DYN_TRA"]["SCpos_ECI"][:,1], label="SC",   fig=fig, ax=ax, color=PPC.colors["magenta"])
-    PPC.plot(MOONpos_ECI[:,0],                             MOONpos_ECI[:,1],                             label="Moon", fig=fig, ax=ax, color=PPC.colors["grey"])
+    PPC.plot(SCpos_ECI[:,0],   SCpos_ECI[:,1],   label="SC",   fig=fig, ax=ax, color=PPC.colors["magenta"])
+    PPC.plot(MOONpos_ECI[:,0], MOONpos_ECI[:,1], label="Moon", fig=fig, ax=ax, color=PPC.colors["grey"])
 
     # Spacecraft state
-    fig, ax = PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCpos_SSB"], ylabel="SCpos_SSB [km]", label=["x","y","z"], title="SCpos_SSB", subplot=(3,1,1))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCvel_SSB"], ylabel="SCvel_SSB [km/s]", label=["x","y","z"], title="SCvel_SSB", fig=fig, subplot=(3,1,2))
-    PPC.plot(timeline["DYN"]["DYN_TIME"]["time_SIM"], timeline["DYN"]["DYN_TRA"]["SCacc_SSB"], ylabel="SCacc_SSB [km/s]", label=["x","y","z"], title="SCacc_SSB", fig=fig, subplot=(3,1,3))
+    fig, ax = PPC.plot(time_SIM, SCpos_SSB, ylabel="SCpos_SSB [km]", label=["x","y","z"], title="SCpos_SSB", subplot=(3,1,1))
+    PPC.plot(time_SIM, SCvel_SSB, ylabel="SCvel_SSB [km/s]", label=["x","y","z"], title="SCvel_SSB", fig=fig, subplot=(3,1,2))
+    PPC.plot(time_SIM, SCacc_SSB, ylabel="SCacc_SSB [km/s]", label=["x","y","z"], title="SCacc_SSB", fig=fig, subplot=(3,1,3))
 
 def DYN_ATT_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Spacecraft attitude

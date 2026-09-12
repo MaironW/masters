@@ -277,12 +277,14 @@ def NAV_EKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # Compute RMS
     SCpos_SSB_err = SCpos_SSB_est - SCpos_SSB
     SCvel_SSB_err = SCvel_SSB_est - SCvel_SSB
-    # error = np.hstack((SCpos_SSB_err, SCvel_SSB_err))
+    error = np.hstack((SCpos_SSB_err, SCvel_SSB_err))
     # RMS_theoretical = np.zeros_like(error)
     # RMS_numerical   = np.zeros_like(error)
-    # for k in range(n_iter):
+    NEES = np.zeros(n_iter)
+    for k in range(n_iter):
     #     RMS_theoretical[k, :] = np.sqrt(np.diag(P[k]))
     #     RMS_numerical[k, :]   = np.sqrt(np.mean(error[:k+1, :]**2, axis=0))
+        NEES[k] = error[k] @ np.linalg.solve(P[k], error[k])
 
     # Plot errors
     fig, ax1 = PPC.plot([], [], ylabel="SCpos_SSB [km]", title="EKF Estimated position error", subplot=(2,1,1))
@@ -294,12 +296,16 @@ def NAV_EKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     # PPC.plot(time_SIM_days, RMS_theoretical[:, 3:6], label=["RMSt X","RMSt Y","RMSt Z"], style="--", fig=fig, ax=ax2)
     # PPC.plot(time_SIM_days, RMS_numerical[:, 3:6],   label=["RMSn X","RMSn Y","RMSn Z"], style="--", fig=fig, ax=ax2)
 
-    # Plot innovation
+    # Plot innovation (NIS)
     fig, ax1 = PPC.plot([], [], xlabel="time_SIM [days]", ylabel="Innovation", title="EKF Innovation Normalized Squared")
     for name in ["NAV_CEL", "NAV_PSR", "NAV_CMB"]:
         y  = timeline["NAV"]["NAV_EKF"][f"y_{name}"]
         y /= len(y)
         PPC.plot(time_SIM_days, y, label=f"{name}", fig=fig, ax=ax1)
+
+    # Plot NEES
+    fig, ax1 = PPC.plot(time_SIM_days, NEES, xlabel="time_SIM [days]", ylabel="NEES", title="EKF Estimation Error Normalized Squared")
+
 
 def NAV_UKF_plot(timeline, DYN_obj, SEN_obj, NAV_obj):
     time_SIM  = timeline["DYN"]["DYN_TIME"]["time_SIM"]

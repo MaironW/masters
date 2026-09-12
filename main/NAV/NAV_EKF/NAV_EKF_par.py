@@ -23,6 +23,7 @@ SCpos_SSB_est_ini = SCpos_SSB_true_ini + SCpos_SSB_err_ini
 SCvel_SSB_est_ini = SCvel_SSB_true_ini + SCvel_SSB_err_ini
 
 x_est_ini = np.concatenate((SCpos_SSB_est_ini, SCvel_SSB_est_ini))
+P_ini = np.eye(6)
 
 NAV_EKF_par = {
     "n_states"  : 6, # Number of estimated states [pos[3], vel[3]]
@@ -31,6 +32,6 @@ NAV_EKF_par = {
 
     # Initial values for the EKF
     "x_est_ini" : x_est_ini,
-    "P_ini"     : np.eye(6), # Initial covariance
-    "y_ini"     : 0, # Initial innovation
+    "P_ini"     : P_ini, # Initial covariance
+    "y_ini"     : 0,     # Initial innovation
 }

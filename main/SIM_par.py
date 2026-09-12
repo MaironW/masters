@@ -2,15 +2,15 @@
 
 SIM_par = {
     # Time parameters
-    "dt"           : 600,        # [s] 10 min
-    "time_start"   : 0,          # [s]
-    "time_end"     : 3600*24*10, # [s] 10 days
+    "dt"           : 1,    # [s]
+    "time_start"   : 0,    # [s]
+    "time_end"     : 3600, # [s]
 
     # Log parameters
     "log_save"      : False,
     "log_load"      : [],
     "log_save_path" : "Logs",
-    "log_load_path" : "Logs",
+    "log_load_path" : "Logs/default_timeline",
 
     # List of default plots
     "PPC_plot_list" : [

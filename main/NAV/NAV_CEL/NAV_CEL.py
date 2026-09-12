@@ -228,11 +228,6 @@ class NAV_CEL(Level2Module):
                 cos_angle       = np.clip(STARdir_SC @ BODYdir_SC, -1.0, 1.0)
                 h               = cos_angle
 
-                den = np.sqrt(1 - cos_angle**2)
-                # Avoid numerical blow-up on the denominator
-                if den < 1e-12:
-                    continue
-
                 # Compute partial derivative
                 dhdr = -1 / BODYlos_SC_norm * (STARdir_SC - h * BODYdir_SC)
 

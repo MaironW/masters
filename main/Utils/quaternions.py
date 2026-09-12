@@ -33,6 +33,18 @@ def qtrans(q):
 
 # Express in frame A a vector initially expressed in frame B
 def qvecprod(Aq_B, v_B):
+    Aq_B = np.asarray(Aq_B)
+    v_B  = np.asarray(v_B)
+    Aq_B = np.broadcast_to(Aq_B, v_B.shape[:-1] + (4,))
+    w  = Aq_B[..., 0]
+    qv = Aq_B[..., 1:4]
+    t = 2.0 * np.cross(qv, v_B)
+    v_A = v_B - w[..., None] * t + np.cross(qv, t)
+    return v_A
+
+# Kept as legacy because it is mathematically clearer
+# However, it is slower than the new version of qvecprod
+def qvecprod_old(Aq_B, v_B):
     Aq_B  = np.asarray(Aq_B)
     v_B   = np.asarray(v_B)
     Aq_B  = np.broadcast_to(Aq_B, v_B.shape[:-1] + (4,))

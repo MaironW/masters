@@ -24,7 +24,6 @@ def run_mc_case(args):
     np.random.seed(seed)
 
     # Define parameters distribuition
-    P_ini       = np.diag(np.random.uniform(0.5, 2.0, size=6))
     pos_ini_err = np.random.normal(0, 10,   size=3)
     vel_ini_err = np.random.normal(0, 0.01, size=3)
     x_ini_err   = np.hstack([pos_ini_err, vel_ini_err])
@@ -35,7 +34,6 @@ def run_mc_case(args):
     par_override = {
         "NAV": {
             "NAV_EKF": {
-                "P_ini"     : P_ini,
                 "x_est_ini" : x_est_ini,
             }
         }
@@ -46,7 +44,7 @@ def run_mc_case(args):
         "log_save_path": os.path.join(run_dir, "log"),
         "log_load_path": os.path.join(output_dir, "baseline"),
         "log_save": True,
-        "log_load": ["DYN","SEN"]
+        "log_load": ["DYN"]
     }
 
     # Save parameters

@@ -13,7 +13,7 @@ NAV_PSR_par = {
                             7.08752914e-05,
                             8.68895977e-05,
                             4.58684526e-05,
-                            8.42690951e-05]),
+                            8.42690951e-05])*10,
 
     # Limit the number of pulsars used in the simulation
     # It aways select the first pulsars (should be between 3 and 10 for valid navigation)

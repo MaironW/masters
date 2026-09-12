@@ -23,10 +23,14 @@ def rk4_step(t, dt, state, inputs):
     sizes = [len(v) for v in state_0_list]
     state_0 = _flatten(state_0_list)
 
+    # Create a temporary copy of the state just to operate inside f()
+    # without changing the final state
+    # It is fine to do it only once because the function f() is returning a
+    # flattened version of the new states, which is by itself a copy
+    state_tmp = copy.copy(state)
+
     # Set states, update algebraic modules and dynamic outputs, then evaluate derivatives
     def f(t_local, y_vec):
-        # Work on a copy to avoid contamination
-        state_tmp = copy.deepcopy(state)
         vecs = _unflatten(y_vec, sizes)
 
         # Inject dynamic state

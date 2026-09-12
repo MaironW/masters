@@ -45,4 +45,5 @@ class DYN(Level1Module):
     # Update time-dependent, non-integrated Level-2 modules
     def update_algebraic(self, t, parent_states, inputs):
         for m in self.modules:
-            m.update_algebraic(t, None, self.snapshot(), inputs)
+            DYN_snapshot = self.snapshot()
+            m.update_algebraic(t, None, DYN_snapshot, inputs)

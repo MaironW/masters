@@ -10,22 +10,16 @@ events_sequence = {
         (0, np.array([1,0,0,0])),
     ],
     "DYN.DYN_ATT.SCw_BOF" : [
-        (0, np.deg2rad([0,0,1])),
+        (0, np.deg2rad([0,0,0])),
     ],
     "SEN.SEN_STR.STRenableflg" : [
-        (0,     1),
-        (6000,  1),
-        (36000, 1),
+        (0, 1),
     ],
     "SEN.SEN_PSR.PSRenableflg" : [
-        (0,     1),
-        (3000,  1),
-        (36000, 1),
+        (0, 1),
     ],
     "SEN.SEN_CMB.CMBenableflg" : [
-        (0,     1),
-        (3000,  1),
-        (36000, 1),
+        (0, 1),
     ],
     "NAV.NAV_CEL.NAV_CELenableflg" : [
         (0, 1),

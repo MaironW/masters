@@ -113,6 +113,12 @@ class SEN_PSR(Level2Module):
 
         # PSR output is valid
         else:
+            # Apply time quantization to all states before starting computations
+            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+            if time_OBT - self._last_update_time < self.par["dt"]:
+                self.state = copy.deepcopy(self._last_state)
+                return self.state
+
             PULSARSid_mes = self.par["name"]
 
             # Properties
@@ -126,16 +132,12 @@ class SEN_PSR(Level2Module):
             # Apply noise to true OBTdt_TDB for visible pulsars
             OBTdt_TDB_mes = DYN_states["DYN_PSR"]["OBTdt_TDB"] + t_bias + noise
 
-            # Apply time quantization to all states (maybe not needed for PSR)
-            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
-            if time_OBT - self._last_update_time >= self.par["dt"]:
-                self.state["time_PSR"]      = time_OBT
-                self.state["OBTdt_TDB_mes"] = OBTdt_TDB_mes
-                self.state["PULSARSid_mes"] = PULSARSid_mes
+            # Update states
+            self.state["time_PSR"]      = time_OBT
+            self.state["OBTdt_TDB_mes"] = OBTdt_TDB_mes
+            self.state["PULSARSid_mes"] = PULSARSid_mes
 
-                self._last_update_time = time_OBT
-                self._last_state = copy.deepcopy(self.state)
-            else:
-                self.state = copy.deepcopy(self._last_state)
+            self._last_update_time = time_OBT
+            self._last_state = copy.deepcopy(self.state)
 
         return self.state

@@ -62,6 +62,13 @@ class SEN_STR(Level2Module):
         self.state["STARSdir_STR_mes"] = self.par["STARSdir_mes_ini"]
         self.state["STARSdir_SC_mes"]  = self.par["STARSdir_mes_ini"]
 
+        # Precomputed quantities
+        STR2q_BOF = self.par["STR2q_STR1"]
+        STR1_boresight = np.array([0, 0, 1])
+        STR2_boresight = quaternions.qvecprod(STR2q_BOF, STR1_boresight) # relative to STR1
+        self.par["STR1_boresight"] = STR1_boresight
+        self.par["STR2_boresight"] = STR2_boresight
+
         # Initialize other variables
         self.state = self.update_algebraic(0, DYN_states, SEN_states)
         return self.state
@@ -96,6 +103,13 @@ class SEN_STR(Level2Module):
 
         # STR output is valid
         else:
+            # Apply time quantization to all states before starting computations
+            # This is useful here because there are so many stars
+            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
+            if time_OBT - self._last_update_time < self.par["dt"]:
+                self.state = copy.deepcopy(self._last_state)
+                return self.state
+
             # Satellite attitude
             BOFq_SSB = DYN_states["DYN_ATT"]["BOFq_SSB"]
 
@@ -132,8 +146,8 @@ class SEN_STR(Level2Module):
             STARSdir_SSB = DYN_states["DYN_STR"]["STARSdir_SSB"]
             STARSid      = DYN_states["DYN_STR"]["STARSid"]
 
-            # Stars directions relative to the Spacecraft
-            STARSdir_SC = STARSdir_SSB.copy()
+            # Stars directions relative to the Spacecraft (just for the ease of notation)
+            STARSdir_SC = STARSdir_SSB
 
             # Rotate to STR frame
             SUNdir_STR    = quaternions.qvecprod(STRq_SSB, SUNdir_SC)
@@ -154,23 +168,33 @@ class SEN_STR(Level2Module):
             STARSdir_STR  = self.mask_visible_objects(STARSdir_STR)
 
             # Filter out STARSid outside the FOV
-            is_nan_mask = np.isnan(STARSdir_STR).any(-1)
-            STARSid_mes = np.where(is_nan_mask, np.nan, STARSid)
+            visible = ~np.isnan(STARSdir_STR).any(axis=1)
+            STARSid_mes = np.where(~visible, np.nan, STARSid)
 
-            # Compute noise quaternion (the same for all objects)
+            # Compute noise quaternion (different for each objects, otherwise it would cancel out on the angles)
             noise_mean = self.par["noise_mean"]
             noise_std  = [self.par["noise_std"], self.par["noise_std"], self.par["noise_std"]]
-            noise_STR  = np.random.normal(noise_mean, noise_std, size=3)
-            noiseq_STR = quaternions.rotvec2q(noise_STR)
+            noiseq_STR        = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_SUN    = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_EARTH  = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_MOON   = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_MARS   = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_DEIMOS = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
+            noiseq_STR_PHOBOS = quaternions.rotvec2q(np.random.normal(noise_mean, noise_std, size=3))
 
-            # Apply noise on the focal plane
-            SUNdir_STR_mes    = quaternions.qvecprod(noiseq_STR, SUNdir_STR)
-            EARTHdir_STR_mes  = quaternions.qvecprod(noiseq_STR, EARTHdir_STR)
-            MOONdir_STR_mes   = quaternions.qvecprod(noiseq_STR, MOONdir_STR)
-            MARSdir_STR_mes   = quaternions.qvecprod(noiseq_STR, MARSdir_STR)
-            DEIMOSdir_STR_mes = quaternions.qvecprod(noiseq_STR, DEIMOSdir_STR)
-            PHOBOSdir_STR_mes = quaternions.qvecprod(noiseq_STR, PHOBOSdir_STR)
-            STARSdir_STR_mes  = quaternions.qvecprod(noiseq_STR, STARSdir_STR)
+            # Apply noise on the focal plane (different value for each body)
+            SUNdir_STR_mes    = quaternions.qvecprod(noiseq_STR_SUN,    SUNdir_STR)
+            EARTHdir_STR_mes  = quaternions.qvecprod(noiseq_STR_EARTH,  EARTHdir_STR)
+            MOONdir_STR_mes   = quaternions.qvecprod(noiseq_STR_MOON,   MOONdir_STR)
+            MARSdir_STR_mes   = quaternions.qvecprod(noiseq_STR_MARS,   MARSdir_STR)
+            DEIMOSdir_STR_mes = quaternions.qvecprod(noiseq_STR_DEIMOS, DEIMOSdir_STR)
+            PHOBOSdir_STR_mes = quaternions.qvecprod(noiseq_STR_PHOBOS, PHOBOSdir_STR)
+
+            # Do not apply noise to the stars
+            # This is computationally easier to do than to apply different noise to each star
+            # And has no downside because each body already have their own noises
+            # This part could be updated to account for star tracker misalignment
+            STARSdir_STR_mes = np.copy(STARSdir_STR)
 
             # Convert back to SC
             SSBq_STR         = quaternions.qtrans(STRq_SSB)
@@ -180,7 +204,9 @@ class SEN_STR(Level2Module):
             MARSdir_SC_mes   = quaternions.qvecprod(SSBq_STR, MARSdir_STR_mes)
             DEIMOSdir_SC_mes = quaternions.qvecprod(SSBq_STR, DEIMOSdir_STR_mes)
             PHOBOSdir_SC_mes = quaternions.qvecprod(SSBq_STR, PHOBOSdir_STR_mes)
-            STARSdir_SC_mes  = quaternions.qvecprod(SSBq_STR, STARSdir_STR_mes)
+            # Copying STARSdir_SC_mes from STARSdir_STR_mes is only safe because the NaN values would be in the same spots for both
+            STARSdir_SC_mes = np.copy(STARSdir_STR_mes)
+            STARSdir_SC_mes[visible] = quaternions.qvecprod(SSBq_STR, STARSdir_STR_mes[visible])
 
             # Compute BOFq_SSB_mes
             BOFq_STR     = quaternions.qtrans(STRq_BOF)
@@ -188,31 +214,27 @@ class SEN_STR(Level2Module):
             STRq_SSB_mes = quaternions.qtrans(SSBq_STR_mes)
             BOFq_SSB_mes = quaternions.qprod(BOFq_STR, STRq_SSB_mes)
 
-            # Apply time quantization to all states
-            time_OBT = SEN_states["SEN_TIME"]["time_OBT"]
-            if time_OBT - self._last_update_time >= self.par["dt"]:
-                self.state["time_STR"]          = time_OBT
-                self.state["STARSid_mes"]       = STARSid_mes
-                self.state["SUNdir_STR_mes"]    = SUNdir_STR_mes
-                self.state["EARTHdir_STR_mes"]  = EARTHdir_STR_mes
-                self.state["MOONdir_STR_mes"]   = MOONdir_STR_mes
-                self.state["MARSdir_STR_mes"]   = MARSdir_STR_mes
-                self.state["DEIMOSdir_STR_mes"] = DEIMOSdir_STR_mes
-                self.state["PHOBOSdir_STR_mes"] = PHOBOSdir_STR_mes
-                self.state["STARSdir_STR_mes"]  = STARSdir_STR_mes
-                self.state["SUNdir_SC_mes"]     = SUNdir_SC_mes
-                self.state["EARTHdir_SC_mes"]   = EARTHdir_SC_mes
-                self.state["MOONdir_SC_mes"]    = MOONdir_SC_mes
-                self.state["MARSdir_SC_mes"]    = MARSdir_SC_mes
-                self.state["DEIMOSdir_SC_mes"]  = DEIMOSdir_SC_mes
-                self.state["PHOBOSdir_SC_mes"]  = PHOBOSdir_SC_mes
-                self.state["STARSdir_SC_mes"]   = STARSdir_SC_mes
-                self.state["BOFq_SSB_mes"]      = BOFq_SSB_mes
+            # Update states
+            self.state["time_STR"]          = time_OBT
+            self.state["STARSid_mes"]       = STARSid_mes
+            self.state["SUNdir_STR_mes"]    = SUNdir_STR_mes
+            self.state["EARTHdir_STR_mes"]  = EARTHdir_STR_mes
+            self.state["MOONdir_STR_mes"]   = MOONdir_STR_mes
+            self.state["MARSdir_STR_mes"]   = MARSdir_STR_mes
+            self.state["DEIMOSdir_STR_mes"] = DEIMOSdir_STR_mes
+            self.state["PHOBOSdir_STR_mes"] = PHOBOSdir_STR_mes
+            self.state["STARSdir_STR_mes"]  = STARSdir_STR_mes
+            self.state["SUNdir_SC_mes"]     = SUNdir_SC_mes
+            self.state["EARTHdir_SC_mes"]   = EARTHdir_SC_mes
+            self.state["MOONdir_SC_mes"]    = MOONdir_SC_mes
+            self.state["MARSdir_SC_mes"]    = MARSdir_SC_mes
+            self.state["DEIMOSdir_SC_mes"]  = DEIMOSdir_SC_mes
+            self.state["PHOBOSdir_SC_mes"]  = PHOBOSdir_SC_mes
+            self.state["STARSdir_SC_mes"]   = STARSdir_SC_mes
+            self.state["BOFq_SSB_mes"]      = BOFq_SSB_mes
 
-                self._last_update_time = time_OBT
-                self._last_state = copy.deepcopy(self.state)
-            else:
-                self.state = copy.deepcopy(self._last_state)
+            self._last_update_time = time_OBT
+            self._last_state = copy.deepcopy(self.state)
 
         return self.state
 
@@ -222,13 +244,11 @@ class SEN_STR(Level2Module):
 
     # Check if objects are inside any of the two Star Trackers FOV
     def mask_visible_objects(self, dir_STR):
-        STR2q_BOF = self.par["STR2q_STR1"]
-        STR1_boresight = np.array([0, 0, 1])
-        STR2_boresight = quaternions.qvecprod(STR2q_BOF, STR1_boresight) # relative to STR1
+        STR1_boresight = self.par["STR1_boresight"]
+        STR2_boresight = self.par["STR2_boresight"]
         cos_field_of_view = self.par["cos_field_of_view"]
         cos_angle_1 = dir_STR @ STR1_boresight
         cos_angle_2 = dir_STR @ STR2_boresight
         visible = ((cos_angle_1 >= cos_field_of_view ) | (cos_angle_2 >= cos_field_of_view))
-        dir_STR_masked = np.full(dir_STR.shape, np.nan, dtype=float)
-        dir_STR_masked[visible] = dir_STR[visible]
-        return dir_STR_masked
+        dir_STR[~visible] = np.nan
+        return dir_STR

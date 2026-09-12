@@ -178,7 +178,7 @@ def plot(x, y, z=None, style='', color=None, xlabel=None, ylabel=None, zlabel=No
     # Add legends
     handles, labels = ax.get_legend_handles_labels()
     if labels:
-        ax.legend()
+        ax.legend(loc='upper right')
 
     if title:
         ax.set_title(title)

@@ -26,6 +26,7 @@ class NAV_UKF(Level2Module):
             "NAV_PSR" : -np.inf,
             "NAV_CMB" : -np.inf,
         }
+        self.first_update = True
         super().__init__("NAV_UKF", par)
 
     # Initialization
@@ -49,16 +50,16 @@ class NAV_UKF(Level2Module):
 
         navigation_methods = [
             {
-                "name" : "NAV_CEL",
-                "data" : NAV_states["NAV_CEL"],
-            },
-            {
                 "name" : "NAV_PSR",
                 "data" : NAV_states["NAV_PSR"],
             },
             {
                 "name" : "NAV_CMB",
                 "data" : NAV_states["NAV_CMB"],
+            },
+            {
+                "name" : "NAV_CEL",
+                "data" : NAV_states["NAV_CEL"],
             },
         ]
 
@@ -71,13 +72,13 @@ class NAV_UKF(Level2Module):
         # Generate sigma points
         X_sigma, Wm, Wc = self.generate_sigma_points(x_est, Pxx)
 
-        # Propagate the sigma points through integration
-        X_sigma_prop = []
-        for i in range(X_sigma.shape[1]):
-            x_i = X_sigma[:, i]
-            x_next = self.propagate_sigma(x_i, dt, NAV_states)
-            X_sigma_prop.append(x_next)
-        X_sigma_prop = np.array(X_sigma_prop).T
+        # Do not propagate the initial state on the first step
+        if self.first_update:
+            X_sigma_prop = X_sigma
+            self.first_update = False
+        # Propagate the sigma points all at once
+        else:
+            X_sigma_prop = self.propagate_sigma(X_sigma, dt, NAV_states)
 
         # Mean, prediction
         x_pred = X_sigma_prop @ Wm
@@ -85,10 +86,8 @@ class NAV_UKF(Level2Module):
 
         # State covariance
         n_states  = len(x_est)
-        Pxx = np.zeros((n_states, n_states))
-        for i in range(X_sigma_prop.shape[1]):
-            dx = X_sigma_prop[:, i] - x_pred
-            Pxx += Wc[i] * np.outer(dx, dx)
+        dx = X_sigma_prop - x_pred[:, None]
+        Pxx = (dx * Wc) @ dx.T
         Pxx += Q # Add discrete process noise covariance to the state
         Pxx = 0.5 * (Pxx + Pxx.T) # Symmetry fix
         Pxx += 1e-12*np.eye(n_states) # Add low value to ensure convergence
@@ -139,15 +138,10 @@ class NAV_UKF(Level2Module):
             n_mes  = len(z)
 
             # Covariances
-            Pzz = np.zeros((n_mes,    n_mes)) # Innovation covariance
-            Pxz = np.zeros((n_states, n_mes)) # Cross-covariance state-measurement
-
-            for i in range(Z_sigma_prop.shape[1]):
-                dx = X_sigma_prop[:, i] - x_est
-                dz = Z_sigma_prop[:, i] - z_est
-
-                Pzz += Wc[i] * np.outer(dz, dz)
-                Pxz += Wc[i] * np.outer(dx, dz)
+            dx = X_sigma_prop - x_est[:, None]
+            dz = Z_sigma_prop - z_est[:, None]
+            Pzz = (dz * Wc) @ dz.T
+            Pxz = (dx * Wc) @ dz.T
 
             Pzz += R
             Pzz += 1e-12*np.eye(n_mes) # Add low value to ensure convergence
@@ -196,14 +190,23 @@ class NAV_UKF(Level2Module):
         return self.state
 
     # Dynamics model
-    def f(self, x, u, NAV_states):
-        SCpos_SSB = x[0:3]
-        SCvel_SSB = x[3:6]
+    def f(self, X_sigma, u, NAV_states):
+        SCpos_SSB = X_sigma[0:3, :]
+        SCvel_SSB = X_sigma[3:6, :]
+
+        SUNpos_SSB   = NAV_states["NAV_EPH"]["SUNpos_SSB"][:, None]
+        EARTHpos_SSB = NAV_states["NAV_EPH"]["EARTHpos_SSB"][:, None]
+        MARSpos_SSB  = NAV_states["NAV_EPH"]["MARSpos_SSB"][:, None]
 
         # Spacecraft position relative to bodies
-        SCpos_SCI = SCpos_SSB - NAV_states["NAV_EPH"]["SUNpos_SSB"]   # [km]
-        SCpos_ECI = SCpos_SSB - NAV_states["NAV_EPH"]["EARTHpos_SSB"] # [km]
-        SCpos_MCI = SCpos_SSB - NAV_states["NAV_EPH"]["MARSpos_SSB"]  # [km]
+        SCpos_SCI = SCpos_SSB - SUNpos_SSB   # [km]
+        SCpos_ECI = SCpos_SSB - EARTHpos_SSB # [km]
+        SCpos_MCI = SCpos_SSB - MARSpos_SSB  # [km]
+
+        # Absolute distance between Spacecraft and bodies
+        SCpos_SCI_norm = np.linalg.norm(SCpos_SCI, axis=0)
+        SCpos_ECI_norm = np.linalg.norm(SCpos_ECI, axis=0)
+        SCpos_MCI_norm = np.linalg.norm(SCpos_MCI, axis=0)
 
         # Get the standard gravitational parameter around each body
         mu_SUN_cst   = CONSTANTS_par["mu_SUN_cst"]   # [km^3/s^2]
@@ -211,9 +214,9 @@ class NAV_UKF(Level2Module):
         mu_MARS_cst  = CONSTANTS_par["mu_MARS_cst"]  # [km^3/s^2]
 
         # Compute the point mass acceleration (no perturbation) in each body inertial frame
-        grvacc_SUN_SCI   = -mu_SUN_cst   * SCpos_SCI/np.linalg.norm(SCpos_SCI)**3 # [km/s^2]
-        grvacc_EARTH_ECI = -mu_EARTH_cst * SCpos_ECI/np.linalg.norm(SCpos_ECI)**3 # [km/s^2]
-        grvacc_MARS_MCI  = -mu_MARS_cst  * SCpos_MCI/np.linalg.norm(SCpos_MCI)**3 # [km/s^2]
+        grvacc_SUN_SCI   = -mu_SUN_cst   * SCpos_SCI/SCpos_SCI_norm**3 # [km/s^2]
+        grvacc_EARTH_ECI = -mu_EARTH_cst * SCpos_ECI/SCpos_ECI_norm**3 # [km/s^2]
+        grvacc_MARS_MCI  = -mu_MARS_cst  * SCpos_MCI/SCpos_MCI_norm**3 # [km/s^2]
 
         # Compute the gravity acceleration in the SSB frame (add all inertial models together)
         # Check Vallado c1.4 - Barycentric form of the N-body problem (eq 1-38)
@@ -222,7 +225,7 @@ class NAV_UKF(Level2Module):
         # Gravity is the only source of acceleration for the spacecraft
         SCacc_SSB = grvacc_SSB
 
-        return np.hstack([SCvel_SSB, SCacc_SSB])
+        return np.vstack([SCvel_SSB, SCacc_SSB])
 
     # Generate sigma-points for the UKF
     def generate_sigma_points(self, x, P):
@@ -260,11 +263,12 @@ class NAV_UKF(Level2Module):
         return sigma_points, Wm, Wc
 
     # Internal RK4 integrator for the UKF
-    def propagate_sigma(self, x, dt, NAV_states):
-        def f_local(x_local):
-            return self.f(x_local, None, NAV_states)
-        k1 = f_local(x)
-        k2 = f_local(x + 0.5 * dt * k1)
-        k3 = f_local(x + 0.5 * dt * k2)
-        k4 = f_local(x + dt * k3)
-        return x + dt/6 * (k1 + 2*k2 + 2*k3 + k4)
+    def propagate_sigma(self, X_sigma, dt, NAV_states):
+        def f_local(X_sigma):
+            return self.f(X_sigma, None, NAV_states)
+
+        k1 = f_local(X_sigma)
+        k2 = f_local(X_sigma + 0.5 * dt * k1)
+        k3 = f_local(X_sigma + 0.5 * dt * k2)
+        k4 = f_local(X_sigma + dt * k3)
+        return X_sigma + dt/6 * (k1 + 2*k2 + 2*k3 + k4)

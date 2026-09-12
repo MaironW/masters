@@ -49,16 +49,16 @@ class NAV_EKF(Level2Module):
 
         navigation_methods = [
             {
-                "name" : "NAV_CEL",
-                "data" : NAV_states["NAV_CEL"],
-            },
-            {
                 "name" : "NAV_PSR",
                 "data" : NAV_states["NAV_PSR"],
             },
             {
                 "name" : "NAV_CMB",
                 "data" : NAV_states["NAV_CMB"],
+            },
+            {
+                "name" : "NAV_CEL",
+                "data" : NAV_states["NAV_CEL"],
             },
         ]
 

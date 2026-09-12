@@ -1,5 +1,6 @@
 # Level 2 Module NAV_UKF
 # Estimate state with Unscented Kalman Filter loading NAV_CEL, NAV_PSR and NAV_CMB data
+# Augmented version
 
 import copy
 import numpy as np
@@ -7,12 +8,12 @@ from scipy.linalg import block_diag
 
 from Utils.constants import CONSTANTS_par
 from Utils.level2module import Level2Module
-from .NAV_UKF_par import NAV_UKF_par
+from .NAV_UKF_aug_par import NAV_UKF_aug_par
 
-class NAV_UKF(Level2Module):
+class NAV_UKF_aug(Level2Module):
     def __init__(self, par_override=None):
         # Start with default parameters
-        par = copy.deepcopy(NAV_UKF_par)
+        par = copy.deepcopy(NAV_UKF_aug_par)
         # Apply user overrides
         if par_override is not None:
             par.update(par_override)
@@ -21,13 +22,14 @@ class NAV_UKF(Level2Module):
             "x_est" : None, # (n,)
             "P"     : None, # (n, n)
         }
-        # Track when the last update occured
+        # Track when the last update occurred
         self.last_update_time = {
             "NAV_CEL" : -np.inf,
             "NAV_PSR" : -np.inf,
             "NAV_CMB" : -np.inf,
         }
-        super().__init__("NAV_UKF", par)
+        self.first_update = True
+        super().__init__("NAV_UKF_aug", par)
 
     # Initialization
     def initialize(self, SEN_states, NAV_states):
@@ -50,10 +52,6 @@ class NAV_UKF(Level2Module):
 
         navigation_methods = [
             {
-                "name" : "NAV_CEL",
-                "data" : NAV_states["NAV_CEL"],
-            },
-            {
                 "name" : "NAV_PSR",
                 "data" : NAV_states["NAV_PSR"],
             },
@@ -61,42 +59,41 @@ class NAV_UKF(Level2Module):
                 "name" : "NAV_CMB",
                 "data" : NAV_states["NAV_CMB"],
             },
+            {
+                "name" : "NAV_CEL",
+                "data" : NAV_states["NAV_CEL"],
+            },
         ]
 
-        # Load states and parameters
+        # Load state and parameters
         x_est = self.state["x_est"]
         Pxx   = self.state["P"]
         dt    = self.par["dt"]
         Q     = self.par["Q"]
         G     = self.par["G"]
+        n_states  = len(x_est)
+        n_process = Q.shape[0]
 
         # Generate sigma points
         X_sigma_aug, Wm, Wc = self.generate_sigma_points(x_est, Pxx, Q)
 
-        # Get individual sigma-points
-        n_states  = len(x_est)
-        n_process = Q.shape[0]
-        X_sigma = X_sigma_aug[0 : n_states, :]
-        W_sigma = X_sigma_aug[n_states : n_states + n_process, :]
-
-        # Propagate the sigma points through integration
-        X_sigma_prop = []
-        for i in range(X_sigma.shape[1]):
-            x_i = X_sigma[:, i]
-            w_i = W_sigma[:, i]
-            x_next = self.propagate_sigma(x_i, w_i, G, dt, NAV_states) + G @ w_i
-            X_sigma_prop.append(x_next)
-        X_sigma_prop = np.array(X_sigma_prop).T
+        # Do not propagate the initial state on the first step
+        if self.first_update:
+            X_sigma_prop = X_sigma_aug[0 : n_states, :]
+            self.first_update = False
+        else:
+            # Propagate the sigma points all at once
+            X_sigma = X_sigma_aug[0 : n_states, :]
+            W_sigma = X_sigma_aug[n_states : n_states + n_process, :]
+            X_sigma_prop = self.propagate_sigma(X_sigma, dt, NAV_states) + G @ W_sigma
 
         # Mean, prediction
         x_pred = X_sigma_prop @ Wm
         x_est  = np.copy(x_pred)
 
         # State covariance
-        Pxx = np.zeros((n_states, n_states))
-        for i in range(X_sigma_prop.shape[1]):
-            dx = X_sigma_prop[:, i] - x_pred
-            Pxx += Wc[i] * np.outer(dx, dx)
+        dx = X_sigma_prop - x_pred[:, None]
+        Pxx = (dx * Wc[None, :]) @ dx.T
         Pxx = 0.5 * (Pxx + Pxx.T) # Symmetry fix
         Pxx += 1e-12*np.eye(n_states) # Add low value to ensure convergence
 
@@ -128,36 +125,37 @@ class NAV_UKF(Level2Module):
             # Get sensor-specific model
             h_fun = data["h"]
 
+            # Generate state-only sigma points
+            # Process noise has already been included in the prediction covariance
+
+            X_sigma_meas, Wm_meas, Wc_meas = self.generate_sigma_points(x_est, Pxx)
+
             # UKF Update
             Z_sigma_prop = []
-            for i in range(X_sigma_prop.shape[1]):
-                z_i = h_fun(X_sigma_prop[:, i])
+            for i in range(X_sigma_meas.shape[1]):
+                z_i = h_fun(X_sigma_meas[:, i])
                 Z_sigma_prop.append(z_i)
-            Z_sigma_prop = np.array(Z_sigma_prop).T
-            z_est = Z_sigma_prop @ Wm
+            Z_sigma_prop = np.column_stack(Z_sigma_prop)
+            z_est = Z_sigma_prop @ Wm_meas
 
             # Filter by measurements
             z            = z[valid_measurements]
             z_est        = z_est[valid_measurements]
             Z_sigma_prop = Z_sigma_prop[valid_measurements, :]
-            R      = R[np.ix_(valid_measurements,valid_measurements)]
-            R      = 0.5 * (R + R.T) # Symmetry fix
-            R     += 1e-12 * np.eye(R.shape[0]) # Add low value to ensure convergence
-            n_mes  = len(z)
+            R  = R[np.ix_(valid_measurements, valid_measurements)]
+            R  = 0.5 * (R + R.T) # Symmetry fix
+            R += 1e-12 * np.eye(R.shape[0]) # Add low value to ensure convergence
+            n_mes = len(z)
 
             # Covariances
-            Pzz = np.zeros((n_mes,    n_mes)) # Innovation covariance
-            Pxz = np.zeros((n_states, n_mes)) # Cross-covariance state-measurement
-
-            for i in range(Z_sigma_prop.shape[1]):
-                dx = X_sigma_prop[:, i] - x_est
-                dz = Z_sigma_prop[:, i] - z_est
-
-                Pzz += Wc[i] * np.outer(dz, dz)
-                Pxz += Wc[i] * np.outer(dx, dz)
+            dx = X_sigma_meas - x_est[:, None]
+            dz = Z_sigma_prop - z_est[:, None]
+            Pzz = (dz * Wc_meas[None, :]) @ dz.T
+            Pxz = (dx * Wc_meas[None, :]) @ dz.T
 
             Pzz += R
-            Pzz += 1e-12*np.eye(n_mes) # Add low value to ensure convergence
+            Pzz = 0.5 * (Pzz + Pzz.T)
+            Pzz += 1e-12 * np.eye(n_mes)
 
             # Compute gain
             K = np.linalg.solve(Pzz.T, Pxz.T).T
@@ -172,19 +170,19 @@ class NAV_UKF(Level2Module):
             # Estimate
             x_est = x_est + K @ y
             Pxx   = Pxx - K @ Pzz @ K.T
-            Pxx   = 0.5 *(Pxx + Pxx.T) # Symmetry fix
-            Pxx  += 1e-12*np.eye(n_states) # Add low value to ensure convergence
+            Pxx   = 0.5 * (Pxx + Pxx.T)
+            Pxx  += 1e-12 * np.eye(n_states)
 
             # Save last update time
             self.last_update_time[name] = t_valid
 
-            # Regenerate sigma-points from last update
-            X_sigma_aug, Wm, Wc = self.generate_sigma_points(x_est, Pxx, Q)
-            X_sigma = X_sigma_aug[0 : n_states, :]
-            W_sigma = X_sigma_aug[n_states : n_states + n_process, :]
+            # # Regenerate sigma-points from last update
+            # X_sigma_aug, Wm, Wc = self.generate_sigma_points(x_est, Pxx, Q)
+            # X_sigma = X_sigma_aug[0 : n_states, :]
+            # W_sigma = X_sigma_aug[n_states : n_states + n_process, :]
 
-            # Re-propagate sigma points
-            X_sigma_prop = np.copy(X_sigma)
+            # # Re-propagate sigma points
+            # X_sigma_prop = np.copy(X_sigma)
 
         # Save final state
         self.state["x_est"] = x_est
@@ -205,14 +203,23 @@ class NAV_UKF(Level2Module):
         return self.state
 
     # Dynamics model
-    def f(self, x, u, NAV_states):
-        SCpos_SSB = x[0:3]
-        SCvel_SSB = x[3:6]
+    def f(self, X_sigma, u, NAV_states):
+        SCpos_SSB = X_sigma[0:3, :]
+        SCvel_SSB = X_sigma[3:6, :]
+
+        SUNpos_SSB   = NAV_states["NAV_EPH"]["SUNpos_SSB"][:, None]
+        EARTHpos_SSB = NAV_states["NAV_EPH"]["EARTHpos_SSB"][:, None]
+        MARSpos_SSB  = NAV_states["NAV_EPH"]["MARSpos_SSB"][:, None]
 
         # Spacecraft position relative to bodies
-        SCpos_SCI = SCpos_SSB - NAV_states["NAV_EPH"]["SUNpos_SSB"]   # [km]
-        SCpos_ECI = SCpos_SSB - NAV_states["NAV_EPH"]["EARTHpos_SSB"] # [km]
-        SCpos_MCI = SCpos_SSB - NAV_states["NAV_EPH"]["MARSpos_SSB"]  # [km]
+        SCpos_SCI = SCpos_SSB - SUNpos_SSB   # [km]
+        SCpos_ECI = SCpos_SSB - EARTHpos_SSB # [km]
+        SCpos_MCI = SCpos_SSB - MARSpos_SSB  # [km]
+
+        # Absolute distance between Spacecraft and bodies
+        SCpos_SCI_norm = np.linalg.norm(SCpos_SCI, axis=0)
+        SCpos_ECI_norm = np.linalg.norm(SCpos_ECI, axis=0)
+        SCpos_MCI_norm = np.linalg.norm(SCpos_MCI, axis=0)
 
         # Get the standard gravitational parameter around each body
         mu_SUN_cst   = CONSTANTS_par["mu_SUN_cst"]   # [km^3/s^2]
@@ -220,9 +227,9 @@ class NAV_UKF(Level2Module):
         mu_MARS_cst  = CONSTANTS_par["mu_MARS_cst"]  # [km^3/s^2]
 
         # Compute the point mass acceleration (no perturbation) in each body inertial frame
-        grvacc_SUN_SCI   = -mu_SUN_cst   * SCpos_SCI/np.linalg.norm(SCpos_SCI)**3 # [km/s^2]
-        grvacc_EARTH_ECI = -mu_EARTH_cst * SCpos_ECI/np.linalg.norm(SCpos_ECI)**3 # [km/s^2]
-        grvacc_MARS_MCI  = -mu_MARS_cst  * SCpos_MCI/np.linalg.norm(SCpos_MCI)**3 # [km/s^2]
+        grvacc_SUN_SCI   = -mu_SUN_cst   * SCpos_SCI/SCpos_SCI_norm**3 # [km/s^2]
+        grvacc_EARTH_ECI = -mu_EARTH_cst * SCpos_ECI/SCpos_ECI_norm**3 # [km/s^2]
+        grvacc_MARS_MCI  = -mu_MARS_cst  * SCpos_MCI/SCpos_MCI_norm**3 # [km/s^2]
 
         # Compute the gravity acceleration in the SSB frame (add all inertial models together)
         # Check Vallado c1.4 - Barycentric form of the N-body problem (eq 1-38)
@@ -231,37 +238,39 @@ class NAV_UKF(Level2Module):
         # Gravity is the only source of acceleration for the spacecraft
         SCacc_SSB = grvacc_SSB
 
-        return np.hstack([SCvel_SSB, SCacc_SSB])
+        return np.vstack([SCvel_SSB, SCacc_SSB])
 
     # Generate sigma-points for the UKF
-    def generate_sigma_points(self, x, P, Q):
-        n_states  = len(x)                # State size
-        n_process = Q.shape[0]            # Process noise size
-        n_a       = n_states + n_process  # Augmented state size
+    def generate_sigma_points(self, x, P, Q=None):
+        if Q is None:
+            n_process = 0
+            P_aug = P
+        else:
+            n_process = Q.shape[0] # Process noise size
+            P_aug = block_diag(P, Q) # Augmented covariance
+
+        n_states = len(x)                # State size
+        n_a      = n_states + n_process  # Augmented state size
 
         # Augmented state
         x_aug = np.hstack([x, np.zeros(n_process)])
-
-        # Augmented covariance
-        P_aug = block_diag(P, Q)
 
         # UKF parameters following Wan & van der Merwe (2000)
         alpha  = self.par["alpha"]
         alpha2 = alpha**2
         beta   = self.par["beta"]
         kappa  = self.par["kappa"]
-        L      = alpha2*(n_a + kappa) - n_a
+        L      = alpha2 * (n_a + kappa) - n_a
         gamma  = np.sqrt(n_a + L)
 
         # Generate augmented sigma-points
         aux_sqrt = gamma * np.linalg.cholesky(P_aug + 1e-12*np.eye(n_a))
 
-        sigma_points = [x_aug]
+        X_sigma = np.empty((n_a, 2 * n_a + 1))
+        X_sigma[:, 0] = x_aug
         for i in range(n_a):
-            sigma_points.append(x_aug + aux_sqrt[:, i])
-            sigma_points.append(x_aug - aux_sqrt[:, i])
-
-        sigma_points = np.array(sigma_points).T
+            X_sigma[:, i + 1] = (x_aug + aux_sqrt[:, i])
+            X_sigma[:, n_a + i + 1] = (x_aug - aux_sqrt[:, i])
 
         # Mean weights
         Wm    = np.full(2*n_a + 1, 0.5 / (n_a + L))
@@ -271,14 +280,15 @@ class NAV_UKF(Level2Module):
         Wc     = np.copy(Wm)
         Wc[0] += 1 - alpha2 + beta
 
-        return sigma_points, Wm, Wc
+        return X_sigma, Wm, Wc
 
     # Internal RK4 integrator for the UKF
-    def propagate_sigma(self, x, w, G, dt, NAV_states):
-        def f_local(x_local):
-            return self.f(x_local, None, NAV_states)
-        k1 = f_local(x)
-        k2 = f_local(x + 0.5 * dt * k1)
-        k3 = f_local(x + 0.5 * dt * k2)
-        k4 = f_local(x + dt * k3)
-        return x + dt/6 * (k1 + 2*k2 + 2*k3 + k4)
+    def propagate_sigma(self, X_sigma, dt, NAV_states):
+        def f_local(X_sigma):
+            return self.f(X_sigma, None, NAV_states)
+
+        k1 = f_local(X_sigma)
+        k2 = f_local(X_sigma + 0.5 * dt * k1)
+        k3 = f_local(X_sigma + 0.5 * dt * k2)
+        k4 = f_local(X_sigma + dt * k3)
+        return X_sigma + dt/6 * (k1 + 2*k2 + 2*k3 + k4)
